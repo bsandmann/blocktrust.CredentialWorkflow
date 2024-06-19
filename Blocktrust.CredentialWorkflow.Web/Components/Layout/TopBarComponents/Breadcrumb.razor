@@ -1,0 +1,29 @@
+﻿@using Blocktrust.CredentialWorkflow.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject AppStateService AppStateService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<AuthorizeView>
+    <Authorized>
+        <div class="flex text-slate-900 no-underline font-light border rounded border-gray-700 bg-slate-300 px-4 py-0.5 mr-2">
+            <a class="font-normal text-slate-900 hover:text-slate-500 px-2" href="tenant">Tenant</a>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        AppStateService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppStateService.OnChange -= StateHasChanged;
+    }
+}

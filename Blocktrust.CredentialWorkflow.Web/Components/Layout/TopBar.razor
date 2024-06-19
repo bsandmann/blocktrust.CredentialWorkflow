@@ -1,0 +1,14 @@
+﻿@using Blocktrust.CredentialWorkflow.Web.Services
+@using Blocktrust.CredentialWorkflow.Web.Components.Layout.TopBarComponents
+@inject NavigationManager NavigationManager
+@inject AppStateService AppStateService
+
+<div class="flex justify-between items-center bg-slate-700 h-16 px-6">
+    <Logo/>
+    <Breadcrumb/>
+    <Login/>
+</div>
+
+@code {
+    private string? currentUrl;
+}

@@ -1,0 +1,78 @@
+﻿@page "/Account/Manage"
+
+@using System.ComponentModel.DataAnnotations
+@using Blocktrust.CredentialWorkflow.Core.Entities.Identity
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Profile</PageTitle>
+
+<StatusMessage/>
+
+<div class="container mx-auto">
+    <div class="mx-auto w-1/2 bg-gray-100 p-4 rounded-xl mt-10">
+        <div class="flex flex-col content-between items-center justify-between">
+            <h2 class="font-museo text-2xl mb-4">Profile</h2>
+            <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+                <DataAnnotationsValidator/>
+                <ValidationSummary class="font-light text-red-500" role="alert"/>
+                <div class="">
+                    <input type="text" value="@username" class="" placeholder="Please choose your username." disabled/>
+                    <label for="username" class="pl-6 font-light">Username</label>
+                </div>
+                <div class="">
+                    <InputText @bind-Value="Input.PhoneNumber" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Please enter your phone number."/>
+                    <label for="phone-number" class="pl-6 font-light">Phone number</label>
+                    <ValidationMessage For="() => Input.PhoneNumber" class="font-light text-red-500"/>
+                </div>
+                <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Save</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? phoneNumber;
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+
+        Input.PhoneNumber ??= phoneNumber;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (Input.PhoneNumber != phoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            }
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Phone]
+        [Display(Name = "Phone number")]
+        public string? PhoneNumber { get; set; }
+    }
+
+}

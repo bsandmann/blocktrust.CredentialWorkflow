@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+@layout AccountLayout
+
+@* <h1>Manage your account</h1> *@
+
+<div>
+    @* <hr /> *@
+    <div class="flex flex-row">
+        <div class="w-64 bg-gray-100 nodegraph">
+            <ManageNavMenu/>
+        </div>
+        <div class="grow">
+            @Body
+        </div>
+    </div>
+</div>
