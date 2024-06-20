@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
+using Domain.Tenant;
 using Microsoft.EntityFrameworkCore;
 using Workflow;
 
@@ -22,4 +23,15 @@ public record TenantEntity
     /// A tenant can have many application users
     /// </summary>
     public IList<ApplicationUser> ApplicationUsers { get; init; }
+    
+    public Tenant Map()
+    {
+        return new Tenant()
+        {
+            Name = this.Name,
+            CreatedUtc = this.CreatedUtc,
+            TenantId = this.TenantEntityId,
+            WorkflowEntities = this.WorkflowEntities.Select(p=>p.Map()).ToList()
+        };
+    }
 }

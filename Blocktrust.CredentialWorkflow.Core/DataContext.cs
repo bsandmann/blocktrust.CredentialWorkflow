@@ -1,8 +1,11 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core;
 
 using System.Text.Json;
+using Domain.Outcome;
 using Entities.Identity;
+using Entities.Outcome;
 using Entities.Tenant;
+using Entities.Workflow;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -43,8 +46,9 @@ public class DataContext : IdentityDbContext<ApplicationUser>
     public DataContext(DbContextOptions<DataContext> options)
         : base(options){}
 
-    // Tenants
     public DbSet<TenantEntity> TenantEntities { get; set; }
+    public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
+    public DbSet<OutcomeEntity> OutcomeEntities { get; set; }
 
     /// <summary>
     /// Setup

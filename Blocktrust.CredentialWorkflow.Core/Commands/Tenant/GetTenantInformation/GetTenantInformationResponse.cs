@@ -1,6 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation;
 
-using Blocktrust.CredentialWorkflow.Core.Models;
+using Domain.Tenant;
 
 public record GetTenantInformationResponse
 {

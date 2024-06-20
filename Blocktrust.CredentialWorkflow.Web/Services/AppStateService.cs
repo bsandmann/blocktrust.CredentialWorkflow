@@ -2,7 +2,7 @@
 
 using Common;
 using Core.Commands.Tenant.GetTenantInformation;
-using Core.Models;
+using Core.Domain.Tenant;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 
