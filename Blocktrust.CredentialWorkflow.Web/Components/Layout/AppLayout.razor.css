@@ -1,11 +1,12 @@
-.main-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
+/*.main-layout {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    height: 100vh;*/
+/*}*/
 
 .main-content {
-    overflow: hidden; /* Prevents scrolling */
+    /*flex-direction: row;*/
+    /*overflow: hidden; !* Prevents scrolling *!*/
 }
 
 #blazor-error-ui {

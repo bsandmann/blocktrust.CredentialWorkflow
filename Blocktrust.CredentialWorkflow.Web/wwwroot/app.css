@@ -626,10 +626,6 @@ video {
   margin-top: 1rem;
 }
 
-.mt-6 {
-  margin-top: 1.5rem;
-}
-
 .mt-8 {
   margin-top: 2rem;
 }
@@ -658,8 +654,8 @@ video {
   width: 50%;
 }
 
-.w-2\/3 {
-  width: 66.666667%;
+.w-48 {
+  width: 12rem;
 }
 
 .w-64 {
@@ -2111,9 +2107,18 @@ a {
   z-index: 50;
 }
 
+.nodegraph {
+  height: calc(100vh - 65px);
+}
+
 .hover\:bg-slate-500:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(100 116 139 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-zinc-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(228 228 231 / var(--tw-bg-opacity));
 }
 
 .hover\:text-slate-500:hover {

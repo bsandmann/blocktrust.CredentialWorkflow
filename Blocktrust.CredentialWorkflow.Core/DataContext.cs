@@ -9,20 +9,39 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.UserSecrets;
+
+public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
+{
+    public DataContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
+
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),"../Blocktrust.CredentialWorkflow.Web"))
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        optionsBuilder
+            .UseNpgsql(connectionString)
+            .EnableSensitiveDataLogging(false)
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
+        return new DataContext(optionsBuilder.Options);
+    }
+}
 
 public class DataContext : IdentityDbContext<ApplicationUser>
 {
-    private readonly IConfiguration _configuration;
-
     /// <summary>
     /// Represents the data context for the application's storage.
     /// </summary
     /// 
-    public DataContext(DbContextOptions<DataContext> options, IConfiguration configuration)
-        : base(options)
-    {
-        _configuration = configuration;
-    }
+    public DataContext(DbContextOptions<DataContext> options)
+        : base(options){}
 
     // Tenants
     public DbSet<TenantEntity> TenantEntities { get; set; }

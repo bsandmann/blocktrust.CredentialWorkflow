@@ -17,3 +17,7 @@ a {
 .has-tooltip:hover .tooltip {
     @apply visible z-50
 }
+
+.nodegraph {
+    height: calc(100vh - 65px);
+}

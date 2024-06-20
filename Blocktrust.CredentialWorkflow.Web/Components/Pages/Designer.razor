@@ -1,0 +1,37 @@
+﻿@page "/designer"
+@using Blocktrust.CredentialWorkflow.Web.Components.Layout
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMediator Mediator
+@inject AppStateService AppStateService
+@inject ILogger<Overview> Logger
+@inject NavigationManager NavigationManager
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@layout AppLayout
+
+<PageTitle>Blocktrust Credential Workflow Platform</PageTitle>
+@if (AppStateService.IsInitialized)
+{
+    <p>This is the Designer page</p> 
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+
+    private readonly CancellationTokenSource cts = new CancellationTokenSource();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AppStateService.IsInitialized)
+        {
+            await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
+        }
+    }
+}

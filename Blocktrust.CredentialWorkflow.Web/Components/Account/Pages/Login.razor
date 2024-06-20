@@ -90,7 +90,7 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            RedirectManager.RedirectTo("Tenant");
+            RedirectManager.RedirectTo("Overview");
         }
         else if (result.RequiresTwoFactor)
         {
