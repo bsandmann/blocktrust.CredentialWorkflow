@@ -1,6 +1,6 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.CreateTenant;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateTenant;
 
-using Entities.Tenants;
+using Entities.Tenant;
 using FluentResults;
 using MediatR;
 

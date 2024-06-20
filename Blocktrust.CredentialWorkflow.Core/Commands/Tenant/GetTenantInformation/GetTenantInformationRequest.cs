@@ -1,4 +1,4 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.GetTenantInformation;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation;
 
 using FluentResults;
 using MediatR;

@@ -1,8 +1,9 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Entities.Tenants;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
 
 using System.ComponentModel.DataAnnotations;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
+using Workflow;
 
 public record TenantEntity
 {
@@ -13,17 +14,12 @@ public record TenantEntity
     public DateTime CreatedUtc { get; init; }
 
     /// <summary>
-    /// A tenant can have many pools
+    /// A tenant can have many workflows
     /// </summary>
-    // public IList<PoolEntity> PoolEntities { get; init; }
+    public IList<WorkflowEntity> WorkflowEntities { get; init; }
 
     /// <summary>
     /// A tenant can have many application users
     /// </summary>
     public IList<ApplicationUser> ApplicationUsers { get; init; }
-
-    // /// <summary>
-    // /// Configured trust registries for this tenant
-    // /// </summary>
-    // public IList<TrustRegistryEntity> TrustRegistryEntities { get; init; }
 }

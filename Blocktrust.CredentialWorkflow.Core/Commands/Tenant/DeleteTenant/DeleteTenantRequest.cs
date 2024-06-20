@@ -1,4 +1,4 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.DeleteTenant;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.DeleteTenant;
 
 using FluentResults;
 using MediatR;

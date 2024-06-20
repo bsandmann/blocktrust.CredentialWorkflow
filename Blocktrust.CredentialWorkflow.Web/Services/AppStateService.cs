@@ -1,7 +1,7 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Web.Services;
 
 using Common;
-using Core.Commands.GetTenantInformation;
+using Core.Commands.Tenant.GetTenantInformation;
 using Core.Models;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;

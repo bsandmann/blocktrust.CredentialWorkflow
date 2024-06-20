@@ -2,7 +2,7 @@
 
 using System.Text.Json;
 using Entities.Identity;
-using Entities.Tenants;
+using Entities.Tenant;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;

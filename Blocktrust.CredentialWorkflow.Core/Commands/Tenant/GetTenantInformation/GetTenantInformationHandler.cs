@@ -1,9 +1,9 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.GetTenantInformation;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation;
 
+using Blocktrust.CredentialWorkflow.Core.Models;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationRequest, Result<GetTenantInformationResponse>>
 {
