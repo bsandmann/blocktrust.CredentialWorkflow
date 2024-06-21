@@ -99,51 +99,51 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
                         }
                     }
                 },
-                Outputs = new Dictionary<Guid, Output>
-                {
-                    {
-                        triggerId, 
-                        new Output
-                        {
-                            Type = OutputType.Object,
-                            Id = Guid.NewGuid(),
-                            Value = new
-                            {
-                                status = "Succeeded",
-                                message = "Incoming request processed successfully"
-                            }
-                        }
-                    },
-                    {
-                        issuanceActionId,
-                        new Output
-                        {
-                            Type = OutputType.Object,
-                            Id = Guid.NewGuid(),
-                            Value = new
-                            {
-                                status = "Succeeded",
-                                message = "Credential issued successfully",
-                                credentialId = "vc:example:123456789"
-                            }
-                        }
-                    },
-                    {
-                        outgoingRequestActionId,
-                        new Output
-                        {
-                            Type = OutputType.Object,
-                            Id = Guid.NewGuid(),
-                            Value = new
-                            {
-                                status = "Succeeded",
-                                message = "Credential sent successfully",
-                                httpStatus = 200,
-                                responseBody = "{\"received\": true, \"message\": \"Credential stored successfully\"}"
-                            }
-                        }
-                    }
-                }
+                // Outputs = new Dictionary<Guid, Output>
+                // {
+                //     {
+                //         triggerId, 
+                //         new Output
+                //         {
+                //             Type = OutputType.Object,
+                //             Id = Guid.NewGuid(),
+                //             Value = new
+                //             {
+                //                 status = "Succeeded",
+                //                 message = "Incoming request processed successfully"
+                //             }
+                //         }
+                //     },
+                //     {
+                //         issuanceActionId,
+                //         new Output
+                //         {
+                //             Type = OutputType.Object,
+                //             Id = Guid.NewGuid(),
+                //             Value = new
+                //             {
+                //                 status = "Succeeded",
+                //                 message = "Credential issued successfully",
+                //                 credentialId = "vc:example:123456789"
+                //             }
+                //         }
+                //     },
+                //     {
+                //         outgoingRequestActionId,
+                //         new Output
+                //         {
+                //             Type = OutputType.Object,
+                //             Id = Guid.NewGuid(),
+                //             Value = new
+                //             {
+                //                 status = "Succeeded",
+                //                 message = "Credential sent successfully",
+                //                 httpStatus = 200,
+                //                 responseBody = "{\"received\": true, \"message\": \"Credential stored successfully\"}"
+                //             }
+                //         }
+                //     }
+                // }
             };
         }
     }

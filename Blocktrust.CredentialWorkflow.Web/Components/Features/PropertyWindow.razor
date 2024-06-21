@@ -1,0 +1,168 @@
+﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
+@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
+
+<div class="bg-white p-4 rounded-lg shadow-md">
+    @if (SelectedItem == null)
+    {
+        <h3 class="text-lg font-bold mb-2">Create new Action/Trigger</h3>
+        <div class="mb-4">
+            <h4 class="text-md font-semibold mb-2">Triggers:</h4>
+            <ul class="list-disc list-inside">
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.IncomingRequest)">Incoming Request</button>
+                </li>
+                <!-- Add other trigger types here -->
+            </ul>
+        </div>
+        <div>
+            <h4 class="text-md font-semibold mb-2">Actions:</h4>
+            <ul class="list-disc list-inside">
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialIssuance)">Credential Issuance</button>
+                </li>
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.OutgoingRequest)">Outgoing Request</button>
+                </li>
+                <!-- Add other action types here -->
+            </ul>
+        </div>
+    }
+    else if (SelectedItem is Trigger trigger)
+    {
+        <h3 class="text-lg font-bold mb-2">Trigger Properties</h3>
+        <p>
+            <strong>Type:</strong> @trigger.Type
+        </p>
+        @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
+        {
+            <p>
+                <strong>Method:</strong> <input @bind="incomingRequest.Method"/>
+            </p>
+            <p>
+                <strong>URI:</strong> <input @bind="incomingRequest.Uri"/>
+            </p>
+            <p>
+                <strong>Headers:</strong>
+            </p>
+            <ul>
+                @foreach (var header in incomingRequest.Headers)
+                {
+                    <li>@header.Key: <input @bind="incomingRequest.Headers[header.Key]"/></li>
+                }
+            </ul>
+        }
+    }
+    else if (SelectedItem is Action action)
+    {
+        <h3 class="text-lg font-bold mb-2">Action Properties</h3>
+        <p>
+            <strong>Type:</strong> @action.Type
+        </p>
+        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
+        {
+            <p>
+                <strong>Subject:</strong> <input @bind="credentialIssuance.Subject"/>
+            </p>
+            <p>
+                <strong>Issuer:</strong> <input @bind="credentialIssuance.Issuer"/>
+            </p>
+            <p>
+                <strong>Claims:</strong>
+            </p>
+            <ul>
+                @foreach (var claim in credentialIssuance.Claims)
+                {
+                    <li>@claim.Key: <input @bind="credentialIssuance.Claims[claim.Key]"/></li>
+                }
+            </ul>
+        }
+        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
+        {
+            <p>
+                <strong>Method:</strong> <input @bind="outgoingRequest.Method"/>
+            </p>
+            <p>
+                <strong>URI:</strong> <input @bind="outgoingRequest.Uri"/>
+            </p>
+            <p>
+                <strong>Headers:</strong>
+            </p>
+            <ul>
+                @foreach (var header in outgoingRequest.Headers)
+                {
+                    <li>@header.Key: <input @bind="outgoingRequest.Headers[header.Key]"/></li>
+                }
+            </ul>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public object? SelectedItem { get; set; }
+
+    [Parameter] public EventCallback<object> OnItemCreated { get; set; }
+
+    private async Task CreateNewItem(object itemType)
+    {
+        object newItem;
+
+        if (itemType is ETriggerType triggerType)
+        {
+            newItem = new Trigger
+            {
+                Type = triggerType,
+                Input = new TriggerInputIncomingRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "GET",
+                    Uri = "/api/example",
+                    Body = null,
+                    Headers = new Dictionary<string, string>()
+                }
+            };
+        }
+        else if (itemType is EActionType actionType)
+        {
+            if (actionType == EActionType.CredentialIssuance)
+            {
+                newItem = new Action
+                {
+                    Type = actionType,
+                    Input = new ActionInputCredentialIssuance
+                    {
+                        Id = Guid.NewGuid(),
+                        Subject = "example_subject",
+                        Issuer = "example_issuer",
+                        Claims = new Dictionary<string, object>()
+                    },
+                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+                };
+            }
+            else // OutgoingRequest
+            {
+                newItem = new Action
+                {
+                    Type = actionType,
+                    Input = new ActionInputOutgoingRequest
+                    {
+                        Id = Guid.NewGuid(),
+                        Method = "GET",
+                        Uri = "https://example.com/api",
+                        Body = "",
+                        Headers = new Dictionary<string, string>()
+                    },
+                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+                };
+            }
+        }
+        else
+        {
+            throw new ArgumentException("Invalid item type");
+        }
+
+        await OnItemCreated.InvokeAsync(newItem);
+    }
+
+}

@@ -2,8 +2,8 @@
 @inject NavigationManager NavigationManager
 @inject AppStateService AppStateService
 
-<div class="bg-gray-100 flex w-48 left-Nav-Menu">
-    <div class="flex flex-col">
+<div class="bg-gray-100 flex w-48 left-Nav-Menu border-r-2 border-slate-200">
+    <div class="flex flex-col w-full">
         <NavLink class="@ActivePage("Workflows")" href="Workflow" Match="NavLinkMatch.All">Workflows</NavLink>
         <NavLink class="@ActivePage("Designer")" href="Designer" Match="NavLinkMatch.All">Designer</NavLink>
         <NavLink class="@ActivePage("Logs")" href="Log" Match="NavLinkMatch.All">Logs</NavLink>
@@ -13,6 +13,6 @@
 @code {
     private string ActivePage(string page)
     {
-        return NavigationManager.Uri.Contains(page, StringComparison.InvariantCultureIgnoreCase) ? "w-48 p-2 pl-4 bg-zinc-200 cursor-pointer" : "w-48 p-2 pl-4 hover:bg-zinc-200 cursor-pointer";
+        return NavigationManager.Uri.Contains(page, StringComparison.InvariantCultureIgnoreCase) ? "p-2 pl-4 bg-zinc-200 cursor-pointer" : "p-2 pl-4 hover:bg-zinc-200 cursor-pointer";
     }
 }

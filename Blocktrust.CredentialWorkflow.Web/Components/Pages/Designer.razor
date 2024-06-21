@@ -13,6 +13,7 @@
 @using Blocktrust.CredentialWorkflow.Web.Services
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
+@using Blocktrust.CredentialWorkflow.Web.Components.Features
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -28,7 +29,7 @@
 {
     <div class="flex flex-col h-screen">
         <!-- Top bar -->
-        <div class="bg-gray-100 p-4 flex items-center flex-row">
+        <div class="bg-gray-100 p-4 flex items-center flex-row border-b-2 border-slate-200">
             @if (isEditing)
             {
                 <input type="text" placeholder="Enter workflow name" class="mr-2 px-2 py-1 border rounded" @bind="workflowName"/>
@@ -44,22 +45,22 @@
                 </select>
                 <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="EditWorkflow">Edit</button>
             }
+            <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="CreateNewWorkflow">Create New</button>
+            <div class="flex-grow"></div>
             @if (currentWorkflow is not null)
             {
-                <button class="bg-blue-500 text-white ml-4 px-4 py-1 rounded" @onclick="RunWorkflow">Run</button>
+                <button class="bg-green-500 text-white ml-4 px-4 py-1 rounded" @onclick="RunWorkflow">Run</button>
             }
-            <div class="flex-grow"></div>
-            <button class="bg-green-500 text-white px-4 py-1 rounded" @onclick="CreateNewWorkflow">Create New Workflow</button>
         </div>
 
         <!-- Main content area -->
         <div class="flex-grow flex flex-row">
             <div class="flex-grow bg-white p-4">
-                <!-- Main content goes here -->
+                <WorkflowDesigner @ref="workflowDesigner" Workflow="@currentWorkflow" OnItemSelected="HandleItemSelected"/>
             </div>
 
-            <div class="w-[200px] bg-gray-200 p-4">
-                <!-- Properties content goes here -->
+            <div class="bg-gray-200 p-4 w-1/4">
+                <PropertyWindow SelectedItem="@selectedItem" OnItemCreated="HandleItemCreated"/>
             </div>
         </div>
     </div>
@@ -77,6 +78,8 @@ else
     private ProcessFlow? currentProcessFlow;
     private bool isEditing = false;
     private Guid? selectedWorkflowId;
+    private object? selectedItem;
+    private WorkflowDesigner? workflowDesigner;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,7 +113,7 @@ else
         var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
         if (workflowResult.IsFailed)
         {
-            // TODO: Show error message
+// TODO: Show error message
             return;
         }
 
@@ -127,7 +130,7 @@ else
         var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId));
         if (createResult.IsFailed)
         {
-            // TODO: Show error message
+// TODO: Show error message
             return;
         }
 
@@ -147,7 +150,7 @@ else
             });
         }
 
-        // Navigate to the new workflow's URL
+// Navigate to the new workflow's URL
         NavigationManager.NavigateTo($"/designer/{currentWorkflow.WorkflowId}", forceLoad: false);
 
         StateHasChanged();
@@ -165,7 +168,7 @@ else
             var updateResult = await Mediator.Send(new UpdateWorkflowRequest(currentWorkflow.WorkflowId, workflowName, currentWorkflow.WorkflowState, currentWorkflow.ProcessFlow));
             if (updateResult.IsFailed)
             {
-                // TODO: Show error message
+// TODO: Show error message
                 return;
             }
 
@@ -187,7 +190,7 @@ else
             var createResult = await Mediator.Send(new CreateOutcomeRequest(currentWorkflow.WorkflowId));
             if (createResult.IsFailed)
             {
-                // TODO: Show error message
+// TODO: Show error message
             }
         }
     }
@@ -201,5 +204,17 @@ else
         }
     }
 
-}
+    private void HandleItemSelected(object? item)
+    {
+        selectedItem = item;
+        StateHasChanged();
+    }
 
+    private void HandleItemCreated(object newItem)
+    {
+        workflowDesigner?.AddItem(newItem);
+        selectedItem = newItem;
+        StateHasChanged();
+    }
+
+}
