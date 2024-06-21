@@ -2,8 +2,10 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Text.Json;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Domain.Enums;
+using Domain.ProcessFlow;
 using Domain.Workflow;
 using Microsoft.EntityFrameworkCore;
 using Outcome;
@@ -20,8 +22,7 @@ public record WorkflowEntity
 
     public required EWorkflowState WorkflowState { get; set; }
 
-    [Unicode(false)] public string? ConfigurationJson { get; set; }
-
+    [Unicode(false)] public string? ProcessFlowJson { get; set; }
 
     // FK
     public TenantEntity TenantEntity { get; init; }
@@ -32,15 +33,22 @@ public record WorkflowEntity
 
     public Workflow Map()
     {
-        return new Workflow()
+        var workflow = new Workflow()
         {
             Name = this.Name,
             WorkflowState = this.WorkflowState,
             CreatedUtc = this.CreatedUtc,
             UpdatedUtc = this.UpdatedUtc,
-            ConfigurationJson = this.ConfigurationJson,
+            ProcessFlowJson = this.ProcessFlowJson,
             WorkflowId = this.WorkflowEntityId,
             TenantId = this.TenantEntityId,
         };
+
+        if (!string.IsNullOrEmpty(this.ProcessFlowJson))
+        {
+            workflow.ProcessFlow = JsonSerializer.Deserialize<ProcessFlow>(this.ProcessFlowJson);
+        }
+
+        return workflow;
     }
 }

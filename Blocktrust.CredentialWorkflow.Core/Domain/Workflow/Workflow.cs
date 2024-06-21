@@ -2,6 +2,7 @@
 
 using Enums;
 using Outcome;
+using ProcessFlow;
 using Tenant;
 
 public record Workflow
@@ -15,7 +16,9 @@ public record Workflow
 
     public required EWorkflowState WorkflowState { get; set; }
     
-    public string? ConfigurationJson { get; set; }
+    public string? ProcessFlowJson { get; set; }
+    
+    public ProcessFlow? ProcessFlow { get; set; }
     
     public Tenant Tenant { get; init; }
     public Guid TenantId { get; init; }

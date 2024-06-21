@@ -2,11 +2,12 @@
 @page "/designer/{workflowWorkflowId:guid}"
 @page "/designer/new"
 
+@using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
-@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetLatestUpdatedWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
@@ -35,7 +36,7 @@
             }
             else
             {
-                <select @bind="selectedWorkflowId" class="mr-2 px-2 py-1 border rounded">
+                <select @bind="selectedWorkflowId" @oninput="OnWorkflowSelectionChanged" class="mr-2 px-2 py-1 border rounded">
                     @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                     {
                         <option value="@workflow.WorkflowId">@workflow.Name</option>
@@ -73,6 +74,7 @@ else
     private readonly CancellationTokenSource cts = new CancellationTokenSource();
     private string? workflowName;
     private Core.Domain.Workflow.Workflow? currentWorkflow;
+    private ProcessFlow? currentProcessFlow;
     private bool isEditing = false;
     private Guid? selectedWorkflowId;
 
@@ -116,6 +118,7 @@ else
         workflowName = currentWorkflow.Name;
         selectedWorkflowId = currentWorkflow.WorkflowId;
         isEditing = false;
+
         StateHasChanged();
     }
 
@@ -159,7 +162,7 @@ else
     {
         if (currentWorkflow != null && !string.IsNullOrWhiteSpace(workflowName))
         {
-            var updateResult = await Mediator.Send(new UpdateWorkflowRequest(currentWorkflow.WorkflowId, workflowName, currentWorkflow.WorkflowState, currentWorkflow.ConfigurationJson));
+            var updateResult = await Mediator.Send(new UpdateWorkflowRequest(currentWorkflow.WorkflowId, workflowName, currentWorkflow.WorkflowState, currentWorkflow.ProcessFlow));
             if (updateResult.IsFailed)
             {
                 // TODO: Show error message
@@ -189,11 +192,14 @@ else
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+    private async Task OnWorkflowSelectionChanged(ChangeEventArgs e)
     {
-        if (selectedWorkflowId.HasValue && selectedWorkflowId != currentWorkflow?.WorkflowId)
+        if (Guid.TryParse(e.Value?.ToString(), out Guid selectedId))
         {
-            await LoadWorkflow(selectedWorkflowId.Value);
+            await LoadWorkflow(selectedId);
+            NavigationManager.NavigateTo($"/designer/{selectedId}", forceLoad: false);
         }
     }
+
 }
+

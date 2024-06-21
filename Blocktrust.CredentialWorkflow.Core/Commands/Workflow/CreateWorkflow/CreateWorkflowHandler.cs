@@ -1,11 +1,13 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow;
 
+using System.Text.Json;
 using Domain.Enums;
 using Domain.Workflow;
 using Entities.Workflow;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Samples;
 
 public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Result<Workflow>>
 {
@@ -37,6 +39,9 @@ public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Resu
             UpdatedUtc = DateTime.UtcNow,
             TenantEntityId = tenant.TenantEntityId,
             WorkflowState = EWorkflowState.Inactive,
+
+            // TODO demo
+            ProcessFlowJson = JsonSerializer.Serialize(SampleGenerator.GenerateSampleProcessFlow()),
         };
 
         await _context.WorkflowEntities.AddAsync(workflowEntity, cancellationToken);

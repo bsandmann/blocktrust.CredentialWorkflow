@@ -1,5 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow;
 
+using System.Text.Json;
 using Domain.Workflow;
 using FluentResults;
 using MediatR;
@@ -29,7 +30,10 @@ public class UpdateWorkflowHandler : IRequestHandler<UpdateWorkflowRequest, Resu
         workflow.UpdatedUtc = DateTime.UtcNow;
         workflow.Name = request.Name;
         workflow.WorkflowState = request.WorkflowState;
-        workflow.ConfigurationJson = request.ConfigurationJson;
+        if (request.ProcessFlow is not null)
+        {
+            workflow.ProcessFlowJson = JsonSerializer.Serialize(request.ProcessFlow);
+        }
 
         _context.WorkflowEntities.Update(workflow);
         await _context.SaveChangesAsync(cancellationToken);

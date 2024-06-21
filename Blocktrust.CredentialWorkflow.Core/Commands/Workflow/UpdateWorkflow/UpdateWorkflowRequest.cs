@@ -3,20 +3,21 @@
 using FluentResults;
 using MediatR;
 using Domain.Enums;
+using Domain.ProcessFlow;
 using Domain.Workflow;
 
 public class UpdateWorkflowRequest : IRequest<Result<Workflow>>
 {
-    public UpdateWorkflowRequest(Guid workflowId, string name, EWorkflowState workflowState, string? configurationJson)
+    public UpdateWorkflowRequest(Guid workflowId, string name, EWorkflowState workflowState, ProcessFlow? processFlow)
     {
         WorkflowId = workflowId;
         Name = name;
         WorkflowState = workflowState;
-        ConfigurationJson = configurationJson;
+        ProcessFlow = processFlow;
     }
 
     public Guid WorkflowId { get; }
     public string Name { get; }
     public EWorkflowState WorkflowState { get; }
-    public string? ConfigurationJson { get; }
+    public ProcessFlow? ProcessFlow { get; }
 }
