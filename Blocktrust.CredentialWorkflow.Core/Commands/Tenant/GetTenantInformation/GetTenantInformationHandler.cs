@@ -1,6 +1,7 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation;
 
 using Domain.Tenant;
+using Domain.Workflow;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,11 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                     TenantEntityId = p.TenantEntityId,
                     TenantName = p.Name,
                     ApplicationUserIds = p.ApplicationUsers.Select(q => q.Id),
-                 
+                    Worflows = p.WorkflowEntities.Select(q =>
+                        new
+                        {
+                            q.WorkflowEntityId, q.Name, q.UpdatedUtc
+                        })
                 })
             .FirstOrDefaultAsync(p => p.TenantEntityId == request.TenantEntityId, cancellationToken: cancellationToken);
         if (result is null)
@@ -38,6 +43,12 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                 Name = result.TenantName,
                 TenantId = request.TenantEntityId
             },
+            WorkflowSummaries = result.Worflows.Select(p => new WorkflowSummary()
+            {
+                Name = p.Name,
+                UpdatedUtc = p.UpdatedUtc,
+                WorkflowId = p.WorkflowEntityId
+            }).ToList()
         });
     }
 }

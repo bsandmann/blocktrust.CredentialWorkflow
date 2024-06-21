@@ -31,7 +31,6 @@ public record TenantEntity
             Name = this.Name,
             CreatedUtc = this.CreatedUtc,
             TenantId = this.TenantEntityId,
-            WorkflowEntities = this.WorkflowEntities.Select(p=>p.Map()).ToList()
         };
     }
 }

@@ -4,5 +4,6 @@ public enum EOutcomeState
 {
     NotStarted,
     Success,
-    FailedWithErrors
+    FailedWithErrors,
+    Running
 }

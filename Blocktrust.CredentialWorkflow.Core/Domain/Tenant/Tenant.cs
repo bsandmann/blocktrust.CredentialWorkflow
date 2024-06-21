@@ -9,9 +9,4 @@ public record Tenant
     public string Name { get; init; }
 
     public DateTime CreatedUtc { get; init; }
-
-    /// <summary>
-    /// A tenant can have many workflows
-    /// </summary>
-    public List<Workflow> WorkflowEntities { get; init; }
 }

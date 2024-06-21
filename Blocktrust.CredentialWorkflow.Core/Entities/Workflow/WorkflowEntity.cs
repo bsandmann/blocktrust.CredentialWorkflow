@@ -41,8 +41,6 @@ public record WorkflowEntity
             ConfigurationJson = this.ConfigurationJson,
             WorkflowId = this.WorkflowEntityId,
             TenantId = this.TenantEntityId,
-            Tenant = this.TenantEntity.Map(),
-            Outcomes = this.OutcomeEntities.Select(p => p.Map()).ToList()
         };
     }
 }

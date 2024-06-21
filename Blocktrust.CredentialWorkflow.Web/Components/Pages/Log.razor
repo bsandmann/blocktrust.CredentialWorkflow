@@ -1,0 +1,164 @@
+﻿@page "/log"
+@using Blocktrust.CredentialWorkflow.Web.Components.Layout
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes
+@using Blocktrust.CredentialWorkflow.Core.Domain.Outcome
+@using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMediator Mediator
+@inject AppStateService AppStateService
+@inject ILogger<Overview> Logger
+@inject NavigationManager NavigationManager
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@layout AppLayout
+
+<PageTitle>Blocktrust Credential Workflow Platform - Logs</PageTitle>
+
+@if (AppStateService.IsInitialized)
+{
+    <div class="flex flex-col h-screen">
+        <!-- Top bar -->
+        <div class="bg-gray-100 p-4 flex items-center">
+            <select @bind="selectedWorkflowId" @bind:after="LoadOutcomes" class="mr-2 px-2 py-1 border rounded">
+                @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
+                {
+                    <option value="@workflow.WorkflowId">@workflow.Name</option>
+                }
+            </select>
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-grow p-4 overflow-auto">
+            @if (outcomes.Any())
+            {
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left">State</th>
+                        <th class="px-4 py-2 text-left">Started</th>
+                        <th class="px-4 py-2 text-left">Ended</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var outcome in outcomes)
+                    {
+                        <tr @onclick="() => ToggleOutcomeDetails(outcome.OutcomeId)"
+                            class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
+                            <td class="border-t px-4 py-2">
+                                <span class="@GetOutcomeStateColor(outcome.OutcomeState)">
+                                    @outcome.OutcomeState
+                                </span>
+                            </td>
+                            <td class="border-t px-4 py-2">@outcome.StartedUtc?.ToString("g")</td>
+                            <td class="border-t px-4 py-2">@outcome.EndedUtc?.ToString("g")</td>
+                        </tr>
+                        @if (expandedOutcomeId == outcome.OutcomeId)
+                        {
+                            <tr>
+                                <td colspan="3" class="border-t px-4 py-2 bg-gray-50">
+                                    <div class="text-sm">
+                                        @if (outcome.OutcomeState == EOutcomeState.Success)
+                                        {
+                                            <p>
+                                                <strong>Outcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                            </p>
+                                        }
+                                        else if (outcome.OutcomeState == EOutcomeState.NotStarted)
+                                        {
+                                            <p>This operation did not start yet.</p> 
+                                        }
+                                        else
+                                        {
+                                            <p>
+                                                <strong>Outcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                            </p>
+                                            <p>
+                                                <strong>Error JSON:</strong> @(string.IsNullOrEmpty(outcome.ErrorJson) ? "N/A" : outcome.ErrorJson)
+                                            </p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-gray-600">No outcomes found for the selected workflow.</p>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <p class="text-center mt-8">Loading...</p>
+}
+
+@code {
+    private readonly CancellationTokenSource cts = new CancellationTokenSource();
+    private Guid? selectedWorkflowId;
+    private List<Outcome> outcomes = new List<Outcome>();
+    private Guid? expandedOutcomeId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AppStateService.IsInitialized)
+        {
+            await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
+        }
+
+        if (AppStateService.WorkflowSummaries.Any())
+        {
+            selectedWorkflowId = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First().WorkflowId;
+            await LoadOutcomes();
+        }
+    }
+
+    private async Task LoadOutcomes()
+    {
+        if (selectedWorkflowId.HasValue)
+        {
+            var outcomesResult = await Mediator.Send(new GetOutcomesRequest(selectedWorkflowId.Value));
+            if (outcomesResult.IsFailed)
+            {
+                Logger.LogError("Failed to fetch outcomes");
+                outcomes.Clear();
+            }
+            else
+            {
+                outcomes = outcomesResult.Value;
+            }
+
+            expandedOutcomeId = null;
+            StateHasChanged();
+        }
+    }
+
+    private string GetOutcomeStateColor(EOutcomeState state) => state switch
+    {
+        EOutcomeState.Success => "text-green-600",
+        EOutcomeState.FailedWithErrors => "text-red-600",
+        EOutcomeState.NotStarted => "text-gray-600",
+        EOutcomeState.Running => "text-blue-600",
+        _ => "text-gray-600"
+    };
+
+    private void ToggleOutcomeDetails(Guid outcomeId)
+    {
+        if (expandedOutcomeId == outcomeId)
+        {
+            expandedOutcomeId = null;
+        }
+        else
+        {
+            expandedOutcomeId = outcomeId;
+        }
+    }
+
+}

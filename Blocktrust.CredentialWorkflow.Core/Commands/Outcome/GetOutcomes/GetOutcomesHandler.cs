@@ -17,7 +17,7 @@ public class GetOutcomesHandler : IRequestHandler<GetOutcomesRequest, Result<Lis
     public async Task<Result<List<Outcome>>> Handle(GetOutcomesRequest request, CancellationToken cancellationToken)
     {
         var outcomeEntities = await _context.OutcomeEntities
-            .Include(o => o.WorkflowEntityId) // include related workflow if required
+            .Include(o => o.WorkflowEntity) // include related workflow if require
             .Where(o => o.WorkflowEntityId == request.WorkflowId)
             .ToListAsync(cancellationToken: cancellationToken);
 

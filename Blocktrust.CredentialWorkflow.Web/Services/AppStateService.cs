@@ -3,6 +3,7 @@
 using Common;
 using Core.Commands.Tenant.GetTenantInformation;
 using Core.Domain.Tenant;
+using Core.Domain.Workflow;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -11,6 +12,7 @@ public class AppStateService
     public bool IsInitialized { get; set; }
     public string? UserName { get; set; }
     public Tenant Tenant { get; private set; } = new Tenant();
+    public List<WorkflowSummary> WorkflowSummaries { get; private set; } = new List<WorkflowSummary>();
 
     public event Action? OnChange;
 
@@ -47,6 +49,7 @@ public class AppStateService
 
         this.UserName = username;
         this.Tenant = tenantInformationResult.Value.Tenant;
+        this.WorkflowSummaries = tenantInformationResult.Value.WorkflowSummaries;
         this.IsInitialized = true;
     }
 }

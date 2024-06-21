@@ -1,9 +1,10 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow;
 
+using Domain.Workflow;
 using FluentResults;
 using MediatR;
 
-public class CreateWorkflowRequest : IRequest<Result<Guid>>
+public class CreateWorkflowRequest : IRequest<Result<Workflow>>
 {
     /// <summary>
     /// Creates a new empty workflow for the tenant

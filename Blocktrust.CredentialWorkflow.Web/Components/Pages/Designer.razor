@@ -1,4 +1,13 @@
 ﻿@page "/designer"
+@page "/designer/{workflowWorkflowId:guid}"
+@page "/designer/new"
+
+@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetLatestUpdatedWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
 @using MediatR
@@ -16,7 +25,43 @@
 <PageTitle>Blocktrust Credential Workflow Platform</PageTitle>
 @if (AppStateService.IsInitialized)
 {
-    <p>This is the Designer page</p> 
+    <div class="flex flex-col h-screen">
+        <!-- Top bar -->
+        <div class="bg-gray-100 p-4 flex items-center flex-row">
+            @if (isEditing)
+            {
+                <input type="text" placeholder="Enter workflow name" class="mr-2 px-2 py-1 border rounded" @bind="workflowName"/>
+                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="SaveWorkflow">Save</button>
+            }
+            else
+            {
+                <select @bind="selectedWorkflowId" class="mr-2 px-2 py-1 border rounded">
+                    @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
+                    {
+                        <option value="@workflow.WorkflowId">@workflow.Name</option>
+                    }
+                </select>
+                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="EditWorkflow">Edit</button>
+            }
+            @if (currentWorkflow is not null)
+            {
+                <button class="bg-blue-500 text-white ml-4 px-4 py-1 rounded" @onclick="RunWorkflow">Run</button>
+            }
+            <div class="flex-grow"></div>
+            <button class="bg-green-500 text-white px-4 py-1 rounded" @onclick="CreateNewWorkflow">Create New Workflow</button>
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-grow flex flex-row">
+            <div class="flex-grow bg-white p-4">
+                <!-- Main content goes here -->
+            </div>
+
+            <div class="w-[200px] bg-gray-200 p-4">
+                <!-- Properties content goes here -->
+            </div>
+        </div>
+    </div>
 }
 else
 {
@@ -24,14 +69,131 @@ else
 }
 
 @code {
-
+    [Parameter] public Guid? WorkflowWorkflowId { get; set; }
     private readonly CancellationTokenSource cts = new CancellationTokenSource();
+    private string? workflowName;
+    private Core.Domain.Workflow.Workflow? currentWorkflow;
+    private bool isEditing = false;
+    private Guid? selectedWorkflowId;
 
     protected override async Task OnInitializedAsync()
     {
         if (!AppStateService.IsInitialized)
         {
             await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
+        }
+
+        var currentUrl = NavigationManager.Uri;
+        if (currentUrl.EndsWith("/designer/new"))
+        {
+            await CreateNewWorkflow();
+        }
+        else if (WorkflowWorkflowId is not null)
+        {
+            await LoadWorkflow(WorkflowWorkflowId.Value);
+        }
+        else if (!AppStateService.WorkflowSummaries.Any())
+        {
+            await CreateNewWorkflow();
+        }
+        else
+        {
+            var latestWorkflow = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First();
+            await LoadWorkflow(latestWorkflow.WorkflowId);
+        }
+    }
+
+    private async Task LoadWorkflow(Guid workflowId)
+    {
+        var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
+        if (workflowResult.IsFailed)
+        {
+            // TODO: Show error message
+            return;
+        }
+
+        currentWorkflow = workflowResult.Value;
+        workflowName = currentWorkflow.Name;
+        selectedWorkflowId = currentWorkflow.WorkflowId;
+        isEditing = false;
+        StateHasChanged();
+    }
+
+    private async Task CreateNewWorkflow()
+    {
+        var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId));
+        if (createResult.IsFailed)
+        {
+            // TODO: Show error message
+            return;
+        }
+
+        currentWorkflow = createResult.Value;
+        workflowName = currentWorkflow.Name;
+        selectedWorkflowId = currentWorkflow.WorkflowId;
+        isEditing = true;
+
+        var workflowInAppStateService = AppStateService.WorkflowSummaries.FirstOrDefault(p => p.WorkflowId == currentWorkflow.WorkflowId);
+        if (workflowInAppStateService is null)
+        {
+            AppStateService.WorkflowSummaries.Add(new WorkflowSummary()
+            {
+                Name = createResult.Value.Name,
+                UpdatedUtc = createResult.Value.UpdatedUtc,
+                WorkflowId = createResult.Value.WorkflowId
+            });
+        }
+
+        // Navigate to the new workflow's URL
+        NavigationManager.NavigateTo($"/designer/{currentWorkflow.WorkflowId}", forceLoad: false);
+
+        StateHasChanged();
+    }
+
+    private void EditWorkflow()
+    {
+        isEditing = true;
+    }
+
+    private async Task SaveWorkflow()
+    {
+        if (currentWorkflow != null && !string.IsNullOrWhiteSpace(workflowName))
+        {
+            var updateResult = await Mediator.Send(new UpdateWorkflowRequest(currentWorkflow.WorkflowId, workflowName, currentWorkflow.WorkflowState, currentWorkflow.ConfigurationJson));
+            if (updateResult.IsFailed)
+            {
+                // TODO: Show error message
+                return;
+            }
+
+            var workflowInAppStateService = AppStateService.WorkflowSummaries.FirstOrDefault(p => p.WorkflowId == currentWorkflow.WorkflowId);
+            if (workflowInAppStateService is not null)
+            {
+                workflowInAppStateService.Name = workflowName;
+            }
+
+            isEditing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RunWorkflow()
+    {
+        if (currentWorkflow is not null)
+        {
+            var createResult = await Mediator.Send(new CreateOutcomeRequest(currentWorkflow.WorkflowId));
+            if (createResult.IsFailed)
+            {
+                // TODO: Show error message
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (selectedWorkflowId.HasValue && selectedWorkflowId != currentWorkflow?.WorkflowId)
+        {
+            await LoadWorkflow(selectedWorkflowId.Value);
         }
     }
 }

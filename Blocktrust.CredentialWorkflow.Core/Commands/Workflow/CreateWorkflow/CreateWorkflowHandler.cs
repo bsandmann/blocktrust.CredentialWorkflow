@@ -1,12 +1,13 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow;
 
 using Domain.Enums;
+using Domain.Workflow;
 using Entities.Workflow;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Result<Guid>>
+public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Result<Workflow>>
 {
     private readonly DataContext _context;
 
@@ -15,7 +16,7 @@ public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Resu
         _context = context;
     }
 
-    public async Task<Result<Guid>> Handle(CreateWorkflowRequest request, CancellationToken cancellationToken)
+    public async Task<Result<Workflow>> Handle(CreateWorkflowRequest request, CancellationToken cancellationToken)
     {
         _context.ChangeTracker.Clear();
         _context.ChangeTracker.AutoDetectChangesEnabled = false;
@@ -41,6 +42,6 @@ public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Resu
         await _context.WorkflowEntities.AddAsync(workflowEntity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(workflowEntity.WorkflowEntityId);
+        return Result.Ok(workflowEntity.Map());
     }
 }
