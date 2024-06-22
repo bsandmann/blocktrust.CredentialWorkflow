@@ -2,7 +2,6 @@
 @page "/designer/{workflowWorkflowId:guid}"
 @page "/designer/new"
 
-@using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
@@ -14,6 +13,7 @@
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -32,24 +32,34 @@
         <div class="bg-gray-100 p-4 flex items-center flex-row border-b-2 border-slate-200">
             @if (isEditing)
             {
-                <input type="text" placeholder="Enter workflow name" class="mr-2 px-2 py-1 border rounded" @bind="workflowName"/>
-                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="SaveWorkflow">Save</button>
+                <input type="text" placeholder="Enter workflow name" class="w-48 mr-2 px-2 py-1 border rounded" @bind="workflowName"/>
+                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="SaveWorkflow">Ok</button>
             }
             else
             {
-                <select @bind="selectedWorkflowId" @oninput="OnWorkflowSelectionChanged" class="mr-2 px-2 py-1 border rounded">
+                <select @bind="selectedWorkflowId" @oninput="OnWorkflowSelectionChanged" class="w-48 mr-2 px-2 py-1 border rounded">
                     @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                     {
                         <option value="@workflow.WorkflowId">@workflow.Name</option>
                     }
                 </select>
-                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="EditWorkflow">Edit</button>
+                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="EditWorkflow">
+                    <span class="material-symbols-outlined text-sm">edit</span>
+                </button>
             }
-            <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="CreateNewWorkflow">Create New</button>
+            <button class="bg-blue-500 text-white px-4 ml-2 py-1 rounded" @onclick="CreateNewWorkflow">Create New</button>
             <div class="flex-grow"></div>
             @if (currentWorkflow is not null)
             {
+                <button class="bg-green-500 text-white ml-4 px-4 py-1 rounded" @onclick="SaveWorkflow">Save</button>
+            }
+            @if (currentWorkflow is not null && currentWorkflow.ProcessFlow is not null && currentWorkflow.ProcessFlow.Triggers.Any() && currentWorkflow.ProcessFlow.Actions.Any())
+            {
                 <button class="bg-green-500 text-white ml-4 px-4 py-1 rounded" @onclick="RunWorkflow">Run</button>
+            }
+            else
+            {
+                <button class="bg-gray-500 text-white ml-4 px-4 py-1 rounded" disabled="disabled" >Run</button>
             }
         </div>
 

@@ -12,7 +12,7 @@ public class AppStateService
     public bool IsInitialized { get; set; }
     public string? UserName { get; set; }
     public Tenant Tenant { get; private set; } = new Tenant();
-    public List<WorkflowSummary> WorkflowSummaries { get; private set; } = new List<WorkflowSummary>();
+    public List<WorkflowSummary> WorkflowSummaries { get; set; } = new List<WorkflowSummary>();
 
     public event Action? OnChange;
 

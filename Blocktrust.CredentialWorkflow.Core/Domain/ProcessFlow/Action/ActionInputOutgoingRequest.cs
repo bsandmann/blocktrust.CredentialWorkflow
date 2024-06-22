@@ -4,8 +4,6 @@ using System.Text.Json.Serialization;
 
 public class ActionInputOutgoingRequest : ActionInput
 {
-    [JsonPropertyName("id")] public Guid Id { get; set; }
-
     [JsonPropertyName("method")] public string Method { get; set; }
 
     [JsonPropertyName("uri")] public string Uri { get; set; }

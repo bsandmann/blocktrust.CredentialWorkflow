@@ -62,7 +62,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
                                 Id = Guid.NewGuid(),
                                 Subject = "did:example:123456789abcdefghi",
                                 Issuer = "did:example:issuer987654321",
-                                Claims = new Dictionary<string, object>
+                                Claims = new Dictionary<string, string>
                                 {
                                     { "name", "Alice Smith" },
                                     { "dateOfBirth", "1990-05-15" },

@@ -1,7 +1,6 @@
 using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Blocktrust.CredentialWorkflow.Web.Common;
-using Blocktrust.CredentialWorkflow.Web.Components;
 using Blocktrust.CredentialWorkflow.Web.Components.Account;
 using Blocktrust.CredentialWorkflow.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;

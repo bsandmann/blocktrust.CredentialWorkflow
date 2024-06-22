@@ -4,11 +4,10 @@ using System.Text.Json.Serialization;
 
 public class ActionInputCredentialIssuance : ActionInput
 {
-    [JsonPropertyName("id")] public Guid Id { get; set; }
-
     [JsonPropertyName("subject")] public string Subject { get; set; }
 
     [JsonPropertyName("issuer")] public string Issuer { get; set; }
 
-    [JsonPropertyName("claims")] public Dictionary<string, object>? Claims { get; set; }
+    // Todo That should actually be a dictionary of string, object, but problems in the interface
+    [JsonPropertyName("claims")] public Dictionary<string, string>? Claims { get; set; }
 }

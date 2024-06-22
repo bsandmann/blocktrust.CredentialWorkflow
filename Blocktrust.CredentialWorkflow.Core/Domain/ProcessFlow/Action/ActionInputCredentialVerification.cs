@@ -4,8 +4,6 @@ using System.Text.Json.Serialization;
 
 public class ActionInputCredentialVerification : ActionInput
 {
-    [JsonPropertyName("id")] public Guid Id { get; set; }
-
     [JsonPropertyName("checkExpiration")] public bool CheckExpiration { get; set; }
 
     [JsonPropertyName("checkSignature")] public bool CheckSignature { get; set; }
@@ -19,6 +17,8 @@ public class ActionInputCredentialVerification : ActionInput
     [JsonPropertyName("requiredSchema")] public Uri? RequiredSchema { get; set; }
 
     [JsonPropertyName("checkClaims")] public bool CheckClaims { get; set; }
+    
+    // Todo That should actually be a dictionary of string, object, but problems in the interface
 
-    [JsonPropertyName("requiredClaims")] public Dictionary<string, object>? RequiredClaims { get; set; }
+    [JsonPropertyName("requiredClaims")] public Dictionary<string, string>? RequiredClaims { get; set; }
 }

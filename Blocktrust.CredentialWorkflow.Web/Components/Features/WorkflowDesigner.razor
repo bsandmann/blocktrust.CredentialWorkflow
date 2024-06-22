@@ -8,15 +8,19 @@
     <div class="flex flex-col items-center">
         @foreach (var item in flowItems)
         {
-            <div class="w-80 h-52 bg-white shadow-md rounded-lg mb-4 p-4 flex flex-col cursor-pointer @(item == SelectedItem ? "border-2 border-blue-500" : "")" 
+            <div class="w-80 h-52 bg-white shadow-md rounded-lg mb-4 p-4 flex flex-col cursor-pointer @(item == SelectedItem ? "border-2 border-blue-500" : "")"
                  @onclick="() => SelectItem(item)">
                 @if (item is Trigger trigger)
                 {
                     <h3 class="text-lg font-bold mb-2">Trigger: @trigger.Type</h3>
                     @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
                     {
-                        <p><strong>Method:</strong> @incomingRequest.Method</p>
-                        <p><strong>URI:</strong> @incomingRequest.Uri</p>
+                        <p>
+                            <strong>Method:</strong> @incomingRequest.Method
+                        </p>
+                        <p>
+                            <strong>URI:</strong> @incomingRequest.Uri
+                        </p>
                     }
                 }
                 else if (item is Action action)
@@ -24,19 +28,27 @@
                     <h3 class="text-lg font-bold mb-2">Action: @action.Type</h3>
                     @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
                     {
-                        <p><strong>Subject:</strong> @credentialIssuance.Subject</p>
-                        <p><strong>Issuer:</strong> @credentialIssuance.Issuer</p>
+                        <p>
+                            <strong>Subject:</strong> @credentialIssuance.Subject
+                        </p>
+                        <p>
+                            <strong>Issuer:</strong> @credentialIssuance.Issuer
+                        </p>
                     }
                     else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
                     {
-                        <p><strong>Method:</strong> @outgoingRequest.Method</p>
-                        <p><strong>URI:</strong> @outgoingRequest.Uri</p>
+                        <p>
+                            <strong>Method:</strong> @outgoingRequest.Method
+                        </p>
+                        <p>
+                            <strong>URI:</strong> @outgoingRequest.Uri
+                        </p>
                     }
                 }
-                <button class="bg-red-500 text-white px-2 py-1 rounded mt-auto self-end" @onclick="() => RemoveItem(item)">Remove</button>
+                <button class="bg-red-500 text-white px-2 py-1 rounded mt-auto self-end" @onclick:stopPropagation="true" @onclick="() => RemoveItem(item)">Remove</button>
             </div>
         }
-        
+
         <div class="w-80 h-52 bg-white shadow-md rounded-lg mb-4 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100"
              @onclick="() => SelectItem(null)">
             <p class="text-lg font-bold text-center">Create new Action/Trigger</p>
@@ -45,11 +57,9 @@
 </div>
 
 @code {
-    [Parameter]
-    public Workflow? Workflow { get; set; }
+    [Parameter] public Workflow? Workflow { get; set; }
 
-    [Parameter]
-    public EventCallback<object?> OnItemSelected { get; set; }
+    [Parameter] public EventCallback<object?> OnItemSelected { get; set; }
 
     private List<object> flowItems = new List<object>();
     private object? SelectedItem { get; set; }
@@ -65,10 +75,16 @@
         }
     }
 
-    private void RemoveItem(object item)
+    private async Task RemoveItem(object item)
     {
+        SelectedItem = item;
         flowItems.Remove(item);
         UpdateProcessFlow();
+        if (item == SelectedItem)
+        {
+            await SelectItem(null);
+        }
+        StateHasChanged();
     }
 
     private void UpdateProcessFlow()

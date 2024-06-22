@@ -8,5 +8,6 @@ public class Trigger
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ETriggerType Type { get; set; }
 
-    [JsonPropertyName("input")] public TriggerInput Input { get; set; }
+    [JsonPropertyName("input")]
+     public TriggerInput Input { get; set; }
 }

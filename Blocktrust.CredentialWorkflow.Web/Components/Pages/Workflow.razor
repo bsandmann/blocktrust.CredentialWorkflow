@@ -6,6 +6,7 @@
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.DeleteWorkflow
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -35,21 +36,21 @@
                         <th class="px-4 py-2 text-left">Last Run Outcome</th>
                         <th class="px-4 py-2 text-left">Last Run Started</th>
                         <th class="px-4 py-2 text-left">Last Run Ended</th>
+                        <th class="px-4 py-2 text-left">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach (var workflow in workflows)
                     {
-                        <tr @onclick="() => NavigateToWorkflow(workflow.WorkflowId)"
-                            class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
-                            <td class="border-t px-4 py-2">@workflow.Name</td>
-                            <td class="border-t px-4 py-2">@workflow.UpdatedUtc.ToString("g")</td>
-                            <td class="border-t px-4 py-2">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">@workflow.Name</td>
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">@workflow.UpdatedUtc.ToString("g")</td>
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
                                 <span class="@GetWorkflowStateColor(workflow.WorkflowState)">
                                     @workflow.WorkflowState
                                 </span>
                             </td>
-                            <td class="border-t px-4 py-2">
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
                                 @if (workflow.LastOutcome != null)
                                 {
                                     <span class="@GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
@@ -61,11 +62,17 @@
                                     <span>N/A</span>
                                 }
                             </td>
-                            <td class="border-t px-4 py-2">
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
                                 @(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")
                             </td>
-                            <td class="border-t px-4 py-2">
+                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
                                 @(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")
+                            </td>
+                            <td class="border-t px-4 py-2">
+                                <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)" @onclick:stopPropagation="true"
+                                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded inline-flex items-center">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
                             </td>
                         </tr>
                     }
@@ -101,14 +108,25 @@ else
             await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
         }
 
+        await LoadWorkflows();
+    }
+
+    private async Task LoadWorkflows()
+    {
         var workflowResults = await Mediator.Send(new GetWorkflowsRequest(AppStateService.Tenant.TenantId));
         if (workflowResults.IsFailed)
         {
-// Handle error
+            // Handle error
             Logger.LogError("Failed to fetch workflows");
         }
         else
         {
+            AppStateService.WorkflowSummaries = workflowResults.Value.Select(p => new WorkflowSummary()
+            {
+                Name = p.Name,
+                WorkflowId = p.WorkflowId,
+                UpdatedUtc = p.UpdatedUtc,
+            }).ToList();
             workflows = workflowResults.Value;
         }
     }
@@ -140,4 +158,17 @@ else
         NavigationManager.NavigateTo("designer/new");
     }
 
+    private async Task DeleteWorkflow(Guid workflowId)
+    {
+        var deleteResult = await Mediator.Send(new DeleteWorkflowRequest(workflowId));
+        if (deleteResult.IsFailed)
+        {
+            // Handle error
+            Logger.LogError($"Failed to delete workflow {workflowId}");
+        }
+        else
+        {
+            await LoadWorkflows();
+        }
+    }
 }

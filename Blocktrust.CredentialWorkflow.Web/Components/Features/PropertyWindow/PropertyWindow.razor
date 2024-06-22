@@ -1,7 +1,8 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
-@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Action
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
@@ -29,7 +30,7 @@
             </ul>
         </div>
     }
-    else if (SelectedItem is Trigger trigger)
+    else if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
     {
         <h3 class="text-lg font-bold mb-2">Trigger Properties</h3>
         <p>
@@ -37,24 +38,11 @@
         </p>
         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
         {
-            <p>
-                <strong>Method:</strong> <input @bind="incomingRequest.Method"/>
-            </p>
-            <p>
-                <strong>URI:</strong> <input @bind="incomingRequest.Uri"/>
-            </p>
-            <p>
-                <strong>Headers:</strong>
-            </p>
-            <ul>
-                @foreach (var header in incomingRequest.Headers)
-                {
-                    <li>@header.Key: <input @bind="incomingRequest.Headers[header.Key]"/></li>
-                }
-            </ul>
+            <IncomingRequestComponent TriggerInput="incomingRequest" />
         }
+        // Add other trigger types here
     }
-    else if (SelectedItem is Action action)
+    else if (SelectedItem is Core.Domain.ProcessFlow.Action.Action action)
     {
         <h3 class="text-lg font-bold mb-2">Action Properties</h3>
         <p>
@@ -62,47 +50,29 @@
         </p>
         @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
         {
-            <p>
-                <strong>Subject:</strong> <input @bind="credentialIssuance.Subject"/>
-            </p>
-            <p>
-                <strong>Issuer:</strong> <input @bind="credentialIssuance.Issuer"/>
-            </p>
-            <p>
-                <strong>Claims:</strong>
-            </p>
-            <ul>
-                @foreach (var claim in credentialIssuance.Claims)
-                {
-                    <li>@claim.Key: <input @bind="credentialIssuance.Claims[claim.Key]"/></li>
-                }
-            </ul>
+            <CredentialIssuanceComponent ActionInput="credentialIssuance" />
         }
         else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
         {
-            <p>
-                <strong>Method:</strong> <input @bind="outgoingRequest.Method"/>
-            </p>
-            <p>
-                <strong>URI:</strong> <input @bind="outgoingRequest.Uri"/>
-            </p>
-            <p>
-                <strong>Headers:</strong>
-            </p>
-            <ul>
-                @foreach (var header in outgoingRequest.Headers)
-                {
-                    <li>@header.Key: <input @bind="outgoingRequest.Headers[header.Key]"/></li>
-                }
-            </ul>
+            <OutgoingRequestComponent ActionInput="outgoingRequest" />
         }
+        // Add other action types here
     }
 </div>
 
 @code {
-    [Parameter] public object? SelectedItem { get; set; }
+    [Parameter]
+    public object? SelectedItem { get; set; }
 
-    [Parameter] public EventCallback<object> OnItemCreated { get; set; }
+    [Parameter]
+    public EventCallback<object> OnItemCreated { get; set; }
+    
+    protected override void OnParametersSet()
+    {
+        // This method is called when the parameters are set or updated
+        base.OnParametersSet();
+        StateHasChanged();
+    }
 
     private async Task CreateNewItem(object itemType)
     {
@@ -110,7 +80,7 @@
 
         if (itemType is ETriggerType triggerType)
         {
-            newItem = new Trigger
+            newItem = new Core.Domain.ProcessFlow.Trigger.Trigger
             {
                 Type = triggerType,
                 Input = new TriggerInputIncomingRequest
@@ -127,7 +97,7 @@
         {
             if (actionType == EActionType.CredentialIssuance)
             {
-                newItem = new Action
+                newItem = new Core.Domain.ProcessFlow.Action.Action
                 {
                     Type = actionType,
                     Input = new ActionInputCredentialIssuance
@@ -135,14 +105,14 @@
                         Id = Guid.NewGuid(),
                         Subject = "example_subject",
                         Issuer = "example_issuer",
-                        Claims = new Dictionary<string, object>()
+                        Claims = new Dictionary<string, string>()
                     },
                     RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
                 };
             }
-            else // OutgoingRequest
+            else if (actionType == EActionType.OutgoingRequest)
             {
-                newItem = new Action
+                newItem = new Core.Domain.ProcessFlow.Action.Action
                 {
                     Type = actionType,
                     Input = new ActionInputOutgoingRequest
@@ -156,6 +126,10 @@
                     RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
                 };
             }
+            else
+            {
+                throw new NotImplementedException($"Action type {actionType} is not implemented.");
+            }
         }
         else
         {
@@ -164,5 +138,4 @@
 
         await OnItemCreated.InvokeAsync(newItem);
     }
-
 }

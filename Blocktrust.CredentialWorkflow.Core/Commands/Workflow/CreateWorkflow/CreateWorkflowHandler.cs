@@ -39,9 +39,7 @@ public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Resu
             UpdatedUtc = DateTime.UtcNow,
             TenantEntityId = tenant.TenantEntityId,
             WorkflowState = EWorkflowState.Inactive,
-
-            // TODO demo
-            ProcessFlowJson = JsonSerializer.Serialize(SampleGenerator.GenerateSampleProcessFlow()),
+            ProcessFlowJson = null
         };
 
         await _context.WorkflowEntities.AddAsync(workflowEntity, cancellationToken);

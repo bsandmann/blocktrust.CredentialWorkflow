@@ -4,5 +4,4 @@ using System.Text.Json.Serialization;
 
 public class TriggerInputOnDemand : TriggerInput
 {
-    [JsonPropertyName("id")] public Guid Id { get; set; }
 }
