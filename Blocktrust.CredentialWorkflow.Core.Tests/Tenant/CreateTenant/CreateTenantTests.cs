@@ -19,4 +19,18 @@ public partial class TestSetup
         result.Should().BeSuccess();
         result.Value.Should().NotBe(Guid.Empty);
     }
+    
+    [Fact]
+    public async Task CreateTenant_with_empty_name_should_fail()
+    {
+        // Arrange
+        var request = new CreateTenantRequest(name: "");
+
+        // Act
+        var result = await _createTenantHandler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeFailure();
+        result.Errors.Should().ContainSingle().Which.Message.Should().Be("The tenant name must be provided");
+    }
 }
