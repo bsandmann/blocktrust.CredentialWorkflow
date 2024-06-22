@@ -38,7 +38,7 @@
         </p>
         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
         {
-            <IncomingRequestComponent TriggerInput="incomingRequest" />
+            <IncomingRequestComponent TriggerInput="incomingRequest" OnChange="OnChange"/>
         }
         // Add other trigger types here
     }
@@ -50,23 +50,21 @@
         </p>
         @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
         {
-            <CredentialIssuanceComponent ActionInput="credentialIssuance" />
+            <CredentialIssuanceComponent ActionInput="credentialIssuance" OnChange="OnChange"/>
         }
         else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
         {
-            <OutgoingRequestComponent ActionInput="outgoingRequest" />
+            <OutgoingRequestComponent ActionInput="outgoingRequest" OnChange="OnChange"/>
         }
         // Add other action types here
     }
 </div>
 
 @code {
-    [Parameter]
-    public object? SelectedItem { get; set; }
+    [Parameter] public object? SelectedItem { get; set; }
+    [Parameter] public EventCallback<object> OnItemCreated { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
 
-    [Parameter]
-    public EventCallback<object> OnItemCreated { get; set; }
-    
     protected override void OnParametersSet()
     {
         // This method is called when the parameters are set or updated
@@ -137,5 +135,7 @@
         }
 
         await OnItemCreated.InvokeAsync(newItem);
+        await OnChange.InvokeAsync();
     }
+
 }

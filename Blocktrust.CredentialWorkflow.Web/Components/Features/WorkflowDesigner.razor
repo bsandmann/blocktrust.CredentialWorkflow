@@ -2,6 +2,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
+@using Blocktrust.CredentialWorkflow.Web.Services
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
 
 <div class="h-full w-full p-4">
@@ -58,8 +59,8 @@
 
 @code {
     [Parameter] public Workflow? Workflow { get; set; }
-
     [Parameter] public EventCallback<object?> OnItemSelected { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
 
     private List<object> flowItems = new List<object>();
     private object? SelectedItem { get; set; }
@@ -84,6 +85,7 @@
         {
             await SelectItem(null);
         }
+        await OnChange.InvokeAsync();
         StateHasChanged();
     }
 
@@ -103,10 +105,11 @@
         await OnItemSelected.InvokeAsync(item);
     }
 
-    public void AddItem(object item)
+    public async Task AddItem(object item)
     {
         flowItems.Add(item);
         UpdateProcessFlow();
+        await OnChange.InvokeAsync();
         StateHasChanged();
     }
 }

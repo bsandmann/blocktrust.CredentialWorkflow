@@ -1,15 +1,23 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
+@using Blocktrust.CredentialWorkflow.Web.Services
+@inject WorkflowChangeTrackerService ChangeTracker
 
 <div>
     <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">Method</label>
         <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-               @bind="TriggerInput.Method"/>
+               @bind-value="TriggerInput.Method"
+               @bind-value:event="oninput"
+               @onchange="@(async () => await OnChange.InvokeAsync())"
+               />
     </div>
     <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">URI</label>
         <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-               @bind="TriggerInput.Uri"/>
+               @bind-value="TriggerInput.Uri"
+               @bind-value:event="oninput"
+               @onchange="@(async () => await OnChange.InvokeAsync())"
+               />
     </div>
     <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">Headers</label>
@@ -43,40 +51,45 @@
 
 @code {
     [Parameter] public TriggerInputIncomingRequest TriggerInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
 
     private string newHeaderKey = string.Empty;
     private string newHeaderValue = string.Empty;
 
-    private void UpdateHeaderKey(string oldKey, string newKey)
+    private async Task UpdateHeaderKey(string oldKey, string newKey)
     {
         if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey) && !TriggerInput.Headers.ContainsKey(newKey))
         {
             var value = TriggerInput.Headers[oldKey];
             TriggerInput.Headers.Remove(oldKey);
             TriggerInput.Headers[newKey] = value;
+            await OnChange.InvokeAsync();
             StateHasChanged();
         }
     }
 
-    private void UpdateHeaderValue(string key, string newValue)
+    private async Task UpdateHeaderValue(string key, string newValue)
     {
         TriggerInput.Headers[key] = newValue;
+        await OnChange.InvokeAsync();
         StateHasChanged();
     }
 
-    private void RemoveHeader(string key)
+    private async Task RemoveHeader(string key)
     {
         TriggerInput.Headers.Remove(key);
+        await OnChange.InvokeAsync();
         StateHasChanged();
     }
 
-    private void AddHeader()
+    private async Task AddHeader()
     {
         if (!string.IsNullOrWhiteSpace(newHeaderKey) && !TriggerInput.Headers.ContainsKey(newHeaderKey))
         {
             TriggerInput.Headers[newHeaderKey] = newHeaderValue;
             newHeaderKey = string.Empty;
             newHeaderValue = string.Empty;
+            await OnChange.InvokeAsync();
             StateHasChanged();
         }
     }

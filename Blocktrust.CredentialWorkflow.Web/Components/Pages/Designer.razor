@@ -14,12 +14,14 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
-
+@inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
 @inject ILogger<Designer> Logger
-@inject NavigationManager NavigationManager
+@inject WorkflowChangeTrackerService ChangeTracker
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @layout AppLayout
@@ -55,22 +57,28 @@
             }
             @if (currentWorkflow is not null && currentWorkflow.ProcessFlow is not null && currentWorkflow.ProcessFlow.Triggers.Any() && currentWorkflow.ProcessFlow.Actions.Any())
             {
-                <button class="bg-green-500 text-white ml-4 px-4 py-1 rounded" @onclick="RunWorkflow">Run</button>
+                <button class="@(hasUnsavedChanges ? "bg-gray-500" : "bg-green-500") text-white ml-4 px-4 py-1 rounded" 
+                        @onclick="RunWorkflow" disabled="@hasUnsavedChanges">Run</button>
             }
             else
             {
-                <button class="bg-gray-500 text-white ml-4 px-4 py-1 rounded" disabled="disabled" >Run</button>
+                <button class="bg-gray-500 text-white ml-4 px-4 py-1 rounded" disabled>Run</button>
             }
         </div>
 
         <!-- Main content area -->
         <div class="flex-grow flex flex-row">
             <div class="flex-grow bg-white p-4">
-                <WorkflowDesigner @ref="workflowDesigner" Workflow="@currentWorkflow" OnItemSelected="HandleItemSelected"/>
+                <WorkflowDesigner @ref="workflowDesigner"
+                                  Workflow="@currentWorkflow"
+                                  OnItemSelected="HandleItemSelected"
+                                  OnChange="HandleChange" />
             </div>
 
             <div class="bg-gray-200 p-4 w-1/4">
-                <PropertyWindow SelectedItem="@selectedItem" OnItemCreated="HandleItemCreated"/>
+                <PropertyWindow SelectedItem="@selectedItem"
+                                OnItemCreated="HandleItemCreated"
+                                OnChange="HandleChange" />
             </div>
         </div>
     </div>
@@ -90,9 +98,17 @@ else
     private Guid? selectedWorkflowId;
     private object? selectedItem;
     private WorkflowDesigner? workflowDesigner;
+    private bool hasUnsavedChanges = false;
+    private DotNetObjectReference<Designer>? objRef;
 
     protected override async Task OnInitializedAsync()
     {
+        objRef = DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("navigationHandler.setUnsavedChanges", false);
+        // NavigationManager.LocationChanged += OnLocationChanged;
+        // ChangeTracker.OnChange += OnChangeTrackerChanged;
+        ChangeTracker.OnChange += HandleChangeTrackerChanged;
+
         if (!AppStateService.IsInitialized)
         {
             await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
@@ -116,7 +132,22 @@ else
             var latestWorkflow = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First();
             await LoadWorkflow(latestWorkflow.WorkflowId);
         }
+        await base.OnInitializedAsync();
     }
+    
+    private void HandleChangeTrackerChanged()
+    {
+        hasUnsavedChanges = ChangeTracker.HasUnsavedChanges;
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void HandleChange()
+    {
+        ChangeTracker.HasUnsavedChanges = true;
+        hasUnsavedChanges = true;
+        InvokeAsync(StateHasChanged);
+    }
+
 
     private async Task LoadWorkflow(Guid workflowId)
     {
@@ -160,7 +191,6 @@ else
             });
         }
 
-// Navigate to the new workflow's URL
         NavigationManager.NavigateTo($"/designer/{currentWorkflow.WorkflowId}", forceLoad: false);
 
         StateHasChanged();
@@ -189,6 +219,8 @@ else
             }
 
             isEditing = false;
+            ChangeTracker.ResetChanges();
+            hasUnsavedChanges = false;
             StateHasChanged();
         }
     }
@@ -224,7 +256,21 @@ else
     {
         workflowDesigner?.AddItem(newItem);
         selectedItem = newItem;
-        StateHasChanged();
+        HandleChange();
+    }
+    
+    public void Dispose()
+    {
+        ChangeTracker.OnChange -= HandleChangeTrackerChanged;
+    }
+    
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (objRef != null)
+        {
+            objRef.Dispose();
+        }
     }
 
 }
