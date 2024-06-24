@@ -37,13 +37,21 @@
                 <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Add Agent</button>
             </EditForm>
 
-            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="mt-8 w-full">
                 @foreach (var agent in IdentusAgentsList)
                 {
-                    <div class="bg-white rounded-lg shadow-md p-4">
-                        <h3 class="font-semibold text-lg">@agent.Name</h3>
-                        <p class="text-sm text-gray-600">@agent.Uri</p>
-                        <button @onclick="() => RemoveAgentAsync(agent.IdentusAgentId)" class="mt-2 bg-red-500 text-white rounded-md px-2 py-1 text-sm">Remove</button>
+                    <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                        <div class="flex flex-row">
+                            <div class="flex flex-col">
+                                <h3 class="font-semibold text-lg">@agent.Name</h3>
+                                <p class="text-sm text-gray-600">@agent.Uri</p>
+                                <p class="text-sm text-gray-600">API Key: @ObscureApiKey(agent.ApiKey)</p>
+                            </div>
+                            <div class="grow"></div>
+                            <button @onclick="() => RemoveAgentAsync(agent.IdentusAgentId)" class="mt-2 bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
                     </div>
                 }
             </div>
@@ -69,11 +77,12 @@
 
     private async Task LoadIdentusAgents()
     {
-        var agentsResult= await Mediator.Send(new GetIdentusAgentsRequest(TenantId));
+        var agentsResult = await Mediator.Send(new GetIdentusAgentsRequest(TenantId));
         if (agentsResult.IsFailed)
         {
-           // TODO error handling 
+// TODO error handling 
         }
+
         IdentusAgentsList = agentsResult.Value;
     }
 
@@ -108,6 +117,16 @@
         {
             message = $"Error: {string.Join(", ", result.Errors)}";
         }
+    }
+
+    private string ObscureApiKey(string apiKey)
+    {
+        if (string.IsNullOrEmpty(apiKey) || apiKey.Length <= 6)
+        {
+            return apiKey;
+        }
+
+        return apiKey.Substring(0, 6) + new string('*', apiKey.Length - 6);
     }
 
     private sealed class InputModel
