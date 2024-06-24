@@ -1,8 +1,9 @@
 @page "/Account/Manage/IdentusAgents"
 
 @using System.ComponentModel.DataAnnotations
-@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentus
-@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.RemoveIdentus
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentusAgent
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIdentusAgents
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.RemoveIdentusAgent
 @using Blocktrust.CredentialWorkflow.Core.Entities.Tenant
 @using MediatR
 
@@ -68,14 +69,17 @@
 
     private async Task LoadIdentusAgents()
     {
-// TODO: Implement a query to load IdentusAgents for the current tenant
-// This is a placeholder. You'll need to implement the actual data loading logic.
-        IdentusAgentsList = await Task.FromResult(new List<IdentusAgent>());
+        var agentsResult= await Mediator.Send(new GetIdentusAgentsRequest(TenantId));
+        if (agentsResult.IsFailed)
+        {
+           // TODO error handling 
+        }
+        IdentusAgentsList = agentsResult.Value;
     }
 
     private async Task OnAddAgentSubmitAsync()
     {
-        var request = new AddIdentusToTenantRequest(TenantId, NewAgent.Name, new Uri(NewAgent.Uri), NewAgent.ApiKey);
+        var request = new AddIdentusAgentRequest(TenantId, NewAgent.Name, new Uri(NewAgent.Uri), NewAgent.ApiKey);
         var result = await Mediator.Send(request);
 
         if (result.IsSuccess)
@@ -92,7 +96,7 @@
 
     private async Task RemoveAgentAsync(Guid agentId)
     {
-        var request = new RemoveIdentusFromTenantRequest(TenantId, agentId);
+        var request = new RemoveIdentusAgentRequest(TenantId, agentId);
         var result = await Mediator.Send(request);
 
         if (result.IsSuccess)

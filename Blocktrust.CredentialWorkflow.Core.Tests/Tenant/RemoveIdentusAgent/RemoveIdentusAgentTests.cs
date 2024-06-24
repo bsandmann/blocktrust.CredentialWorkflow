@@ -2,7 +2,7 @@
 namespace Blocktrust.CredentialWorkflow.Core.Tests;
 
 using Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
-using Commands.Tenant.RemoveIdentus;
+using Commands.Tenant.RemoveIdentusAgent;
 using FluentAssertions;
 using FluentResults.Extensions.FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +30,8 @@ public partial class TestSetup
         await _context.IdentusAgents.AddAsync(identusAgent);
         await _context.SaveChangesAsync();
 
-        var request = new RemoveIdentusFromTenantRequest(tenant.TenantEntityId, identusAgent.IdentusAgentId);
-        var handler = new RemoveIdentusFromTenantHandler(_context);
+        var request = new RemoveIdentusAgentRequest(tenant.TenantEntityId, identusAgent.IdentusAgentId);
+        var handler = new RemoveIdentusAgentHandler(_context);
 
         // Act
         var result = await handler.Handle(request, CancellationToken.None);
@@ -58,8 +58,8 @@ public partial class TestSetup
         await _context.SaveChangesAsync();
 
         var nonExistentIdentusAgentId = Guid.NewGuid();
-        var request = new RemoveIdentusFromTenantRequest(tenant.TenantEntityId, nonExistentIdentusAgentId);
-        var handler = new RemoveIdentusFromTenantHandler(_context);
+        var request = new RemoveIdentusAgentRequest(tenant.TenantEntityId, nonExistentIdentusAgentId);
+        var handler = new RemoveIdentusAgentHandler(_context);
 
         // Act
         var result = await handler.Handle(request, CancellationToken.None);
@@ -87,8 +87,8 @@ public partial class TestSetup
         await _context.IdentusAgents.AddAsync(identusAgent);
         await _context.SaveChangesAsync();
 
-        var request = new RemoveIdentusFromTenantRequest(tenant2.TenantEntityId, identusAgent.IdentusAgentId);
-        var handler = new RemoveIdentusFromTenantHandler(_context);
+        var request = new RemoveIdentusAgentRequest(tenant2.TenantEntityId, identusAgent.IdentusAgentId);
+        var handler = new RemoveIdentusAgentHandler(_context);
 
         // Act
         var result = await handler.Handle(request, CancellationToken.None);

@@ -1,11 +1,11 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentus;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentusAgent;
 
 using FluentResults;
 using MediatR;
 
-public class AddIdentusToTenantRequest : IRequest<Result<Guid>>
+public class AddIdentusAgentRequest : IRequest<Result<Guid>>
 {
-    public AddIdentusToTenantRequest(Guid tenantId, string name, Uri uri, string apiKey)
+    public AddIdentusAgentRequest(Guid tenantId, string name, Uri uri, string apiKey)
     {
         TenantId = tenantId;
         Name = name;

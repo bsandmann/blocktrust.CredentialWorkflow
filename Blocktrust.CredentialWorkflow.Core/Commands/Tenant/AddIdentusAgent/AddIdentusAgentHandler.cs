@@ -1,19 +1,19 @@
-using Blocktrust.CredentialWorkflow.Core;
-using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentus;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentusAgent;
+
 using Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
 using FluentResults;
 using MediatR;
 
-public class AddIdentusToTenantHandler : IRequestHandler<AddIdentusToTenantRequest, Result<Guid>>
+public class AddIdentusAgentHandler : IRequestHandler<AddIdentusAgentRequest, Result<Guid>>
 {
     private readonly DataContext _context;
 
-    public AddIdentusToTenantHandler(DataContext context)
+    public AddIdentusAgentHandler(DataContext context)
     {
         _context = context;
     }
 
-    public async Task<Result<Guid>> Handle(AddIdentusToTenantRequest request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(AddIdentusAgentRequest request, CancellationToken cancellationToken)
     {
         _context.ChangeTracker.Clear();
         _context.ChangeTracker.AutoDetectChangesEnabled = false;

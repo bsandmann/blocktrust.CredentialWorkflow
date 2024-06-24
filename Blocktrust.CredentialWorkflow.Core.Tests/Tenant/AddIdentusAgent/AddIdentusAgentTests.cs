@@ -1,7 +1,7 @@
 namespace Blocktrust.CredentialWorkflow.Core.Tests;
 
 using Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
-using Commands.Tenant.AddIdentus;
+using Commands.Tenant.AddIdentusAgent;
 using FluentAssertions;
 using FluentResults.Extensions.FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +20,13 @@ public partial class TestSetup
         await _context.TenantEntities.AddAsync(tenant);
         await _context.SaveChangesAsync();
 
-        var request = new AddIdentusToTenantRequest(
+        var request = new AddIdentusAgentRequest(
             tenant.TenantEntityId,
             "TestIdentusAgent",
             new Uri("https://test.identus.com"),
             "testApiKey123"
         );
-        var handler = new AddIdentusToTenantHandler(_context);
+        var handler = new AddIdentusAgentHandler(_context);
 
         // Act
         var result = await handler.Handle(request, CancellationToken.None);
@@ -58,12 +58,12 @@ public partial class TestSetup
         await _context.TenantEntities.AddAsync(tenant);
         await _context.SaveChangesAsync();
 
-        var handler = new AddIdentusToTenantHandler(_context);
+        var handler = new AddIdentusAgentHandler(_context);
 
         // Act
-        var result1 = await handler.Handle(new AddIdentusToTenantRequest(tenantId, "Agent1", new Uri("https://agent1.com"), "key1"), CancellationToken.None);
-        var result2 = await handler.Handle(new AddIdentusToTenantRequest(tenantId, "Agent2", new Uri("https://agent2.com"), "key2"), CancellationToken.None);
-        var result3 = await handler.Handle(new AddIdentusToTenantRequest(tenantId, "Agent3", new Uri("https://agent3.com"), "key3"), CancellationToken.None);
+        var result1 = await handler.Handle(new AddIdentusAgentRequest(tenantId, "Agent1", new Uri("https://agent1.com"), "key1"), CancellationToken.None);
+        var result2 = await handler.Handle(new AddIdentusAgentRequest(tenantId, "Agent2", new Uri("https://agent2.com"), "key2"), CancellationToken.None);
+        var result3 = await handler.Handle(new AddIdentusAgentRequest(tenantId, "Agent3", new Uri("https://agent3.com"), "key3"), CancellationToken.None);
 
         // Assert
         result1.Should().BeSuccess();

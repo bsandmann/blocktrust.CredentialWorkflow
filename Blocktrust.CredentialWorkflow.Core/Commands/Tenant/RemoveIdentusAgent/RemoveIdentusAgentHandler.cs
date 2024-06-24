@@ -1,19 +1,19 @@
-using Blocktrust.CredentialWorkflow.Core;
-using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.RemoveIdentus;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-public class RemoveIdentusFromTenantHandler : IRequestHandler<RemoveIdentusFromTenantRequest, Result>
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.RemoveIdentusAgent;
+
+public class RemoveIdentusAgentHandler : IRequestHandler<RemoveIdentusAgentRequest, Result>
 {
     private readonly DataContext _context;
 
-    public RemoveIdentusFromTenantHandler(DataContext context)
+    public RemoveIdentusAgentHandler(DataContext context)
     {
         _context = context;
     }
 
-    public async Task<Result> Handle(RemoveIdentusFromTenantRequest request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(RemoveIdentusAgentRequest request, CancellationToken cancellationToken)
     {
         _context.ChangeTracker.Clear();
         _context.ChangeTracker.AutoDetectChangesEnabled = false;
