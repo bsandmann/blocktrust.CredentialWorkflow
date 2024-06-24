@@ -49,6 +49,8 @@ public class DataContext : IdentityDbContext<ApplicationUser>
     public DbSet<TenantEntity> TenantEntities { get; set; }
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
     public DbSet<OutcomeEntity> OutcomeEntities { get; set; }
+    
+    public DbSet<IdentusAgent> IdentusAgents { get; set; }
 
     /// <summary>
     /// Setup
@@ -69,5 +71,15 @@ public class DataContext : IdentityDbContext<ApplicationUser>
             .WithMany(b => b.ApplicationUsers)
             .HasForeignKey(p => p.TenantEntityId)
             .OnDelete(DeleteBehavior.NoAction);
+        
+        modelBuilder.Entity<IdentusAgent>().HasKey(p => p.IdentusAgentId);
+        modelBuilder.Entity<IdentusAgent>().Property(p => p.IdentusAgentId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        
+        //////////////////////////////////////////////////////////////// Workflow
+        modelBuilder.Entity<WorkflowEntity>().HasKey(p => p.WorkflowEntityId);
+        modelBuilder.Entity<WorkflowEntity>().Property(p => p.WorkflowEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        
+        modelBuilder.Entity<OutcomeEntity>().HasKey(p => p.OutcomeEntityId);
+        modelBuilder.Entity<OutcomeEntity>().Property(p => p.OutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
     }
 }

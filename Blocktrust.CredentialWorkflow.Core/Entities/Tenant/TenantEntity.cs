@@ -24,6 +24,12 @@ public record TenantEntity
     /// </summary>
     public IList<ApplicationUser> ApplicationUsers { get; init; }
     
+    /// <summary>
+    /// A tenant can have many identus agents
+    /// </summary>
+    public IList<IdentusAgent> IdentusAgents { get; set; }
+    
+    
     public Tenant Map()
     {
         return new Tenant()

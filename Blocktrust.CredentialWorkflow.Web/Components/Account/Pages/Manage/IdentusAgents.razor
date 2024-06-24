@@ -1,0 +1,123 @@
+@page "/Account/Manage/IdentusAgents"
+
+@using System.ComponentModel.DataAnnotations
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.AddIdentus
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.RemoveIdentus
+@using Blocktrust.CredentialWorkflow.Core.Entities.Tenant
+@using MediatR
+
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<IdentusAgents> Logger
+
+<PageTitle>Manage Identus Agents</PageTitle>
+
+<div class="container mx-auto">
+    <div class="mx-auto w-3/4 bg-gray-100 p-4 rounded-xl mt-10">
+        <div class="flex flex-col content-between items-center justify-between">
+            <StatusMessage Message="@message"/>
+            <h2 class="font-museo text-2xl mb-4">Manage Identus Agents</h2>
+
+            <EditForm Model="NewAgent" FormName="add-identus-agent" OnValidSubmit="OnAddAgentSubmitAsync" method="post">
+                <DataAnnotationsValidator/>
+                <div class="mt-4">
+                    <InputText @bind-Value="NewAgent.Name" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Agent Name"/>
+                    <ValidationMessage For="() => NewAgent.Name" class="font-light text-red-500"/>
+                </div>
+                <div class="mt-4">
+                    <InputText @bind-Value="NewAgent.Uri" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Agent URI"/>
+                    <ValidationMessage For="() => NewAgent.Uri" class="font-light text-red-500"/>
+                </div>
+                <div class="mt-4">
+                    <InputText @bind-Value="NewAgent.ApiKey" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="API Key"/>
+                    <ValidationMessage For="() => NewAgent.ApiKey" class="font-light text-red-500"/>
+                </div>
+                <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Add Agent</button>
+            </EditForm>
+
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach (var agent in IdentusAgentsList)
+                {
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold text-lg">@agent.Name</h3>
+                        <p class="text-sm text-gray-600">@agent.Uri</p>
+                        <button @onclick="() => RemoveAgentAsync(agent.IdentusAgentId)" class="mt-2 bg-red-500 text-white rounded-md px-2 py-1 text-sm">Remove</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? message;
+    private List<IdentusAgent> IdentusAgentsList { get; set; } = new();
+    private Guid TenantId { get; set; }
+
+    [SupplyParameterFromForm] private InputModel NewAgent { get; set; } = new();
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        TenantId = user.TenantEntityId.Value;
+        await LoadIdentusAgents();
+    }
+
+    private async Task LoadIdentusAgents()
+    {
+// TODO: Implement a query to load IdentusAgents for the current tenant
+// This is a placeholder. You'll need to implement the actual data loading logic.
+        IdentusAgentsList = await Task.FromResult(new List<IdentusAgent>());
+    }
+
+    private async Task OnAddAgentSubmitAsync()
+    {
+        var request = new AddIdentusToTenantRequest(TenantId, NewAgent.Name, new Uri(NewAgent.Uri), NewAgent.ApiKey);
+        var result = await Mediator.Send(request);
+
+        if (result.IsSuccess)
+        {
+            message = "Identus Agent added successfully.";
+            await LoadIdentusAgents();
+            NewAgent = new InputModel();
+        }
+        else
+        {
+            message = $"Error: {string.Join(", ", result.Errors)}";
+        }
+    }
+
+    private async Task RemoveAgentAsync(Guid agentId)
+    {
+        var request = new RemoveIdentusFromTenantRequest(TenantId, agentId);
+        var result = await Mediator.Send(request);
+
+        if (result.IsSuccess)
+        {
+            message = "Identus Agent removed successfully.";
+            await LoadIdentusAgents();
+        }
+        else
+        {
+            message = $"Error: {string.Join(", ", result.Errors)}";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [Display(Name = "Agent Name")]
+        public string Name { get; set; } = "";
+
+        [Required]
+        [Url]
+        [Display(Name = "Agent URI")]
+        public string Uri { get; set; } = "";
+
+        [Required] [Display(Name = "API Key")] public string ApiKey { get; set; } = "";
+    }
+
+}
