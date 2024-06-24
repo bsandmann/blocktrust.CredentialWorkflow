@@ -17,6 +17,7 @@ public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result
 
     public async Task<Result<Outcome>> Handle(UpdateOutcomeRequest request, CancellationToken cancellationToken)
     {
+        _context.ChangeTracker.Clear();
         var outcomeEntity = await _context.OutcomeEntities
             .FirstOrDefaultAsync(o => o.OutcomeEntityId == request.OutcomeId, cancellationToken);
 

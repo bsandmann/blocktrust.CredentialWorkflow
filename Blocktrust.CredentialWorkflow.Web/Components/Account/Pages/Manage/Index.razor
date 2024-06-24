@@ -21,14 +21,14 @@
                 <DataAnnotationsValidator/>
                 <ValidationSummary class="font-light text-red-500" role="alert"/>
                 <div class="">
-                    <input type="text" value="@username" class="" placeholder="Please choose your username." disabled/>
+                    <input type="text" value="@username" class="w-56" placeholder="Please choose your username." disabled/>
                     <label for="username" class="pl-6 font-light">Username</label>
                 </div>
-                <div class="">
-                    <InputText @bind-Value="Input.PhoneNumber" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Please enter your phone number."/>
-                    <label for="phone-number" class="pl-6 font-light">Phone number</label>
-                    <ValidationMessage For="() => Input.PhoneNumber" class="font-light text-red-500"/>
-                </div>
+                @* <div class=""> *@
+                @*     <InputText @bind-Value="Input.PhoneNumber" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Please enter your phone number."/> *@
+                @*     <label for="phone-number" class="pl-6 font-light">Phone number</label> *@
+                @*     <ValidationMessage For="() => Input.PhoneNumber" class="font-light text-red-500"/> *@
+                @* </div> *@
                 <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Save</button>
             </EditForm>
         </div>
