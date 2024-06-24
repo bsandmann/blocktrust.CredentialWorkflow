@@ -7,6 +7,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
@@ -14,6 +15,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
+@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -171,11 +173,12 @@ else
         var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId));
         if (createResult.IsFailed)
         {
-// TODO: Show error message
+            // TODO: Show error message
             return;
         }
 
         currentWorkflow = createResult.Value;
+        currentWorkflow.ProcessFlow = new ProcessFlow(); // Ensure ProcessFlow is initialized
         workflowName = currentWorkflow.Name;
         selectedWorkflowId = currentWorkflow.WorkflowId;
         isEditing = true;
@@ -254,10 +257,18 @@ else
 
     private void HandleItemCreated(object newItem)
     {
+        if (currentWorkflow?.ProcessFlow == null)
+        {
+            // TODO: Show error message
+            return;
+        }
+
         workflowDesigner?.AddItem(newItem);
         selectedItem = newItem;
         HandleChange();
     }
+    
+  
     
     public void Dispose()
     {

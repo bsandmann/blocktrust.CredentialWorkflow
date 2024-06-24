@@ -65,77 +65,60 @@
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
 
-    protected override void OnParametersSet()
-    {
-        // This method is called when the parameters are set or updated
-        base.OnParametersSet();
-        StateHasChanged();
-    }
-
     private async Task CreateNewItem(object itemType)
     {
-        object newItem;
-
-        if (itemType is ETriggerType triggerType)
+        object newItem = itemType switch
         {
-            newItem = new Core.Domain.ProcessFlow.Trigger.Trigger
+            ETriggerType triggerType => CreateNewTrigger(triggerType),
+            EActionType actionType => CreateNewAction(actionType),
+            _ => throw new ArgumentException("Invalid item type")
+        };
+
+        await OnItemCreated.InvokeAsync(newItem);
+    }
+
+    private Core.Domain.ProcessFlow.Trigger.Trigger CreateNewTrigger(ETriggerType triggerType)
+    {
+        return new Core.Domain.ProcessFlow.Trigger.Trigger
+        {
+            Type = triggerType,
+            Input = new TriggerInputIncomingRequest
             {
-                Type = triggerType,
-                Input = new TriggerInputIncomingRequest
+                Id = Guid.NewGuid(),
+                Method = "GET",
+                Uri = "/api/example",
+                Body = null,
+                Headers = new Dictionary<string, string>()
+            }
+        };
+    }
+
+    private Core.Domain.ProcessFlow.Action.Action CreateNewAction(EActionType actionType)
+    {
+        return new Core.Domain.ProcessFlow.Action.Action
+        {
+            Type = actionType,
+            Input = actionType switch
+            {
+                EActionType.CredentialIssuance => new ActionInputCredentialIssuance
+                {
+                    Id = Guid.NewGuid(),
+                    Subject = "example_subject",
+                    Issuer = "example_issuer",
+                    Claims = new Dictionary<string, string>()
+                },
+                EActionType.OutgoingRequest => new ActionInputOutgoingRequest
                 {
                     Id = Guid.NewGuid(),
                     Method = "GET",
-                    Uri = "/api/example",
-                    Body = null,
+                    Uri = "https://example.com/api",
+                    Body = "",
                     Headers = new Dictionary<string, string>()
-                }
-            };
-        }
-        else if (itemType is EActionType actionType)
-        {
-            if (actionType == EActionType.CredentialIssuance)
-            {
-                newItem = new Core.Domain.ProcessFlow.Action.Action
-                {
-                    Type = actionType,
-                    Input = new ActionInputCredentialIssuance
-                    {
-                        Id = Guid.NewGuid(),
-                        Subject = "example_subject",
-                        Issuer = "example_issuer",
-                        Claims = new Dictionary<string, string>()
-                    },
-                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                };
-            }
-            else if (actionType == EActionType.OutgoingRequest)
-            {
-                newItem = new Core.Domain.ProcessFlow.Action.Action
-                {
-                    Type = actionType,
-                    Input = new ActionInputOutgoingRequest
-                    {
-                        Id = Guid.NewGuid(),
-                        Method = "GET",
-                        Uri = "https://example.com/api",
-                        Body = "",
-                        Headers = new Dictionary<string, string>()
-                    },
-                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                };
-            }
-            else
-            {
-                throw new NotImplementedException($"Action type {actionType} is not implemented.");
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Invalid item type");
-        }
-
-        await OnItemCreated.InvokeAsync(newItem);
-        await OnChange.InvokeAsync();
+                },
+                _ => throw new NotImplementedException($"Action type {actionType} is not implemented.")
+            },
+            RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+        };
     }
 
 }

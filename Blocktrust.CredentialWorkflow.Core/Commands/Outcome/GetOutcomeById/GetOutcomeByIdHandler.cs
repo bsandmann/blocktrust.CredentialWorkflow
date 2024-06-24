@@ -17,7 +17,6 @@ public class GetOutcomeByIdHandler : IRequestHandler<GetOutcomeByIdRequest, Resu
     public async Task<Result<Outcome>> Handle(GetOutcomeByIdRequest request, CancellationToken cancellationToken)
     {
         var outcomeEntity = await _context.OutcomeEntities
-            .Include(o => o.WorkflowEntityId) // include related workflow if required
             .FirstOrDefaultAsync(o => o.OutcomeEntityId == request.OutcomeId, cancellationToken);
 
         if (outcomeEntity is null)
