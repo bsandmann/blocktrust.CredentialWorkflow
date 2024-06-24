@@ -32,7 +32,7 @@ public class UpdateWorkflowHandler : IRequestHandler<UpdateWorkflowRequest, Resu
         workflow.WorkflowState = request.WorkflowState;
         if (request.ProcessFlow is not null)
         {
-            workflow.ProcessFlowJson = JsonSerializer.Serialize(request.ProcessFlow);
+            workflow.ProcessFlowJson = request.ProcessFlow.SerializeToJson();
         }
 
         _context.WorkflowEntities.Update(workflow);

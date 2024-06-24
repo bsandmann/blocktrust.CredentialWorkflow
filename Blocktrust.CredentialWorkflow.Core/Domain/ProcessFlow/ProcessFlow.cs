@@ -68,25 +68,26 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
             Actions.Remove(lastActionId);
         }
 
-        public string SerializeToJson()
+        
+        private static JsonSerializerOptions GetJsonSerializerOptions()
         {
-            var options = new JsonSerializerOptions
+            return new JsonSerializerOptions
             {
                 WriteIndented = true,
-                Converters = { new JsonStringEnumConverter() }
+                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                IgnoreReadOnlyProperties = true,
+                PropertyNameCaseInsensitive = true
             };
-
-            return JsonSerializer.Serialize(this, options);
+        }
+        public string SerializeToJson()
+        {
+            return JsonSerializer.Serialize(this, GetJsonSerializerOptions());
         }
 
         public static ProcessFlow DeserializeFromJson(string json)
         {
-            var options = new JsonSerializerOptions
-            {
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var processFlow = JsonSerializer.Deserialize<ProcessFlow>(json, options);
+            var processFlow = JsonSerializer.Deserialize<ProcessFlow>(json, GetJsonSerializerOptions());
             return processFlow ?? throw new ArgumentException("Invalid JSON string");
         }
     }

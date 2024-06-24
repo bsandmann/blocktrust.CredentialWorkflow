@@ -42,6 +42,15 @@ public class CreateWorkflowHandler : IRequestHandler<CreateWorkflowRequest, Resu
             ProcessFlowJson = null
         };
 
+        if (request.ProcessFlow is not null)
+        {
+            workflowEntity.ProcessFlowJson = request.ProcessFlow.SerializeToJson();
+            if(request.Name is not null)
+            {
+                workflowEntity.Name = request.Name;
+            }
+        }
+
         await _context.WorkflowEntities.AddAsync(workflowEntity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 

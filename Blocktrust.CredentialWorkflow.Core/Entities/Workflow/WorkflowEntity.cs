@@ -46,7 +46,7 @@ public record WorkflowEntity
 
         if (!string.IsNullOrEmpty(this.ProcessFlowJson))
         {
-            workflow.ProcessFlow = JsonSerializer.Deserialize<ProcessFlow>(this.ProcessFlowJson);
+            workflow.ProcessFlow = ProcessFlow.DeserializeFromJson(ProcessFlowJson);
         }
 
         return workflow;

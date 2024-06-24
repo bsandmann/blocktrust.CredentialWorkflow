@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Blocktrust.CredentialWorkflow.Web.Services
+﻿namespace Blocktrust.CredentialWorkflow.Web.Services
 {
     public class WorkflowChangeTrackerService
     {

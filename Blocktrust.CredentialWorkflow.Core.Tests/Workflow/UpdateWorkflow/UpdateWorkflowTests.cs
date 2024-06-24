@@ -55,7 +55,7 @@ public partial class TestSetup
         updatedWorkflow.Should().NotBeNull();
         updatedWorkflow!.Name.Should().Be("Updated Workflow");
         updatedWorkflow.WorkflowState.Should().Be(EWorkflowState.ActiveWithExternalTrigger);
-        var deserializedProcessFlow = JsonSerializer.Deserialize<ProcessFlow>(updatedWorkflow.ProcessFlowJson);
+        var deserializedProcessFlow = ProcessFlow.DeserializeFromJson(updatedWorkflow.ProcessFlowJson);
         deserializedProcessFlow.Should().BeEquivalentTo(processFlow);
     }
 

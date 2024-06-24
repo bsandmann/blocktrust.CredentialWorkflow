@@ -1,14 +1,13 @@
 using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
+using Blocktrust.CredentialWorkflow.Core.Services;
 using Blocktrust.CredentialWorkflow.Web.Common;
 using Blocktrust.CredentialWorkflow.Web.Components.Account;
 using Blocktrust.CredentialWorkflow.Web.Services;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +23,7 @@ builder.Services.AddScoped<AppStateService>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<WorkflowChangeTrackerService>();
+builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 
 builder.Services.AddAuthentication(options =>
     {
