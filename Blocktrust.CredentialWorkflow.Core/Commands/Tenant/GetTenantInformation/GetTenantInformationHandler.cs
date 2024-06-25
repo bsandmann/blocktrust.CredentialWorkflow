@@ -24,7 +24,7 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                     TenantEntityId = p.TenantEntityId,
                     TenantName = p.Name,
                     ApplicationUserIds = p.ApplicationUsers.Select(q => q.Id),
-                    Worflows = p.WorkflowEntities.Select(q =>
+                    Workflows = p.WorkflowEntities.Select(q =>
                         new
                         {
                             q.WorkflowEntityId, q.Name, q.UpdatedUtc
@@ -43,7 +43,7 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                 Name = result.TenantName,
                 TenantId = request.TenantEntityId
             },
-            WorkflowSummaries = result.Worflows.Select(p => new WorkflowSummary()
+            WorkflowSummaries = result.Workflows.Select(p => new WorkflowSummary()
             {
                 Name = p.Name,
                 UpdatedUtc = p.UpdatedUtc,

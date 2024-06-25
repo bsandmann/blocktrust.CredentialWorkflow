@@ -7,7 +7,7 @@
     <div class="flex flex-col items-center">
         @foreach (var item in flowItems)
         {
-            <div class="w-80 h-52 bg-white shadow-md rounded-lg mb-4 p-4 flex flex-col cursor-pointer @(item == SelectedItem ? "border-2 border-blue-500" : "")"
+            <div class="w-80 h-44 bg-gray-200 hover:bg-gray-100 shadow-md rounded-lg p-4 flex flex-col cursor-pointer @(item == SelectedItem ? "border-2 border-blue-500" : "")"
                  @onclick="() => SelectItem(item)">
                 @if (item is Trigger trigger)
                 {
@@ -44,12 +44,18 @@
                         </p>
                     }
                 }
-                <button class="bg-red-500 text-white px-2 py-1 rounded mt-auto self-end" @onclick:stopPropagation="true" @onclick="() => RemoveItem(item)">Remove</button>
+                <button class="bg-red-500 text-white px-2 py-1 rounded mt-auto self-end" @onclick:stopPropagation="true" @onclick="() => RemoveItem(item)">
+                    <span class="material-symbols-outlined text-sm">delete</span> 
+                </button>
             </div>
+            <div class="h-12 border-r-2 border-gray-500"></div>
         }
 
-        <div class="w-80 h-52 bg-white shadow-md rounded-lg mb-4 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100"
+        <div class="w-80 h-44 bg-gray-50 shadow-md rounded-lg mb-4 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100"
              @onclick="() => SelectItem(null)">
+            <div>
+                <span class="material-symbols-outlined text-3xl">add_circle_outline</span>
+            </div>
             <p class="text-lg font-bold text-center">Create new Action/Trigger</p>
         </div>
     </div>
