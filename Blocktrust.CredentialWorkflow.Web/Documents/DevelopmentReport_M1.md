@@ -1,13 +1,13 @@
 # Development Report Milestone 1
 
-## Registration, Authentication, and User Management
+## Project Structure and Architecture
+The project structure was designed to be modular and scalable, following the best practices for ASP.NET Core applications. The solution is currently divided into projects, each responsible for a specific part of the application.
+The Web project contains the main application logic, including controllers, views, and services. The Core project is responsible for handling database operations and defining the data models.
+
+### Registration, Authentication, and User Management
 The project started with implementing basic user registration and authentication features. We used the ASP.NET Core Identity framework to handle user management, including registration, login, and password reset. 
 This decision was made to ensure a secure and reliable user management system that can be easily extended in the future e.g. for external authentication providers or role-based access control.
 The user management system was adapted to be used with the PostgreSQL database, which was chosen as the primary database for the project according to the specifications from the proposal.
-
-## Project Structure and Architecture
-The project structure was designed to be modular and scalable, following the best practices for ASP.NET Core applications. The solution is currently divided into projects, each responsible for a specific part of the application.
-The Web project contains the main application logic, including controllers, views, and services. The Core project is responsible for handling database operations and defining the data models. 
 
 ### Tenant Management
 The project includes a basic tenant management system that allows users to be part of tenants. Each tenant can have its own set of users and settings, making it possible to create isolated environments for different organizations or projects.
