@@ -50,7 +50,6 @@
             </div>
             <div class="h-12 border-r-2 border-gray-500"></div>
         }
-
         <div class="w-80 h-44 bg-gray-50 shadow-md rounded-lg mb-4 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100"
              @onclick="() => SelectItem(null)">
             <div>
@@ -96,7 +95,6 @@
         {
             if (Workflow.ProcessFlow.Actions.Any())
             {
-                // TODO: Show error message - cannot remove trigger if actions exist
                 return;
             }
             Workflow.ProcessFlow.Triggers.Clear();
@@ -105,7 +103,6 @@
         {
             if (item != flowItems.LastOrDefault(i => i is Action))
             {
-                // TODO: Show error message - can only remove the last action
                 return;
             }
             Workflow.ProcessFlow.RemoveLastAction();
@@ -136,7 +133,6 @@
         {
             if (Workflow.ProcessFlow.Triggers.Any())
             {
-                // TODO: Show error message - only one trigger allowed
                 return;
             }
             Workflow.ProcessFlow.AddTrigger(trigger);
@@ -145,7 +141,6 @@
         {
             if (!Workflow.ProcessFlow.Triggers.Any())
             {
-                // TODO: Show error message - trigger must be added before actions
                 return;
             }
             Workflow.ProcessFlow.AddAction(action);
