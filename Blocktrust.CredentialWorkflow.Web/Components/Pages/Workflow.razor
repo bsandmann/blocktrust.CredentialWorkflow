@@ -15,73 +15,104 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
-@inject ILogger<Workflow> Logger
 @inject NavigationManager NavigationManager
 @inject ISchemaValidationService _schemaValidationService
 @inject IJSRuntime JSRuntime
+@inject ILogger<Workflow> Logger
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @layout AppLayout
-
 <PageTitle>Blocktrust Credential Workflow Platform - Workflows</PageTitle>
 
-@if (AppStateService.IsInitialized)
-{
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Workflows</h1>
+<div class="container mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Workflows</h1>
+        <div class="flex space-x-4">
+            <button @onclick="CreateNewWorkflow" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
+                <span class="material-symbols-outlined mr-2">add</span>
+                Create New
+            </button>
+            <button @onclick="OpenJsonImportModal" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
+                <span class="material-symbols-outlined mr-2">upload_file</span>
+                Import
+            </button>
+        </div>
+    </div>
 
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md" role="alert">
+            <p class="font-bold">Error</p>
+            <p>@errorMessage</p>
+        </div>
+    }
+
+    @if (AppStateService.IsInitialized)
+    {
         @if (workflows.Any())
         {
-            <div class="overflow-x-auto mb-4">
-                <table class="min-w-full bg-white">
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <table class="min-w-full">
                     <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Name</th>
-                        <th class="px-4 py-2 text-left">Last Updated</th>
-                        <th class="px-4 py-2 text-left">State</th>
-                        <th class="px-4 py-2 text-left">Last Run Outcome</th>
-                        <th class="px-4 py-2 text-left">Last Run Started</th>
-                        <th class="px-4 py-2 text-left">Last Run Ended</th>
-                        <th class="px-4 py-2 text-left">Actions</th>
-                    </tr>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colspan="6">
+                                <div class="grid grid-cols-6 gap-4">
+                                    <div>Name</div>
+                                    <div>Last Updated</div>
+                                    <div>State</div>
+                                    <div>Last Run Outcome</div>
+                                    <div>Last Run Started</div>
+                                    <div>Last Run Ended</div>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200">
                     @foreach (var workflow in workflows)
                     {
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">@workflow.Name</td>
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">@workflow.UpdatedUtc.ToString("g")</td>
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
-                                <span class="@GetWorkflowStateColor(workflow.WorkflowState)">
-                                    @workflow.WorkflowState
-                                </span>
+                            <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)" colspan="6">
+                                <div class="grid grid-cols-6 gap-4">
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">@workflow.Name</div>
+                                    </div>
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">@workflow.UpdatedUtc.ToString("g")</div>
+                                    </div>
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetWorkflowStateColor(workflow.WorkflowState)">
+                                            @workflow.WorkflowState
+                                        </span>
+                                    </div>
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        @if (workflow.LastOutcome != null)
+                                        {
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
+                                                @workflow.LastOutcome.OutcomeState
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-sm text-gray-500">N/A</span>
+                                        }
+                                    </div>
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">@(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
+                                    </div>
+                                    <div class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">@(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
-                                @if (workflow.LastOutcome != null)
-                                {
-                                    <span class="@GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
-                                        @workflow.LastOutcome.OutcomeState
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span>N/A</span>
-                                }
-                            </td>
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
-                                @(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")
-                            </td>
-                            <td class="border-t px-4 py-2 cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)">
-                                @(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")
-                            </td>
-                            <td class="border-t px-4 py-2">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)" @onclick:stopPropagation="true"
-                                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded inline-flex items-center mr-2">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                        class="text-red-600 hover:text-red-900 mr-2">
+                                    <span class="material-symbols-outlined">delete</span>
                                 </button>
                                 <button @onclick="() => ExportWorkflow(workflow.WorkflowId)" @onclick:stopPropagation="true"
-                                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded inline-flex items-center">
-                                    <span class="material-symbols-outlined text-sm">file_download</span>
+                                        class="text-blue-600 hover:text-blue-900">
+                                    <span class="material-symbols-outlined">file_download</span>
                                 </button>
                             </td>
                         </tr>
@@ -92,112 +123,132 @@
         }
         else
         {
-            <p class="text-gray-600 mb-4">No workflows found.</p>
+            <div class="bg-white shadow-md rounded-lg p-6 text-center">
+                <p class="text-gray-600 mb-4">No workflows found.</p>
+                <button @onclick="CreateNewWorkflow" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                    Create Your First Workflow
+                </button>
+            </div>
         }
-
-        <div class="flex justify-center space-x-4">
-            <button @onclick="CreateNewWorkflow" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Create New Workflow
-            </button>
-            <button @onclick="OpenJsonImportModal" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Import from JSON
-            </button>
-        </div>
-    </div>
-
-    @if (isJsonImportModalOpen)
+    }
+    else
     {
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Import Workflow from JSON</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <textarea @bind="jsonInput" class="w-full h-40 border rounded p-2" placeholder="Paste your JSON here..."></textarea>
-                    </div>
-                    <div class="mt-2 px-7 py-3">
-                        <InputFile OnChange="OnFileSelected" class="w-full"/>
-                    </div>
-                    <div class="items-center px-4 py-3">
-                        <button @onclick="ImportFromJson" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                            Import
-                        </button>
-                    </div>
-                    <div class="items-center px-4 py-3">
-                        <button @onclick="CloseJsonImportModal" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                            Cancel
-                        </button>
-                    </div>
+        <div class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-slate-500"></div>
+        </div>
+    }
+</div>
+
+@if (isJsonImportModalOpen)
+{
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Import Workflow from JSON</h3>
+                <div class="mt-2 px-7 py-3">
+                    <textarea @bind="jsonInput" class="w-full h-40 border rounded p-2" placeholder="Paste your JSON here..."></textarea>
+                </div>
+                <div class="mt-2 px-7 py-3">
+                    <InputFile OnChange="OnFileSelected" class="w-full" />
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button @onclick="ImportFromJson" class="px-4 py-2 bg-slate-700 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-300">
+                        Import
+                    </button>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button @onclick="CloseJsonImportModal" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
-    }
-}
-else
-{
-    <p class="text-center mt-8">Loading...</p>
+    </div>
 }
 
 @code {
-    private readonly CancellationTokenSource cts = new CancellationTokenSource();
-    private List<WorkflowWithLastResult> workflows = new List<WorkflowWithLastResult>();
-    private bool isJsonImportModalOpen = false;
+    private readonly CancellationTokenSource cts = new();
+    private List<WorkflowWithLastResult> workflows = new();
+    private bool isJsonImportModalOpen;
     private string jsonInput = "";
+    private string errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
-        if (!AppStateService.IsInitialized)
+        try
         {
-            await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
-        }
+            if (!AppStateService.IsInitialized)
+            {
+                await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
+            }
 
-        await LoadWorkflows();
+            await LoadWorkflows();
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred while initializing the page. Please try again later.";
+        }
     }
 
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
-        var file = e.File;
-        if (file != null)
+        try
         {
-            using var streamReader = new StreamReader(file.OpenReadStream());
-            jsonInput = await streamReader.ReadToEndAsync();
+            var file = e.File;
+            if (file != null)
+            {
+                using var streamReader = new StreamReader(file.OpenReadStream());
+                jsonInput = await streamReader.ReadToEndAsync();
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred while reading the file. Please try again.";
         }
     }
 
     private async Task LoadWorkflows()
     {
-        var workflowResults = await Mediator.Send(new GetWorkflowsRequest(AppStateService.Tenant.TenantId));
-        if (workflowResults.IsFailed)
+        try
         {
-            Logger.LogError("Failed to fetch workflows");
-        }
-        else
-        {
-            AppStateService.WorkflowSummaries = workflowResults.Value.Select(p => new WorkflowSummary()
+            var workflowResults = await Mediator.Send(new GetWorkflowsRequest(AppStateService.Tenant.TenantId));
+            if (workflowResults.IsFailed)
             {
-                Name = p.Name,
-                WorkflowId = p.WorkflowId,
-                UpdatedUtc = p.UpdatedUtc,
-            }).ToList();
-            workflows = workflowResults.Value;
+                errorMessage = "Failed to load workflows. Please try again later.";
+            }
+            else
+            {
+                AppStateService.WorkflowSummaries = workflowResults.Value.Select(p => new WorkflowSummary()
+                {
+                    Name = p.Name,
+                    WorkflowId = p.WorkflowId,
+                    UpdatedUtc = p.UpdatedUtc,
+                }).ToList();
+                workflows = workflowResults.Value;
+                errorMessage = ""; // Clear error message on successful load
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred while loading workflows. Please try again later.";
         }
     }
 
-
     private string GetWorkflowStateColor(EWorkflowState state) => state switch
     {
-        EWorkflowState.ActiveWithExternalTrigger => "text-green-600",
-        EWorkflowState.ActiveWithRecurrentTrigger => "text-green-600",
-        EWorkflowState.Inactive => "text-gray-600",
-        _ => "text-gray-600"
+        EWorkflowState.ActiveWithExternalTrigger => "bg-green-100 text-green-800",
+        EWorkflowState.ActiveWithRecurrentTrigger => "bg-green-100 text-green-800",
+        EWorkflowState.Inactive => "bg-gray-100 text-gray-800",
+        _ => "bg-gray-100 text-gray-800"
     };
 
     private string GetOutcomeStateColor(EOutcomeState state) => state switch
     {
-        EOutcomeState.Success => "text-green-600",
-        EOutcomeState.FailedWithErrors => "text-red-600",
-        EOutcomeState.NotStarted => "text-gray-600",
-        EOutcomeState.Running => "text-blue-600",
-        _ => "text-gray-600"
+        EOutcomeState.Success => "bg-green-100 text-green-800",
+        EOutcomeState.FailedWithErrors => "bg-red-100 text-red-800",
+        EOutcomeState.NotStarted => "bg-yellow-100 text-yellow-800",
+        EOutcomeState.Running => "bg-blue-100 text-blue-800",
+        _ => "bg-gray-100 text-gray-800"
     };
 
     private void NavigateToWorkflow(Guid workflowWorkflowId)
@@ -212,15 +263,22 @@ else
 
     private async Task DeleteWorkflow(Guid workflowId)
     {
-        var deleteResult = await Mediator.Send(new DeleteWorkflowRequest(workflowId));
-        if (deleteResult.IsFailed)
+        try
         {
-            // Handle error
-            Logger.LogError($"Failed to delete workflow {workflowId}");
+            var deleteResult = await Mediator.Send(new DeleteWorkflowRequest(workflowId));
+            if (deleteResult.IsFailed)
+            {
+                errorMessage = "Failed to delete the workflow. Please try again.";
+            }
+            else
+            {
+                await LoadWorkflows();
+                errorMessage = ""; // Clear error message on successful delete
+            }
         }
-        else
+        catch (Exception)
         {
-            await LoadWorkflows();
+            errorMessage = "An unexpected error occurred while deleting the workflow. Please try again later.";
         }
     }
 
@@ -228,6 +286,7 @@ else
     {
         isJsonImportModalOpen = true;
         jsonInput = "";
+        errorMessage = ""; // Clear any existing error messages
     }
 
     private void CloseJsonImportModal()
@@ -238,27 +297,33 @@ else
 
     private async Task ExportWorkflow(Guid workflowId)
     {
-        var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
-        if (workflowResult.IsFailed)
+        try
         {
-            Logger.LogError($"Failed to fetch workflow {workflowId}");
-            return;
+            var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
+            if (workflowResult.IsFailed)
+            {
+                errorMessage = "Failed to export the workflow. Please try again.";
+                return;
+            }
+
+            var workflow = workflowResult.Value;
+            var processFlowJson = workflow.ProcessFlow.SerializeToJson();
+
+            var fileName = $"workflow_{workflowId}.json";
+            var fileContent = System.Text.Encoding.UTF8.GetBytes(processFlowJson);
+            await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
         }
-
-        var workflow = workflowResult.Value;
-        var processFlowJson = workflow.ProcessFlow.SerializeToJson();
-
-        var fileName = $"workflow_{workflowId}.json";
-        var fileContent = System.Text.Encoding.UTF8.GetBytes(processFlowJson);
-        await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred while exporting the workflow. Please try again later.";
+        }
     }
 
     private async Task ImportFromJson()
     {
         if (string.IsNullOrWhiteSpace(jsonInput))
         {
-            Logger.LogError("No JSON input provided");
-            // TODO: Show error message to user
+            errorMessage = "Please provide JSON input before importing.";
             return;
         }
 
@@ -268,42 +333,35 @@ else
 
             if (errors.Any())
             {
-                foreach (var error in errors)
-                {
-                    Logger.LogError($"JSON validation error: {error}");
-                }
-
-                // TODO: Show validation errors to the user
+                errorMessage = "Invalid JSON format. Please check your input and try again.";
                 return;
             }
 
             var processFlow = ProcessFlow.DeserializeFromJson(jsonInput);
             if (processFlow == null)
             {
-                Logger.LogError("Failed to deserialize JSON to ProcessFlow");
+                errorMessage = "Failed to parse the JSON input. Please check the format and try again.";
                 return;
             }
 
             var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId, "Imported Workflow", processFlow));
             if (createResult.IsFailed)
             {
-                Logger.LogError("Failed to create workflow from imported JSON");
+                errorMessage = "Failed to create workflow from imported JSON. Please try again.";
                 return;
             }
 
             await LoadWorkflows();
             CloseJsonImportModal();
+            errorMessage = ""; // Clear any error messages on successful import
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            Logger.LogError(ex, "Invalid JSON format");
-            // TODO: Show error message to user
+            errorMessage = "Invalid JSON format. Please check your input and try again.";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.LogError(ex, "Error importing workflow from JSON");
-            // TODO: Show error message to user
+            errorMessage = "An unexpected error occurred while importing the workflow. Please try again later.";
         }
     }
-
 }
