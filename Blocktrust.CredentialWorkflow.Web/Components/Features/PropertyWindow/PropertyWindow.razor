@@ -14,7 +14,13 @@
                 <li>
                     <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.IncomingRequest)">Incoming Request</button>
                 </li>
-                <!-- Add other trigger types here -->
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.RecurringTimer)">Recurring Timer</button>
+                </li>
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.OnDemand)">On Demand</button>
+                </li>
+                <!-- TODO: Add other trigger types here -->
             </ul>
         </div>
         <div>
@@ -26,7 +32,10 @@
                 <li>
                     <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.OutgoingRequest)">Outgoing Request</button>
                 </li>
-                <!-- Add other action types here -->
+                <li>
+                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialVerification)">Credential Verification</button>
+                </li>
+                <!-- TODO: Add other action types here -->
             </ul>
         </div>
     }
@@ -40,7 +49,17 @@
         {
             <IncomingRequestComponent TriggerInput="incomingRequest" OnChange="OnChange"/>
         }
-        // Add other trigger types here
+        else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
+        {
+            <!-- TODO: Implement RecurringTimerComponent -->
+            <p>Recurring Timer properties editing not yet implemented</p>
+        }
+        else if (trigger.Input is TriggerInputOnDemand onDemand)
+        {
+            <!-- TODO: Implement OnDemandComponent -->
+            <p>On Demand properties editing not yet implemented</p>
+        }
+        <!-- TODO: Add other trigger types here -->
     }
     else if (SelectedItem is Core.Domain.ProcessFlow.Action.Action action)
     {
@@ -56,7 +75,12 @@
         {
             <OutgoingRequestComponent ActionInput="outgoingRequest" OnChange="OnChange"/>
         }
-        // Add other action types here
+        else if (action.Input is ActionInputCredentialVerification credentialVerification)
+        {
+            <!-- TODO: Implement CredentialVerificationComponent -->
+            <p>Credential Verification properties editing not yet implemented</p>
+        }
+        <!-- TODO: Add other action types here -->
     }
 </div>
 
@@ -73,7 +97,6 @@
             EActionType actionType => CreateNewAction(actionType),
             _ => throw new ArgumentException("Invalid item type")
         };
-
         await OnItemCreated.InvokeAsync(newItem);
     }
 
@@ -82,13 +105,26 @@
         return new Core.Domain.ProcessFlow.Trigger.Trigger
         {
             Type = triggerType,
-            Input = new TriggerInputIncomingRequest
+            Input = triggerType switch
             {
-                Id = Guid.NewGuid(),
-                Method = "GET",
-                Uri = "/api/example",
-                Body = null,
-                Headers = new Dictionary<string, string>()
+                ETriggerType.IncomingRequest => new TriggerInputIncomingRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "GET",
+                    Uri = "/api/example",
+                    Body = null,
+                    Headers = new Dictionary<string, string>()
+                },
+                ETriggerType.RecurringTimer => new TriggerInputRecurringTimer
+                {
+                    Id = Guid.NewGuid(),
+                    TimeSpan = TimeSpan.FromHours(1)
+                },
+                ETriggerType.OnDemand => new TriggerInputOnDemand
+                {
+                    Id = Guid.NewGuid()
+                },
+                _ => throw new NotImplementedException($"Trigger type {triggerType} is not implemented.")
             }
         };
     }
@@ -115,10 +151,21 @@
                     Body = "",
                     Headers = new Dictionary<string, string>()
                 },
+                EActionType.CredentialVerification => new ActionInputCredentialVerification
+                {
+                    Id = Guid.NewGuid(),
+                    CheckExpiration = true,
+                    CheckSignature = true,
+                    CheckIssuer = false,
+                    RequiredIssuer = null,
+                    CheckSchema = false,
+                    RequiredSchema = null,
+                    CheckClaims = false,
+                    RequiredClaims = new Dictionary<string, string>()
+                },
                 _ => throw new NotImplementedException($"Action type {actionType} is not implemented.")
             },
             RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
         };
     }
-
 }
