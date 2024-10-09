@@ -1,19 +1,6 @@
 ﻿@page "/designer"
 @page "/designer/{workflowWorkflowId:guid}"
 @page "/designer/new"
-
-@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
-@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
-@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
-@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
-@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
-@using Blocktrust.CredentialWorkflow.Web.Components.Layout
-@using Blocktrust.CredentialWorkflow.Web.Services
-@using MediatR
-@using Microsoft.AspNetCore.Components.Authorization
-@using Blocktrust.CredentialWorkflow.Web.Components.Features
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -21,50 +8,74 @@
 @inject ILogger<Designer> Logger
 @inject WorkflowChangeTrackerService ChangeTracker
 @inject IJSRuntime JSRuntime
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
+@using Blocktrust.CredentialWorkflow.Web.Components.Features
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
+@using Blocktrust.CredentialWorkflow.Web.Components.Layout
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
+@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
 @implements IAsyncDisposable
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @layout AppLayout
 
-<PageTitle>Blocktrust Credential Workflow Platform</PageTitle>
+<PageTitle>Blocktrust Credential Workflow Platform - Designer</PageTitle>
 @if (AppStateService.IsInitialized)
 {
     <div class="flex flex-col h-screen">
         <!-- Top bar -->
         <div class="bg-gray-100 p-4 flex items-center flex-row border-b-2 border-slate-200">
-            @if (isEditing)
+            @if (isEditing || isCreatingNew)
             {
-                <input type="text" placeholder="Enter workflow name" class="w-48 mr-2 px-2 py-1 border rounded" @bind="workflowName"/>
-                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="SaveWorkflow">Ok</button>
+                <input type="text" placeholder="Enter workflow name" class="w-64 mr-2 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" @bind="workflowName"/>
+                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition duration-300 ease-in-out" @onclick="SaveWorkflow">
+                    @(isCreatingNew ? "Create" : "Save")
+                </button>
             }
             else
             {
-                <select @bind="selectedWorkflowId" @oninput="OnWorkflowSelectionChanged" class="w-48 mr-2 px-2 py-1 border rounded">
+                <select @bind="selectedWorkflowId" @oninput="OnWorkflowSelectionChanged" class="w-64 mr-2 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500">
                     @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                     {
                         <option value="@workflow.WorkflowId">@workflow.Name</option>
                     }
                 </select>
-                <button class="bg-blue-500 text-white px-4 py-1 rounded" @onclick="EditWorkflow">
-                    <span class="material-symbols-outlined text-sm">edit</span>
+                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition duration-300 ease-in-out flex items-center" @onclick="EditWorkflow">
+                    <span class="material-symbols-outlined mr-2">edit</span>
+                    Edit
                 </button>
             }
-            <button class="bg-blue-500 text-white px-4 ml-2 py-1 rounded" @onclick="CreateNewWorkflow">Create New</button>
+            <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition duration-300 ease-in-out ml-4 flex items-center" @onclick="InitiateNewWorkflow">
+                <span class="material-symbols-outlined mr-2">add</span>
+                New Workflow
+            </button>
             <div class="flex-grow"></div>
-            @if (currentWorkflow is not null)
-            {
-                <button class="bg-green-500 text-white ml-4 px-4 py-1 rounded" @onclick="SaveWorkflow">Save</button>
-            }
             @if (currentWorkflow is not null && currentWorkflow.ProcessFlow is not null && currentWorkflow.ProcessFlow.Triggers.Any() && currentWorkflow.ProcessFlow.Actions.Any())
             {
-                <button class="@(hasUnsavedChanges ? "bg-gray-500" : "bg-green-500") text-white ml-4 px-4 py-1 rounded" 
-                        @onclick="RunWorkflow" disabled="@hasUnsavedChanges">Run</button>
+                <button class="@(hasUnsavedChanges ? "bg-gray-500 cursor-not-allowed" : "bg-slate-700 hover:bg-slate-600") text-white px-4 py-2 rounded-md transition duration-300 ease-in-out ml-4" 
+                        @onclick="RunWorkflow" disabled="@hasUnsavedChanges">
+                    Run
+                </button>
             }
             else
             {
-                <button class="bg-gray-500 text-white ml-4 px-4 py-1 rounded" disabled>Run</button>
+                <button class="bg-gray-500 text-white px-4 py-2 rounded-md ml-4 cursor-not-allowed" disabled>Run</button>
             }
         </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p class="font-bold">Error</p>
+                <p>@errorMessage</p>
+            </div>
+        }
 
         <!-- Main content area -->
         <div class="flex-grow flex flex-row">
@@ -85,28 +96,30 @@
 }
 else
 {
-    <p>Loading...</p>
+    <div class="flex justify-center items-center h-screen">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-slate-900"></div>
+    </div>
 }
 
 @code {
     [Parameter] public Guid? WorkflowWorkflowId { get; set; }
-    private readonly CancellationTokenSource cts = new CancellationTokenSource();
+    private readonly CancellationTokenSource cts = new();
     private string? workflowName;
     private Core.Domain.Workflow.Workflow? currentWorkflow;
     private ProcessFlow? currentProcessFlow;
-    private bool isEditing = false;
+    private bool isEditing;
+    private bool isCreatingNew;
     private Guid? selectedWorkflowId;
     private object? selectedItem;
     private WorkflowDesigner? workflowDesigner;
-    private bool hasUnsavedChanges = false;
+    private bool hasUnsavedChanges;
     private DotNetObjectReference<Designer>? objRef;
+    private string errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
         objRef = DotNetObjectReference.Create(this);
         await JSRuntime.InvokeVoidAsync("navigationHandler.setUnsavedChanges", false);
-        // NavigationManager.LocationChanged += OnLocationChanged;
-        // ChangeTracker.OnChange += OnChangeTrackerChanged;
         ChangeTracker.OnChange += HandleChangeTrackerChanged;
 
         if (!AppStateService.IsInitialized)
@@ -117,7 +130,7 @@ else
         var currentUrl = NavigationManager.Uri;
         if (currentUrl.EndsWith("/designer/new"))
         {
-            await CreateNewWorkflow();
+            InitiateNewWorkflow();
         }
         else if (WorkflowWorkflowId is not null)
         {
@@ -125,7 +138,7 @@ else
         }
         else if (!AppStateService.WorkflowSummaries.Any())
         {
-            await CreateNewWorkflow();
+            InitiateNewWorkflow();
         }
         else
         {
@@ -148,13 +161,12 @@ else
         InvokeAsync(StateHasChanged);
     }
 
-
     private async Task LoadWorkflow(Guid workflowId)
     {
         var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
         if (workflowResult.IsFailed)
         {
-// TODO: Show error message
+            errorMessage = "Failed to load the workflow. Please try again.";
             return;
         }
 
@@ -166,38 +178,52 @@ else
         workflowName = currentWorkflow.Name;
         selectedWorkflowId = currentWorkflow.WorkflowId;
         isEditing = false;
+        isCreatingNew = false;
+        errorMessage = "";
 
+        StateHasChanged();
+    }
+
+    private void InitiateNewWorkflow()
+    {
+        isCreatingNew = true;
+        workflowName = "";
+        currentWorkflow = null;
+        selectedWorkflowId = null;
+        errorMessage = "";
         StateHasChanged();
     }
 
     private async Task CreateNewWorkflow()
     {
-        var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId));
+        if (string.IsNullOrWhiteSpace(workflowName))
+        {
+            errorMessage = "Please enter a workflow name.";
+            return;
+        }
+
+        var newProcessFlow = new ProcessFlow();
+        var createResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId, workflowName, newProcessFlow));
         if (createResult.IsFailed)
         {
-            // TODO: Show error message
+            errorMessage = "Failed to create the workflow. Please try again.";
             return;
         }
 
         currentWorkflow = createResult.Value;
-        currentWorkflow.ProcessFlow = new ProcessFlow(); // Ensure ProcessFlow is initialized
-        workflowName = currentWorkflow.Name;
         selectedWorkflowId = currentWorkflow.WorkflowId;
-        isEditing = true;
+        isEditing = false;
+        isCreatingNew = false;
 
-        var workflowInAppStateService = AppStateService.WorkflowSummaries.FirstOrDefault(p => p.WorkflowId == currentWorkflow.WorkflowId);
-        if (workflowInAppStateService is null)
+        AppStateService.WorkflowSummaries.Add(new WorkflowSummary
         {
-            AppStateService.WorkflowSummaries.Add(new WorkflowSummary()
-            {
-                Name = createResult.Value.Name,
-                UpdatedUtc = createResult.Value.UpdatedUtc,
-                WorkflowId = createResult.Value.WorkflowId
-            });
-        }
+            Name = currentWorkflow.Name,
+            UpdatedUtc = currentWorkflow.UpdatedUtc,
+            WorkflowId = currentWorkflow.WorkflowId
+        });
 
         NavigationManager.NavigateTo($"/designer/{currentWorkflow.WorkflowId}", forceLoad: false);
-
+        errorMessage = "";
         StateHasChanged();
     }
 
@@ -208,12 +234,24 @@ else
 
     private async Task SaveWorkflow()
     {
-        if (currentWorkflow != null && !string.IsNullOrWhiteSpace(workflowName))
+        if (string.IsNullOrWhiteSpace(workflowName))
+        {
+            errorMessage = "Please enter a workflow name.";
+            return;
+        }
+
+        if (isCreatingNew)
+        {
+            await CreateNewWorkflow();
+            return;
+        }
+
+        if (currentWorkflow != null)
         {
             var updateResult = await Mediator.Send(new UpdateWorkflowRequest(currentWorkflow.WorkflowId, workflowName, currentWorkflow.WorkflowState, currentWorkflow.ProcessFlow));
             if (updateResult.IsFailed)
             {
-// TODO: Show error message
+                errorMessage = "Failed to update the workflow. Please try again.";
                 return;
             }
 
@@ -226,6 +264,7 @@ else
             isEditing = false;
             ChangeTracker.ResetChanges();
             hasUnsavedChanges = false;
+            errorMessage = "";
             StateHasChanged();
         }
     }
@@ -237,7 +276,11 @@ else
             var createResult = await Mediator.Send(new CreateOutcomeRequest(currentWorkflow.WorkflowId));
             if (createResult.IsFailed)
             {
-// TODO: Show error message
+                errorMessage = "Failed to run the workflow. Please try again.";
+            }
+            else
+            {
+                errorMessage = "Workflow executed successfully.";
             }
         }
     }
@@ -261,7 +304,7 @@ else
     {
         if (currentWorkflow?.ProcessFlow == null)
         {
-            // TODO: Show error message
+            errorMessage = "No active workflow. Please create or select a workflow first.";
             return;
         }
 
@@ -270,13 +313,10 @@ else
         HandleChange();
     }
     
-  
-    
     public void Dispose()
     {
         ChangeTracker.OnChange -= HandleChangeTrackerChanged;
     }
-    
     
     public async ValueTask DisposeAsync()
     {
@@ -285,5 +325,4 @@ else
             objRef.Dispose();
         }
     }
-
 }
