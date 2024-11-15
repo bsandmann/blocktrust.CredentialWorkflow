@@ -139,9 +139,9 @@
                 EActionType.CredentialIssuance => new ActionInputCredentialIssuance
                 {
                     Id = Guid.NewGuid(),
-                    Subject = "example_subject",
-                    Issuer = "example_issuer",
-                    Claims = new Dictionary<string, string>()
+                    SubjectDid = "example_subject",
+                    IssuerDid = "example_issuer",
+                    Claims = new Dictionary<string, ClaimValue>()
                 },
                 EActionType.OutgoingRequest => new ActionInputOutgoingRequest
                 {

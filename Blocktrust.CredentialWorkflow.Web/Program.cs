@@ -1,6 +1,11 @@
+using ActionType = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.EActionType;
 using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
+using Blocktrust.CredentialWorkflow.Core.Factories;
+using Blocktrust.CredentialWorkflow.Core.Domain.Handlers.Actions;
 using Blocktrust.CredentialWorkflow.Core.Services;
+using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
+using Blocktrust.CredentialWorkflow.Core.Settings;
 using Blocktrust.CredentialWorkflow.Web.Common;
 using Blocktrust.CredentialWorkflow.Web.Components.Account;
 using Blocktrust.CredentialWorkflow.Web.Services;
@@ -11,9 +16,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to athe container.
+// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add controller support
+builder.Services.AddControllers();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCascadingAuthenticationState();
@@ -25,6 +33,31 @@ builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<WorkflowChangeTrackerService>();
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 
+// Add Credential Workflow Services
+builder.Services.AddScoped<ICredentialService, CredentialService>();
+builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
+builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+
+// Register Action Handlers
+builder.Services.AddScoped<CredentialIssuanceActionHandler>();
+builder.Services.AddScoped<DeliveryActionHandler>();
+
+// Configure strongly typed settings object
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
+builder.Services.Configure<CredentialSettings>(
+    builder.Configuration.GetSection("CredentialSettings"));
+
+// Register Action Handler Factory
+builder.Services.AddSingleton<IActionHandlerFactory>(provider => new ActionHandlerFactory(
+    new Dictionary<ActionType, Type>
+    {
+        { ActionType.CredentialIssuance, typeof(CredentialIssuanceActionHandler) },
+        { ActionType.Delivery, typeof(DeliveryActionHandler) }
+    },
+    provider
+));
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -32,53 +65,34 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContextFactory<DataContext>(options =>
     options.UseNpgsql(connectionString));
 
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
-        {
-            // Sign in
-            options.SignIn.RequireConfirmedAccount = false;
-            // options.SignIn.RequireConfirmedEmail = false;
-            // options.SignIn.RequireConfirmedPhoneNumber = false;
-
-            // Password settings.
-            // options.Password.RequireDigit = true;
-            // options.Password.RequireLowercase = true;
-            // options.Password.RequireNonAlphanumeric = true;
-            // options.Password.RequireUppercase = true;
-            // options.Password.RequiredLength = 6;
-            // options.Password.RequiredUniqueChars = 1;
-
-            // Lockout settings.
-            // options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-            // options.Lockout.MaxFailedAccessAttempts = 5;
-            // options.Lockout.AllowedForNewUsers = true;
-
-            // User settings.
-            // options.User.AllowedUserNameCharacters =
-            //     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-            // options.User.RequireUniqueEmail = false;
-        }
-    )
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+    })
     .AddSignInManager()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<DataContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-builder.Services.Configure<AppSettings>(appSettingsSection);
 builder.Services.AddTransient<IEmailSender, SendGridEmailSender>();
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, ApplicationUserEmailSender>();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+// Add MediatR with all handlers
+builder.Services.AddMediatR(cfg => 
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly); // Web project handlers
+    cfg.RegisterServicesFromAssembly(typeof(DataContext).Assembly); // Core project handlers
+});
 
+builder.Services.AddAntiforgery();
 
 var app = builder.Build();
 
@@ -86,20 +100,28 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
+
+// Add routing middleware
+app.UseRouting();
+
+// Add authentication & authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Add antiforgery middleware after authentication/authorization but before endpoints
 app.UseAntiforgery();
 
+// Map endpoints
+app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
 
 app.Run();

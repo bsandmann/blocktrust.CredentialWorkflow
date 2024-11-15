@@ -28,10 +28,10 @@
                     @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
                     {
                         <p>
-                            <strong>Subject:</strong> @credentialIssuance.Subject
+                            <strong>Subject:</strong> @credentialIssuance.SubjectDid
                         </p>
                         <p>
-                            <strong>Issuer:</strong> @credentialIssuance.Issuer
+                            <strong>Issuer:</strong> @credentialIssuance.IssuerDid
                         </p>
                     }
                     else if (action.Input is ActionInputOutgoingRequest outgoingRequest)

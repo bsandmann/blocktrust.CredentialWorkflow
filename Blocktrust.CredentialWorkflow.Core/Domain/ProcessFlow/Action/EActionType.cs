@@ -4,5 +4,6 @@ public enum EActionType
 {
     OutgoingRequest,
     CredentialVerification,
-    CredentialIssuance
+    CredentialIssuance,
+    Delivery
 }
