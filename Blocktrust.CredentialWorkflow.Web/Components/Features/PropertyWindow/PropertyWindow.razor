@@ -3,6 +3,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Action
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
@@ -110,10 +112,10 @@
                 ETriggerType.IncomingRequest => new TriggerInputIncomingRequest
                 {
                     Id = Guid.NewGuid(),
-                    Method = "GET",
-                    Uri = "/api/example",
-                    Body = null,
-                    Headers = new Dictionary<string, string>()
+                    Method = "POST",
+                    Endpoint = "/credentials/issue/{workflowId}",
+                    Template = "credential-issuance",
+                    Parameters = RequestTemplates.Templates["credential-issuance"].Parameters
                 },
                 ETriggerType.RecurringTimer => new TriggerInputRecurringTimer
                 {
@@ -128,7 +130,6 @@
             }
         };
     }
-
     private Core.Domain.ProcessFlow.Action.Action CreateNewAction(EActionType actionType)
     {
         return new Core.Domain.ProcessFlow.Action.Action
@@ -139,8 +140,18 @@
                 EActionType.CredentialIssuance => new ActionInputCredentialIssuance
                 {
                     Id = Guid.NewGuid(),
-                    SubjectDid = "example_subject",
-                    IssuerDid = "example_issuer",
+                    SubjectDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "subjectDid",
+                        DefaultValue = ""
+                    },
+                    IssuerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultIssuerDid",
+                        DefaultValue = ""
+                    },
                     Claims = new Dictionary<string, ClaimValue>()
                 },
                 EActionType.OutgoingRequest => new ActionInputOutgoingRequest
@@ -167,5 +178,6 @@
             },
             RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
         };
-    }
+    }    
+
 }

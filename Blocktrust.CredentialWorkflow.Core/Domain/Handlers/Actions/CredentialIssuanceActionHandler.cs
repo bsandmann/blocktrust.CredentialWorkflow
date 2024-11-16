@@ -4,6 +4,7 @@ using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.Handlers.Actions;
 
@@ -11,13 +12,16 @@ public class CredentialIssuanceActionHandler : IActionHandler
 {
     private readonly ICredentialService _credentialService;
     private readonly ILogger<CredentialIssuanceActionHandler> _logger;
+    private readonly IConfiguration _configuration;
 
     public CredentialIssuanceActionHandler(
         ICredentialService credentialService,
-        ILogger<CredentialIssuanceActionHandler> logger)
+        ILogger<CredentialIssuanceActionHandler> logger,
+        IConfiguration configuration)
     {
         _credentialService = credentialService;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<Result<ActionResult>> ExecuteAsync(
@@ -29,10 +33,32 @@ public class CredentialIssuanceActionHandler : IActionHandler
         {
             var typedInput = (ActionInputCredentialIssuance)input;
             
+            var subjectDid = typedInput.SubjectDid.ResolveValue(context, _configuration);
+            var issuerDid = typedInput.IssuerDid.ResolveValue(context, _configuration);
+
+            if (string.IsNullOrEmpty(subjectDid) || string.IsNullOrEmpty(issuerDid))
+            {
+                return Result.Fail<ActionResult>("Required DIDs not available");
+            }
+
+            // Resolve claims
+            var resolvedClaims = new Dictionary<string, string>();
+            foreach (var claim in typedInput.Claims)
+            {
+                var value = claim.Value.Type == ClaimValueType.Static 
+                    ? claim.Value.Value 
+                    : claim.Value.ParameterReference?.ResolveValue(context, _configuration);
+                
+                if (value != null)
+                {
+                    resolvedClaims[claim.Key] = value;
+                }
+            }
+
             var issuanceResult = await _credentialService.IssueCredential(
-                typedInput.SubjectDid,
-                typedInput.IssuerDid,
-                JsonSerializer.Serialize(typedInput.Claims));
+                subjectDid,
+                issuerDid,
+                JsonSerializer.Serialize(resolvedClaims));
 
             if (issuanceResult.IsFailed)
             {

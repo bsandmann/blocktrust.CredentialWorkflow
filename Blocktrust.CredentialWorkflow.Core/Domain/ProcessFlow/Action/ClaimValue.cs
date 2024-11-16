@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
 
@@ -9,9 +10,11 @@ public class ClaimValue
     public ClaimValueType Type { get; set; }
 
     [JsonPropertyName("value")]
-    public string Value { get; set; } = string.Empty;
-}
+    public string Value { get; set; } = "";
 
+    [JsonPropertyName("parameterReference")]
+    public ParameterReference? ParameterReference { get; set; }
+}
 
 public enum ClaimValueType
 {

@@ -18,8 +18,20 @@
                             <strong>Method:</strong> @incomingRequest.Method
                         </p>
                         <p>
-                            <strong>URI:</strong> @incomingRequest.Uri
+                            <strong>Endpoint:</strong> @incomingRequest.Endpoint
                         </p>
+                        @if (incomingRequest.Parameters.Any())
+                        {
+                            <p>
+                                <strong>Required Parameters:</strong>
+                            </p>
+                            <ul class="text-sm">
+                                @foreach (var param in incomingRequest.Parameters.Where(p => p.Value.Required))
+                                {
+                                    <li>@param.Key</li>
+                                }
+                            </ul>
+                        }
                     }
                 }
                 else if (item is Action action)
@@ -28,11 +40,23 @@
                     @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
                     {
                         <p>
-                            <strong>Subject:</strong> @credentialIssuance.SubjectDid
+                            <strong>Subject DID:</strong> @(credentialIssuance.SubjectDid.Path)
+                            <span class="text-sm text-gray-500">
+                                (@credentialIssuance.SubjectDid.Source)
+                            </span>
                         </p>
                         <p>
-                            <strong>Issuer:</strong> @credentialIssuance.IssuerDid
+                            <strong>Issuer DID:</strong> @(credentialIssuance.IssuerDid.Path)
+                            <span class="text-sm text-gray-500">
+                                (@credentialIssuance.IssuerDid.Source)
+                            </span>
                         </p>
+                        @if (credentialIssuance.Claims.Any())
+                        {
+                            <p>
+                                <strong>Claims:</strong> @credentialIssuance.Claims.Count
+                            </p>
+                        }
                     }
                     else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
                     {

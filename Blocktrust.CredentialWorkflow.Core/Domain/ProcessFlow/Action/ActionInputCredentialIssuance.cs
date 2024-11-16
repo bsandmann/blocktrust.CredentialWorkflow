@@ -1,15 +1,25 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-
 using System.Text.Json.Serialization;
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
 
 public class ActionInputCredentialIssuance : ActionInput
 {
-    [JsonPropertyName("subjectDid")] 
-    public string SubjectDid { get; set; } = null!;
+    [JsonPropertyName("subjectDid")]
+    public ParameterReference SubjectDid { get; set; } = new()
+    {
+        Source = ParameterSource.TriggerInput,
+        Path = "subjectDid"
+    };
 
-    [JsonPropertyName("issuerDid")] 
-    public string IssuerDid { get; set; } = null!;
+    [JsonPropertyName("issuerDid")]
+    public ParameterReference IssuerDid { get; set; } = new()
+    {
+        Source = ParameterSource.AppSettings,
+        Path = "DefaultIssuerDid"
+    };
 
-    [JsonPropertyName("claims")] 
+    [JsonPropertyName("claims")]
     public Dictionary<string, ClaimValue> Claims { get; set; } = new();
 }
+
