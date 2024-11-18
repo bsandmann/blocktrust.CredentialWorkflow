@@ -5,84 +5,122 @@
 
 <div class="h-full w-full p-4">
     <div class="flex flex-col items-center">
-        @foreach (var item in flowItems)
+        @if (showToast)
         {
-            <div class="w-80 h-44 bg-gray-200 hover:bg-gray-100 shadow-md rounded-lg p-4 flex flex-col cursor-pointer @(item == SelectedItem ? "border-2 border-blue-500" : "")"
-                 @onclick="() => SelectItem(item)">
-                @if (item is Trigger trigger)
-                {
-                    <h3 class="text-lg font-bold mb-2">Trigger: @trigger.Type</h3>
-                    @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
-                    {
-                        <p>
-                            <strong>Method:</strong> @incomingRequest.Method
-                        </p>
-                        <p>
-                            <strong>Endpoint:</strong> @incomingRequest.Endpoint
-                        </p>
-                        @if (incomingRequest.Parameters.Any())
-                        {
-                            <p>
-                                <strong>Required Parameters:</strong>
-                            </p>
-                            <ul class="text-sm">
-                                @foreach (var param in incomingRequest.Parameters.Where(p => p.Value.Required))
-                                {
-                                    <li>@param.Key</li>
-                                }
-                            </ul>
-                        }
-                    }
-                }
-                else if (item is Action action)
-                {
-                    <h3 class="text-lg font-bold mb-2">Action: @action.Type</h3>
-                    @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
-                    {
-                        <p>
-                            <strong>Subject DID:</strong> @(credentialIssuance.SubjectDid.Path)
-                            <span class="text-sm text-gray-500">
-                                (@credentialIssuance.SubjectDid.Source)
-                            </span>
-                        </p>
-                        <p>
-                            <strong>Issuer DID:</strong> @(credentialIssuance.IssuerDid.Path)
-                            <span class="text-sm text-gray-500">
-                                (@credentialIssuance.IssuerDid.Source)
-                            </span>
-                        </p>
-                        @if (credentialIssuance.Claims.Any())
-                        {
-                            <p>
-                                <strong>Claims:</strong> @credentialIssuance.Claims.Count
-                            </p>
-                        }
-                    }
-                    else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
-                    {
-                        <p>
-                            <strong>Method:</strong> @outgoingRequest.Method
-                        </p>
-                        <p>
-                            <strong>URI:</strong> @outgoingRequest.Uri
-                        </p>
-                    }
-                }
-                <button class="bg-red-500 text-white px-2 py-1 rounded mt-auto self-end" @onclick:stopPropagation="true" @onclick="() => RemoveItem(item)">
-                    <span class="material-symbols-outlined text-sm">delete</span> 
-                </button>
+            <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+                @toastMessage
             </div>
-            <div class="h-12 border-r-2 border-gray-500"></div>
         }
 
-        <div class="w-80 h-44 bg-gray-50 shadow-md rounded-lg mb-4 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100"
+        @foreach (var item in flowItems)
+        {
+            <div class="w-80 h-32 bg-gray-200 hover:bg-gray-100 shadow-md rounded-lg p-3 flex flex-col cursor-pointer text-sm relative transition-all duration-200 @(item == SelectedItem ? "border-2 border-blue-500" : "")"
+                 @onclick="() => SelectItem(item)">
+                <div class="overflow-hidden hover:overflow-visible hover:absolute hover:z-50 hover:bg-gray-100 hover:h-auto hover:w-80 hover:shadow-xl hover:rounded-lg hover:p-3">
+                    @if (item is Trigger trigger)
+                    {
+                        <h3 class="text-base font-bold mb-1">Trigger: @trigger.Type</h3>
+                        @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
+                        {
+                            <p class="text-xs">
+                                <strong>Method:</strong> @incomingRequest.Method
+                            </p>
+                            <p class="text-xs truncate hover:whitespace-normal">
+                                <strong>Endpoint:</strong> @incomingRequest.Endpoint
+                            </p>
+                            @if (incomingRequest.Parameters.Any())
+                            {
+                                <div class="mt-1">
+                                    <p class="text-xs">
+                                        <strong>Required Parameters:</strong>
+                                    </p>
+                                    <ul class="text-xs">
+                                        @foreach (var param in incomingRequest.Parameters.Where(p => p.Value.Required))
+                                        {
+                                            <li>@param.Key</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        }
+                    }
+                    else if (item is Action action)
+                    {
+                        <h3 class="text-base font-bold mb-1">Action: @action.Type</h3>
+                        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
+                        {
+                            <p class="text-xs truncate hover:whitespace-normal">
+                                <strong>Subject DID:</strong> @(credentialIssuance.SubjectDid.Path)
+                                <span class="text-xs text-gray-500">
+                                    (@credentialIssuance.SubjectDid.Source)
+                                </span>
+                            </p>
+                            <p class="text-xs truncate hover:whitespace-normal">
+                                <strong>Issuer DID:</strong> @(credentialIssuance.IssuerDid.Path)
+                                <span class="text-xs text-gray-500">
+                                    (@credentialIssuance.IssuerDid.Source)
+                                </span>
+                            </p>
+                            @if (credentialIssuance.Claims.Any())
+                            {
+                                <div class="mt-1 space-y-1">
+                                    <p class="text-xs">
+                                        <strong>Claims (@credentialIssuance.Claims.Count):</strong>
+                                    </p>
+                                    <div class="text-xs space-y-1">
+                                        @foreach (var claim in credentialIssuance.Claims)
+                                        {
+                                            <p class="truncate hover:whitespace-normal">
+                                                <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value)
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
+                        {
+                            <p class="text-xs">
+                                <strong>Method:</strong> @outgoingRequest.Method
+                            </p>
+                            <p class="text-xs truncate hover:whitespace-normal">
+                                <strong>URI:</strong> @outgoingRequest.Uri
+                            </p>
+                        }
+                    }
+                </div>
+
+                <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded mt-auto self-end transition-colors duration-200" 
+                        @onclick:stopPropagation="true" 
+                        @onclick="() => RemoveItem(item)">
+                    <span class="material-symbols-outlined text-xs">delete</span> 
+                </button>
+            </div>
+            <div class="h-8 border-r-2 border-gray-300"></div>
+        }
+
+        <div class="w-80 h-32 bg-gray-50 shadow-md rounded-lg mb-4 p-3 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100 transition-colors duration-200"
              @onclick="() => SelectItem(null)">
             <div>
-                <span class="material-symbols-outlined text-3xl">add_circle_outline</span>
+                <span class="material-symbols-outlined text-2xl">add_circle_outline</span>
             </div>
-            <p class="text-lg font-bold text-center">Create new Action/Trigger</p>
+            <p class="text-base font-bold text-center">Create new Action/Trigger</p>
         </div>
     </div>
+
+    @if (showError)
+    {
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 max-w-md">
+                <h3 class="text-xl font-bold mb-4">Error</h3>
+                <p class="text-gray-700 mb-6">@errorMessage</p>
+                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
+                        @onclick="CloseError">
+                    OK
+                </button>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -92,6 +130,10 @@
 
     private List<object> flowItems = new List<object>();
     private object? SelectedItem { get; set; }
+    private string? errorMessage;
+    private bool showError;
+    private string? toastMessage;
+    private bool showToast;
 
     protected override void OnParametersSet()
     {
@@ -109,6 +151,35 @@
         }
     }
 
+    private async Task ShowToast(string message)
+    {
+        toastMessage = message;
+        showToast = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(3000);
+        showToast = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ShowError(string message)
+    {
+        errorMessage = message;
+        showError = true;
+    }
+
+    private void CloseError()
+    {
+        showError = false;
+        errorMessage = null;
+    }
+
+    private string GetClaimPreview(ClaimValue claim)
+    {
+        if (claim.Type == ClaimValueType.Static)
+            return claim.Value;
+        return $"{claim.ParameterReference?.Source} ({claim.ParameterReference?.Path})";
+    }
+
     private async Task RemoveItem(object item)
     {
         if (Workflow?.ProcessFlow == null)
@@ -120,19 +191,21 @@
         {
             if (Workflow.ProcessFlow.Actions.Any())
             {
-                // TODO: Show error message - cannot remove trigger if actions exist
+                ShowError("Cannot remove trigger while actions exist. Please remove all actions first.");
                 return;
             }
             Workflow.ProcessFlow.Triggers.Clear();
+            await ShowToast("Trigger removed successfully");
         }
         else if (item is Action)
         {
             if (item != flowItems.LastOrDefault(i => i is Action))
             {
-                // TODO: Show error message - can only remove the last action
+                ShowError("Only the last action can be removed. Please remove actions in reverse order.");
                 return;
             }
             Workflow.ProcessFlow.RemoveLastAction();
+            await ShowToast("Action removed successfully");
         }
 
         UpdateFlowItems();
@@ -160,19 +233,21 @@
         {
             if (Workflow.ProcessFlow.Triggers.Any())
             {
-                // TODO: Show error message - only one trigger allowed
+                ShowError("Only one trigger is allowed per workflow. Please remove the existing trigger first.");
                 return;
             }
             Workflow.ProcessFlow.AddTrigger(trigger);
+            await ShowToast("Trigger added successfully");
         }
         else if (item is Action action)
         {
             if (!Workflow.ProcessFlow.Triggers.Any())
             {
-                // TODO: Show error message - trigger must be added before actions
+                ShowError("A trigger must be added before adding actions. Please add a trigger first.");
                 return;
             }
             Workflow.ProcessFlow.AddAction(action);
+            await ShowToast("Action added successfully");
         }
 
         UpdateFlowItems();
