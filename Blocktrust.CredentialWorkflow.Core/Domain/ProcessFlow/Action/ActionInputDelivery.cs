@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;using Blocktrust.CredentialWorkflow.Core.Domain.Common;
-using System.Text.Json.Serialization;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
 
