@@ -32,12 +32,19 @@
                             {
                                 <div class="mt-1">
                                     <p class="text-xs">
-                                        <strong>Required Parameters:</strong>
+                                        <strong>Parameters:</strong>
                                     </p>
-                                    <ul class="text-xs">
-                                        @foreach (var param in incomingRequest.Parameters.Where(p => p.Value.Required))
+                                    <ul class="text-xs space-y-1">
+                                        @foreach (var param in incomingRequest.Parameters)
                                         {
-                                            <li>@param.Key</li>
+                                            <li class="flex items-center">
+                                                <span class="font-medium">@param.Key:</span>
+                                                <span class="ml-1 text-gray-600">@param.Value.Type</span>
+                                                @if (param.Value.Required)
+                                                {
+                                                    <span class="ml-1 text-red-500 text-xs">*</span>
+                                                }
+                                            </li>
                                         }
                                     </ul>
                                 </div>
@@ -92,7 +99,7 @@
 
                 <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded mt-auto self-end transition-colors duration-200" 
                         @onclick:stopPropagation="true" 
-                        @onclick="() => RemoveItem(item)">
+                        @onclick="async () => await RemoveItem(item)">
                     <span class="material-symbols-outlined text-xs">delete</span> 
                 </button>
             </div>
@@ -144,10 +151,11 @@
     {
         if (Workflow?.ProcessFlow != null)
         {
-            flowItems.Clear();
-            flowItems.AddRange(Workflow.ProcessFlow.Triggers.Values);
-            flowItems.AddRange(Workflow.ProcessFlow.Actions.Values);
-            flowItems = flowItems.OrderBy(item => item is Trigger ? 0 : 1).ToList();
+            var newItems = new List<object>();
+            newItems.AddRange(Workflow.ProcessFlow.Triggers.Values);
+            newItems.AddRange(Workflow.ProcessFlow.Actions.Values);
+            flowItems = newItems.OrderBy(item => item is Trigger ? 0 : 1).ToList();
+            StateHasChanged();
         }
     }
 
@@ -155,22 +163,24 @@
     {
         toastMessage = message;
         showToast = true;
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
         await Task.Delay(3000);
         showToast = false;
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private void ShowError(string message)
     {
         errorMessage = message;
         showError = true;
+        StateHasChanged();
     }
 
     private void CloseError()
     {
         showError = false;
         errorMessage = null;
+        StateHasChanged();
     }
 
     private string GetClaimPreview(ClaimValue claim)
@@ -187,6 +197,7 @@
             return;
         }
 
+        bool removed = false;
         if (item is Trigger)
         {
             if (Workflow.ProcessFlow.Actions.Any())
@@ -195,7 +206,7 @@
                 return;
             }
             Workflow.ProcessFlow.Triggers.Clear();
-            await ShowToast("Trigger removed successfully");
+            removed = true;
         }
         else if (item is Action)
         {
@@ -205,15 +216,19 @@
                 return;
             }
             Workflow.ProcessFlow.RemoveLastAction();
-            await ShowToast("Action removed successfully");
+            removed = true;
         }
 
-        UpdateFlowItems();
-        if (item == SelectedItem)
+        if (removed)
         {
-            await SelectItem(null);
+            if (item == SelectedItem)
+            {
+                await SelectItem(null);
+            }
+            await OnChange.InvokeAsync();
+            UpdateFlowItems();
+            await ShowToast(item is Trigger ? "Trigger removed successfully" : "Action removed successfully");
         }
-        await OnChange.InvokeAsync();
     }
 
     private async Task SelectItem(object? item)
@@ -229,6 +244,7 @@
             return;
         }
 
+        bool added = false;
         if (item is Trigger trigger)
         {
             if (Workflow.ProcessFlow.Triggers.Any())
@@ -237,7 +253,7 @@
                 return;
             }
             Workflow.ProcessFlow.AddTrigger(trigger);
-            await ShowToast("Trigger added successfully");
+            added = true;
         }
         else if (item is Action action)
         {
@@ -247,10 +263,14 @@
                 return;
             }
             Workflow.ProcessFlow.AddAction(action);
-            await ShowToast("Action added successfully");
+            added = true;
         }
 
-        UpdateFlowItems();
-        await OnChange.InvokeAsync();
+        if (added)
+        {
+            await OnChange.InvokeAsync();
+            UpdateFlowItems();
+            await ShowToast(item is Trigger ? "Trigger added successfully" : "Action added successfully");
+        }
     }
 }
