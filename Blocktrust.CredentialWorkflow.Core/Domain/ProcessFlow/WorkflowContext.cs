@@ -1,4 +1,6 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 
 public class WorkflowContext
 {

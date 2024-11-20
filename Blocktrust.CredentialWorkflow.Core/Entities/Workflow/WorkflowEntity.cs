@@ -1,9 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 
 using System.ComponentModel.DataAnnotations;
-using System.Data;
-using System.Text.Json;
-using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Domain.Enums;
 using Domain.ProcessFlow;
 using Domain.Workflow;

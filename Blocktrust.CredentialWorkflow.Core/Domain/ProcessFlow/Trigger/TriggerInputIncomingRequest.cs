@@ -10,7 +10,7 @@ public class TriggerInputIncomingRequest : TriggerInput
     public string Method { get; set; } = "POST";
 
     [JsonPropertyName("template")] 
-    public string Template { get; set; } = "credential-issuance";  // Identifies the request template to use
+    public string Template { get; set; } = "credential-issuance"; 
 
     [JsonPropertyName("parameters")]
     public Dictionary<string, ParameterDefinition> Parameters { get; set; } = new();

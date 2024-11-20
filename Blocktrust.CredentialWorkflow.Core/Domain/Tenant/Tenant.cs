@@ -1,7 +1,5 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.Tenant;
 
-using Workflow;
-
 public record Tenant
 {
     public Guid TenantId { get; init; }

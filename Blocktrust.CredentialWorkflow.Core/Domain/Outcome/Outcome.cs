@@ -1,6 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.Outcome;
 
-using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
+using Enums;
 using Workflow;
 
 public class Outcome

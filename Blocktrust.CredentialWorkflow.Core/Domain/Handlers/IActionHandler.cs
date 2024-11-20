@@ -1,14 +1,5 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-
-namespace Blocktrust.CredentialWorkflow.Core.Domain.Handlers;
-
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
-using FluentResults;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.Handlers;
 
 public interface IActionHandler
 {
-    Task<Result<ActionResult>> ExecuteAsync(
-        ActionInput input,
-        WorkflowContext context,
-        CancellationToken cancellationToken);
 }

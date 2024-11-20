@@ -1,10 +1,6 @@
-// Location: /Blocktrust.CredentialWorkflow.Core/Domain/ProcessFlow/ProcessFlow.cs
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.Common;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-using Microsoft.Extensions.Configuration;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 
@@ -12,9 +8,12 @@ public class ProcessFlow
 {
     [JsonPropertyName("triggers")] 
     public Dictionary<Guid, Trigger.Trigger> Triggers { get; set; } = new();
-
+    
     [JsonPropertyName("actions")] 
     public Dictionary<Guid, Action.Action> Actions { get; set; } = new();
+    
+    [JsonPropertyName("outcome")]
+    public WorkflowOutcomeDefinition? Outcome { get; set; }
 
     public void AddTrigger(Trigger.Trigger trigger)
     {
@@ -22,23 +21,25 @@ public class ProcessFlow
         {
             throw new InvalidOperationException("Only a single trigger can be added to a ProcessFlow.");
         }
-
         var triggerId = Guid.NewGuid();
         Triggers.Add(triggerId, trigger);
     }
 
     public void AddAction(Action.Action action)
     {
+        if (Outcome != null)
+        {
+            throw new InvalidOperationException("Cannot add actions after an outcome has been set. Remove the outcome first.");
+        }
+        
         if (!Triggers.Any())
         {
             throw new InvalidOperationException("A trigger must be added before adding any actions.");
         }
-
+        
         var actionId = Guid.NewGuid();
-
         if (!Actions.Any())
         {
-            // This is the first action, so it should run after the trigger
             action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
             {
                 { Triggers.Keys.First(), new List<EFlowStatus> { EFlowStatus.Succeeded } }
@@ -46,14 +47,12 @@ public class ProcessFlow
         }
         else
         {
-            // This action should run after the previous action
             var previousActionId = Actions.Keys.Last();
             action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
             {
                 { previousActionId, new List<EFlowStatus> { EFlowStatus.Succeeded } }
             };
         }
-
         Actions.Add(actionId, action);
     }
 
@@ -63,9 +62,22 @@ public class ProcessFlow
         {
             throw new InvalidOperationException("There are no actions to remove.");
         }
-
         var lastActionId = Actions.Keys.Last();
         Actions.Remove(lastActionId);
+    }
+
+    public void SetOutcome(WorkflowOutcomeDefinition workflowOutcome)
+    {
+        if (!Actions.Any())
+        {
+            throw new InvalidOperationException("Cannot add outcome before adding at least one action.");
+        }
+        Outcome = workflowOutcome;
+    }
+
+    public void RemoveOutcome()
+    {
+        Outcome = null;
     }
 
     private static JsonSerializerOptions GetJsonSerializerOptions()

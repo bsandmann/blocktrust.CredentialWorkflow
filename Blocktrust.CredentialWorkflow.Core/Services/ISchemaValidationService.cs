@@ -1,10 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+namespace Blocktrust.CredentialWorkflow.Core.Services;
 
-namespace Blocktrust.CredentialWorkflow.Core.Services
+public interface ISchemaValidationService
 {
-    public interface ISchemaValidationService
-    {
-        Task<IEnumerable<string>> ValidateJsonAgainstSchema(string json, string schemaName);
-    }
+    Task<IEnumerable<string>> ValidateJsonAgainstSchema(string json, string schemaName);
 }
