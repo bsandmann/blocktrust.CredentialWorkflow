@@ -1,4 +1,5 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger.IncomingRequests
 
 <div class="p-4 text-sm">
     @if (showToast)
@@ -9,6 +10,15 @@
     }
 
     <div class="space-y-3">
+        <div class="flex justify-between items-center">
+            <label class="block text-xs font-medium text-gray-700">Trigger Configuration</label>
+            <button class="@(hasUnsavedChanges ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-300 cursor-not-allowed") text-white text-xs py-1 px-3 rounded transition-colors duration-200"
+                    @onclick="SaveChanges" 
+                    disabled="@(!hasUnsavedChanges)">
+                Save Changes
+            </button>
+        </div>
+
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Request Template</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
@@ -22,7 +32,8 @@
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Endpoint</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
-                    @bind="TriggerInput.Endpoint">
+                    @bind="TriggerInput.Endpoint"
+                    @bind:after="OnInputChanged">
                 <option value="/credentials/issue">/credentials/issue</option>
             </select>
         </div>
@@ -30,7 +41,8 @@
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Method</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
-                    @bind="TriggerInput.Method">
+                    @bind="TriggerInput.Method"
+                    @bind:after="OnInputChanged">
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
             </select>
@@ -38,7 +50,9 @@
 
         @if (selectedTemplate == "credential-issuance")
         {
-            <CredentialIssuanceTrigger TriggerInput="TriggerInput" OnChange="OnChange" />
+            <CredentialIssuanceTrigger 
+                TriggerInput="TriggerInput" 
+                OnChange="HandleChildChange"/>
         }
     </div>
 </div>
@@ -46,14 +60,97 @@
 @code {
     [Parameter] public TriggerInputIncomingRequest TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public EventCallback<TriggerInputIncomingRequest> OnSave { get; set; }
 
     private string selectedTemplate = "credential-issuance";
+    private bool hasUnsavedChanges;
+    private TriggerInputIncomingRequest? originalState;
     private string? toastMessage;
     private bool showToast;
 
     protected override void OnInitialized()
     {
         TriggerInput.Template = selectedTemplate;
+        originalState = CloneTriggerInput();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!hasUnsavedChanges)
+        {
+            originalState = CloneTriggerInput();
+        }
+    }
+
+    private TriggerInputIncomingRequest CloneTriggerInput()
+    {
+        // Deep clone implementation
+        var clone = new TriggerInputIncomingRequest
+        {
+            Id = TriggerInput.Id,
+            Method = TriggerInput.Method,
+            Endpoint = TriggerInput.Endpoint,
+            Template = TriggerInput.Template,
+            Parameters = new Dictionary<string, ParameterDefinition>()
+        };
+
+        foreach (var param in TriggerInput.Parameters)
+        {
+            clone.Parameters[param.Key] = new ParameterDefinition
+            {
+                Type = param.Value.Type,
+                Required = param.Value.Required,
+                Description = param.Value.Description,
+                AllowedValues = param.Value.AllowedValues?.ToArray()
+            };
+        }
+
+        return clone;
+    }
+
+    private async Task OnTemplateChanged()
+    {
+        TriggerInput.Template = selectedTemplate;
+        TriggerInput.Parameters.Clear();
+        CheckForChanges();
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task OnInputChanged()
+    {
+        CheckForChanges();
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task HandleChildChange()
+    {
+        CheckForChanges();
+        await OnChange.InvokeAsync();
+    }
+
+    private void CheckForChanges()
+    {
+        if (originalState == null) return;
+
+        hasUnsavedChanges = !CompareInputs(TriggerInput, originalState);
+        StateHasChanged();
+    }
+
+    private bool CompareInputs(TriggerInputIncomingRequest current, TriggerInputIncomingRequest original)
+    {
+        // Implement deep comparison using serialization to compare objects
+        return System.Text.Json.JsonSerializer.Serialize(current) == 
+               System.Text.Json.JsonSerializer.Serialize(original);
+    }
+
+    private async Task SaveChanges()
+    {
+        if (!hasUnsavedChanges) return;
+
+        await OnSave.InvokeAsync(TriggerInput);
+        originalState = CloneTriggerInput();
+        hasUnsavedChanges = false;
+        await ShowToast("Changes saved successfully");
     }
 
     private async Task ShowToast(string message)
@@ -64,12 +161,5 @@
         await Task.Delay(3000);
         showToast = false;
         StateHasChanged();
-    }
-
-    private async Task OnTemplateChanged()
-    {
-        TriggerInput.Template = selectedTemplate;
-        TriggerInput.Parameters.Clear();
-        await OnChange.InvokeAsync();
     }
 }

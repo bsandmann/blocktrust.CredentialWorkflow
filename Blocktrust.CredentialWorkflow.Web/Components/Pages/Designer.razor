@@ -1,13 +1,6 @@
 ﻿@page "/designer"
 @page "/designer/{workflowWorkflowId:guid}"
 @page "/designer/new"
-@inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IMediator Mediator
-@inject AppStateService AppStateService
-@inject ILogger<Designer> Logger
-@inject WorkflowChangeTrackerService ChangeTracker
-@inject IJSRuntime JSRuntime
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
@@ -20,12 +13,18 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
-@implements IAsyncDisposable
-
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMediator Mediator
+@inject AppStateService AppStateService
+@inject ILogger<Designer> Logger
+@inject WorkflowChangeTrackerService ChangeTracker
+@inject IJSRuntime JSRuntime
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @layout AppLayout
 
 <PageTitle>Blocktrust Credential Workflow Platform - Designer</PageTitle>
+
 @if (AppStateService.IsInitialized)
 {
     <div class="flex flex-col h-screen">
@@ -81,15 +80,16 @@
         <div class="flex-grow flex flex-row">
             <div class="flex-grow bg-white p-4">
                 <WorkflowDesigner @ref="workflowDesigner"
-                                  Workflow="@currentWorkflow"
-                                  OnItemSelected="HandleItemSelected"
-                                  OnChange="HandleChange" />
+                              Workflow="@currentWorkflow"
+                              OnItemSelected="HandleItemSelected"
+                              OnChange="HandleChange"/>
             </div>
-
             <div class="bg-gray-200 p-4 w-1/4">
                 <PropertyWindow SelectedItem="@selectedItem"
-                                OnItemCreated="HandleItemCreated"
-                                OnChange="HandleChange" />
+                           OnItemCreated="HandleItemCreated"
+                           OnChange="HandleChange"
+                           OnSave="HandleSave"
+                           flowItems="@flowItems"/>
             </div>
         </div>
     </div>
@@ -115,6 +115,7 @@ else
     private bool hasUnsavedChanges;
     private DotNetObjectReference<Designer>? objRef;
     private string errorMessage = "";
+    private List<object> flowItems = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,15 +146,16 @@ else
             var latestWorkflow = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First();
             await LoadWorkflow(latestWorkflow.WorkflowId);
         }
+
         await base.OnInitializedAsync();
     }
-    
+
     private void HandleChangeTrackerChanged()
     {
         hasUnsavedChanges = ChangeTracker.HasUnsavedChanges;
         InvokeAsync(StateHasChanged);
     }
-    
+
     private void HandleChange()
     {
         ChangeTracker.HasUnsavedChanges = true;
@@ -175,14 +177,53 @@ else
         {
             currentWorkflow.ProcessFlow = new ProcessFlow();
         }
+
         workflowName = currentWorkflow.Name;
         selectedWorkflowId = currentWorkflow.WorkflowId;
         isEditing = false;
         isCreatingNew = false;
         errorMessage = "";
 
+        // Update flowItems
+        flowItems.Clear();
+        if (currentWorkflow.ProcessFlow.Triggers != null)
+            flowItems.AddRange(currentWorkflow.ProcessFlow.Triggers.Values);
+        if (currentWorkflow.ProcessFlow.Actions != null)
+            flowItems.AddRange(currentWorkflow.ProcessFlow.Actions.Values);
+        if (currentWorkflow.ProcessFlow.Outcome != null)
+            flowItems.Add(currentWorkflow.ProcessFlow.Outcome);
+
         StateHasChanged();
     }
+
+    private async Task HandleSave(object item)
+    {
+        if (currentWorkflow == null) return;
+
+        if (item is Core.Domain.ProcessFlow.Trigger.Trigger)
+        {
+            var updateResult = await Mediator.Send(new UpdateWorkflowRequest(
+                currentWorkflow.WorkflowId,
+                currentWorkflow.Name,
+                currentWorkflow.WorkflowState,
+                currentWorkflow.ProcessFlow));
+
+            if (updateResult.IsSuccess)
+            {
+                await LoadWorkflow(currentWorkflow.WorkflowId); // Reload to get fresh state
+                ChangeTracker.ResetChanges();
+                hasUnsavedChanges = false;
+                errorMessage = "";
+            }
+            else
+            {
+                errorMessage = "Failed to save changes";
+            }
+        }
+    }
+    
+    
+   
 
     private void InitiateNewWorkflow()
     {

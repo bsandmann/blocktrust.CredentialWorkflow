@@ -60,7 +60,10 @@
         </p>
         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
         {
-            <IncomingRequestComponent TriggerInput="incomingRequest" OnChange="OnChange"/>
+            <IncomingRequestComponent 
+                TriggerInput="incomingRequest" 
+                OnChange="OnChange"
+                OnSave="HandleTriggerSave"/>
         }
         else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
         {
@@ -100,10 +103,20 @@
     [Parameter] public object? SelectedItem { get; set; }
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public EventCallback<object> OnSave { get; set; }
     [Parameter] public List<object> flowItems { get; set; } = new();
     
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
     private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
+
+    private async Task HandleTriggerSave(TriggerInputIncomingRequest updatedInput)
+    {
+        if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
+        {
+            trigger.Input = updatedInput;
+            await OnSave.InvokeAsync(trigger);
+        }
+    }
 
     private async Task CreateNewItem(object itemType)
     {
