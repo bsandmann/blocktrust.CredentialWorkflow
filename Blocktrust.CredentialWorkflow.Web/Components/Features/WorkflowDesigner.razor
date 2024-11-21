@@ -135,7 +135,7 @@
     [Parameter] public EventCallback<object?> OnItemSelected { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
 
-    private List<object> flowItems = new List<object>();
+    private List<object> flowItems = new();
     private object? SelectedItem { get; set; }
     private string? errorMessage;
     private bool showError;

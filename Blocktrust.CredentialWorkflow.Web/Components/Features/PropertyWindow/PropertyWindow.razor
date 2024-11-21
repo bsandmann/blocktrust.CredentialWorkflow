@@ -4,6 +4,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Action
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger.IncomingRequests
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
 
@@ -92,7 +93,6 @@
     else if (SelectedItem is WorkflowOutcomeDefinition outcome)
     {
         <h3 class="text-lg font-bold mb-2">Outcome Properties</h3>
-        <WorkflowOutcomePropertyEditor Definition="outcome" OnChange="OnChange" />
     }
 </div>
 
