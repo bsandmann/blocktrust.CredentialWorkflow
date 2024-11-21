@@ -1,18 +1,18 @@
-﻿namespace Blocktrust.CredentialWorkflow.Web.Services;
-
-using Common;
-using Core.Commands.Tenant.GetTenantInformation;
-using Core.Domain.Tenant;
-using Core.Domain.Workflow;
+﻿using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation;
+using Blocktrust.CredentialWorkflow.Core.Domain.Tenant;
+using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
+using Blocktrust.CredentialWorkflow.Web.Common;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
+
+namespace Blocktrust.CredentialWorkflow.Web.Services;
 
 public class AppStateService
 {
     public bool IsInitialized { get; set; }
     public string? UserName { get; set; }
-    public Tenant Tenant { get; private set; } = new Tenant();
-    public List<WorkflowSummary> WorkflowSummaries { get; set; } = new List<WorkflowSummary>();
+    public Tenant Tenant { get; private set; } = new();
+    public List<WorkflowSummary> WorkflowSummaries { get; set; } = new();
 
     public event Action? OnChange;
 
@@ -47,9 +47,9 @@ public class AppStateService
             return;
         }
 
-        this.UserName = username;
-        this.Tenant = tenantInformationResult.Value.Tenant;
-        this.WorkflowSummaries = tenantInformationResult.Value.WorkflowSummaries;
-        this.IsInitialized = true;
+        UserName = username;
+        Tenant = tenantInformationResult.Value.Tenant;
+        WorkflowSummaries = tenantInformationResult.Value.WorkflowSummaries;
+        IsInitialized = true;
     }
 }

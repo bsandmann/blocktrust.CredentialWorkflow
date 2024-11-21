@@ -1,7 +1,5 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core;
 
-using System.Text.Json;
-using Domain.Outcome;
 using Entities.Identity;
 using Entities.Outcome;
 using Entities.Tenant;
@@ -9,10 +7,8 @@ using Entities.Workflow;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.UserSecrets;
 
 public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
 {
@@ -50,7 +46,7 @@ public class DataContext : IdentityDbContext<ApplicationUser>
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
     public DbSet<OutcomeEntity> OutcomeEntities { get; set; }
     
-    public DbSet<IdentusAgent> IdentusAgents { get; set; }
+    // public DbSet<IdentusAgent> IdentusAgents { get; set; }
 
     /// <summary>
     /// Setup
@@ -72,8 +68,8 @@ public class DataContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.TenantEntityId)
             .OnDelete(DeleteBehavior.NoAction);
         
-        modelBuilder.Entity<IdentusAgent>().HasKey(p => p.IdentusAgentId);
-        modelBuilder.Entity<IdentusAgent>().Property(p => p.IdentusAgentId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        // modelBuilder.Entity<IdentusAgent>().HasKey(p => p.IdentusAgentId);
+        // modelBuilder.Entity<IdentusAgent>().Property(p => p.IdentusAgentId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
         
         //////////////////////////////////////////////////////////////// Workflow
         modelBuilder.Entity<WorkflowEntity>().HasKey(p => p.WorkflowEntityId);

@@ -1,7 +1,7 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
 
 using System.ComponentModel.DataAnnotations;
-using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
+using Identity;
 using Domain.Tenant;
 using Microsoft.EntityFrameworkCore;
 using Workflow;
@@ -27,7 +27,7 @@ public record TenantEntity
     /// <summary>
     /// A tenant can have many identus agents
     /// </summary>
-    public IList<IdentusAgent> IdentusAgents { get; set; }
+    // public IList<IdentusAgent> IdentusAgents { get; set; }
     
     
     public Tenant Map()

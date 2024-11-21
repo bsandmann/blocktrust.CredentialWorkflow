@@ -1,94 +1,105 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
+
+public class ProcessFlow
 {
-    public class ProcessFlow
+    [JsonPropertyName("triggers")] 
+    public Dictionary<Guid, Trigger.Trigger> Triggers { get; set; } = new();
+    
+    [JsonPropertyName("actions")] 
+    public Dictionary<Guid, Action.Action> Actions { get; set; } = new();
+    
+    [JsonPropertyName("outcome")]
+    public WorkflowOutcomeDefinition? Outcome { get; set; }
+
+    public void AddTrigger(Trigger.Trigger trigger)
     {
-        [JsonPropertyName("triggers")] 
-        public Dictionary<Guid, Trigger.Trigger> Triggers { get; set; } = new();
-
-        [JsonPropertyName("actions")] 
-        public Dictionary<Guid, Action.Action> Actions { get; set; } = new();
-
-        public void AddTrigger(Trigger.Trigger trigger)
+        if (Triggers.Any())
         {
-            if (Triggers.Any())
-            {
-                throw new InvalidOperationException("Only a single trigger can be added to a ProcessFlow.");
-            }
-
-            var triggerId = Guid.NewGuid();
-            Triggers.Add(triggerId, trigger);
+            throw new InvalidOperationException("Only a single trigger can be added to a ProcessFlow.");
         }
+        var triggerId = Guid.NewGuid();
+        Triggers.Add(triggerId, trigger);
+    }
 
-        public void AddAction(Action.Action action)
+    public void AddAction(Action.Action action)
+    {
+        if (Outcome != null)
         {
-            if (!Triggers.Any())
-            {
-                throw new InvalidOperationException("A trigger must be added before adding any actions.");
-            }
-
-            var actionId = Guid.NewGuid();
-
-            if (!Actions.Any())
-            {
-                // This is the first action, so it should run after the trigger
-                action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
-                {
-                    { Triggers.Keys.First(), new List<EFlowStatus> { EFlowStatus.Succeeded } }
-                };
-            }
-            else
-            {
-                // This action should run after the previous action
-                var previousActionId = Actions.Keys.Last();
-                action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
-                {
-                    { previousActionId, new List<EFlowStatus> { EFlowStatus.Succeeded } }
-                };
-            }
-
-            Actions.Add(actionId, action);
+            throw new InvalidOperationException("Cannot add actions after an outcome has been set. Remove the outcome first.");
         }
-
-        public void RemoveLastAction()
-        {
-            if (!Actions.Any())
-            {
-                throw new InvalidOperationException("There are no actions to remove.");
-            }
-
-            var lastActionId = Actions.Keys.Last();
-            Actions.Remove(lastActionId);
-        }
-
         
-        private static JsonSerializerOptions GetJsonSerializerOptions()
+        if (!Triggers.Any())
         {
-            return new JsonSerializerOptions
+            throw new InvalidOperationException("A trigger must be added before adding any actions.");
+        }
+        
+        var actionId = Guid.NewGuid();
+        if (!Actions.Any())
+        {
+            action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
             {
-                WriteIndented = true,
-                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                IgnoreReadOnlyProperties = true,
-                PropertyNameCaseInsensitive = true
+                { Triggers.Keys.First(), new List<EFlowStatus> { EFlowStatus.Succeeded } }
             };
         }
-        public string SerializeToJson()
+        else
         {
-            return JsonSerializer.Serialize(this, GetJsonSerializerOptions());
+            var previousActionId = Actions.Keys.Last();
+            action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
+            {
+                { previousActionId, new List<EFlowStatus> { EFlowStatus.Succeeded } }
+            };
         }
+        Actions.Add(actionId, action);
+    }
 
-        public static ProcessFlow DeserializeFromJson(string json)
+    public void RemoveLastAction()
+    {
+        if (!Actions.Any())
         {
-            var processFlow = JsonSerializer.Deserialize<ProcessFlow>(json, GetJsonSerializerOptions());
-            return processFlow ?? throw new ArgumentException("Invalid JSON string");
+            throw new InvalidOperationException("There are no actions to remove.");
         }
+        var lastActionId = Actions.Keys.Last();
+        Actions.Remove(lastActionId);
+    }
+
+    public void SetOutcome(WorkflowOutcomeDefinition workflowOutcome)
+    {
+        if (!Actions.Any())
+        {
+            throw new InvalidOperationException("Cannot add outcome before adding at least one action.");
+        }
+        Outcome = workflowOutcome;
+    }
+
+    public void RemoveOutcome()
+    {
+        Outcome = null;
+    }
+
+    private static JsonSerializerOptions GetJsonSerializerOptions()
+    {
+        return new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            IgnoreReadOnlyProperties = true,
+            PropertyNameCaseInsensitive = true
+        };
+    }
+
+    public string SerializeToJson()
+    {
+        return JsonSerializer.Serialize(this, GetJsonSerializerOptions());
+    }
+
+    public static ProcessFlow DeserializeFromJson(string json)
+    {
+        var processFlow = JsonSerializer.Deserialize<ProcessFlow>(json, GetJsonSerializerOptions());
+        return processFlow ?? throw new ArgumentException("Invalid JSON string");
     }
 }

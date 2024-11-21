@@ -1,8 +1,12 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Action
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger.IncomingRequests
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
@@ -20,10 +24,9 @@
                 <li>
                     <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.OnDemand)">On Demand</button>
                 </li>
-                <!-- TODO: Add other trigger types here -->
             </ul>
         </div>
-        <div>
+        <div class="mb-4">
             <h4 class="text-md font-semibold mb-2">Actions:</h4>
             <ul class="list-disc list-inside">
                 <li>
@@ -35,9 +38,19 @@
                 <li>
                     <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialVerification)">Credential Verification</button>
                 </li>
-                <!-- TODO: Add other action types here -->
             </ul>
         </div>
+        @if (hasActions && !hasOutcome)
+        {
+            <div>
+                <h4 class="text-md font-semibold mb-2">Outcome:</h4>
+                <ul class="list-disc list-inside">
+                    <li>
+                        <button class="text-blue-500 hover:underline" @onclick="CreateNewOutcome">Add Workflow Outcome</button>
+                    </li>
+                </ul>
+            </div>
+        }
     }
     else if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
     {
@@ -47,21 +60,21 @@
         </p>
         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
         {
-            <IncomingRequestComponent TriggerInput="incomingRequest" OnChange="OnChange"/>
+            <IncomingRequestComponent 
+                TriggerInput="incomingRequest" 
+                OnChange="OnChange"
+                OnSave="HandleTriggerSave"/>
         }
         else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
         {
-            <!-- TODO: Implement RecurringTimerComponent -->
-            <p>Recurring Timer properties editing not yet implemented</p>
+            <div class="text-yellow-600">Recurring Timer properties editing not yet implemented</div>
         }
         else if (trigger.Input is TriggerInputOnDemand onDemand)
         {
-            <!-- TODO: Implement OnDemandComponent -->
-            <p>On Demand properties editing not yet implemented</p>
+            <div class="text-yellow-600">On Demand properties editing not yet implemented</div>
         }
-        <!-- TODO: Add other trigger types here -->
     }
-    else if (SelectedItem is Core.Domain.ProcessFlow.Action.Action action)
+    else if (SelectedItem is WorkflowAction action)
     {
         <h3 class="text-lg font-bold mb-2">Action Properties</h3>
         <p>
@@ -77,10 +90,12 @@
         }
         else if (action.Input is ActionInputCredentialVerification credentialVerification)
         {
-            <!-- TODO: Implement CredentialVerificationComponent -->
-            <p>Credential Verification properties editing not yet implemented</p>
+            <div class="text-yellow-600">Credential Verification properties editing not yet implemented</div>
         }
-        <!-- TODO: Add other action types here -->
+    }
+    else if (SelectedItem is WorkflowOutcomeDefinition outcome)
+    {
+        <h3 class="text-lg font-bold mb-2">Outcome Properties</h3>
     }
 </div>
 
@@ -88,6 +103,20 @@
     [Parameter] public object? SelectedItem { get; set; }
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public EventCallback<object> OnSave { get; set; }
+    [Parameter] public List<object> flowItems { get; set; } = new();
+    
+    private bool hasActions => flowItems.Any(x => x is WorkflowAction);
+    private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
+
+    private async Task HandleTriggerSave(TriggerInputIncomingRequest updatedInput)
+    {
+        if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
+        {
+            trigger.Input = updatedInput;
+            await OnSave.InvokeAsync(trigger);
+        }
+    }
 
     private async Task CreateNewItem(object itemType)
     {
@@ -100,6 +129,16 @@
         await OnItemCreated.InvokeAsync(newItem);
     }
 
+    private async Task CreateNewOutcome()
+    {
+        var outcome = new WorkflowOutcomeDefinition
+        {
+            Type = EOutcomeType.Success,
+            Message = "Workflow completed successfully"
+        };
+        await OnItemCreated.InvokeAsync(outcome);
+    }
+
     private Core.Domain.ProcessFlow.Trigger.Trigger CreateNewTrigger(ETriggerType triggerType)
     {
         return new Core.Domain.ProcessFlow.Trigger.Trigger
@@ -110,10 +149,10 @@
                 ETriggerType.IncomingRequest => new TriggerInputIncomingRequest
                 {
                     Id = Guid.NewGuid(),
-                    Method = "GET",
-                    Uri = "/api/example",
-                    Body = null,
-                    Headers = new Dictionary<string, string>()
+                    Method = "POST",
+                    Endpoint = "/credentials/issue/{workflowId}",
+                    Template = "credential-issuance",
+                    Parameters = RequestTemplates.Templates["credential-issuance"].Parameters
                 },
                 ETriggerType.RecurringTimer => new TriggerInputRecurringTimer
                 {
@@ -129,9 +168,9 @@
         };
     }
 
-    private Core.Domain.ProcessFlow.Action.Action CreateNewAction(EActionType actionType)
+    private WorkflowAction CreateNewAction(EActionType actionType)
     {
-        return new Core.Domain.ProcessFlow.Action.Action
+        return new WorkflowAction
         {
             Type = actionType,
             Input = actionType switch
@@ -139,9 +178,19 @@
                 EActionType.CredentialIssuance => new ActionInputCredentialIssuance
                 {
                     Id = Guid.NewGuid(),
-                    Subject = "example_subject",
-                    Issuer = "example_issuer",
-                    Claims = new Dictionary<string, string>()
+                    SubjectDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "subjectDid",
+                        DefaultValue = ""
+                    },
+                    IssuerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultIssuerDid",
+                        DefaultValue = ""
+                    },
+                    Claims = new Dictionary<string, ClaimValue>()
                 },
                 EActionType.OutgoingRequest => new ActionInputOutgoingRequest
                 {
