@@ -62,8 +62,7 @@
         {
             <IncomingRequestComponent 
                 TriggerInput="incomingRequest" 
-                OnChange="OnChange"
-                OnSave="HandleTriggerSave"/>
+                OnChange="OnChange"/>
         }
         else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
         {
@@ -82,7 +81,11 @@
         </p>
         @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
         {
-            <CredentialIssuanceComponent ActionInput="credentialIssuance" OnChange="OnChange"/>
+            var triggerParameters = GetTriggerParameters();
+            <CredentialIssuanceComponent 
+                ActionInput="credentialIssuance" 
+                OnChange="OnChange"
+                TriggerParameters="triggerParameters"/>
         }
         else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
         {
@@ -103,19 +106,19 @@
     [Parameter] public object? SelectedItem { get; set; }
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
-    [Parameter] public EventCallback<object> OnSave { get; set; }
     [Parameter] public List<object> flowItems { get; set; } = new();
     
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
     private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
 
-    private async Task HandleTriggerSave(TriggerInputIncomingRequest updatedInput)
+    private IEnumerable<string>? GetTriggerParameters()
     {
-        if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
+        var trigger = flowItems.FirstOrDefault(x => x is Core.Domain.ProcessFlow.Trigger.Trigger) as Core.Domain.ProcessFlow.Trigger.Trigger;
+        if (trigger?.Input is TriggerInputIncomingRequest incomingRequest)
         {
-            trigger.Input = updatedInput;
-            await OnSave.InvokeAsync(trigger);
+            return incomingRequest.Parameters.Keys;
         }
+        return null;
     }
 
     private async Task CreateNewItem(object itemType)
