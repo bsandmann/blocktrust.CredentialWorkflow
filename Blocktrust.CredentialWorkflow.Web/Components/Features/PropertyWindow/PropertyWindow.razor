@@ -82,7 +82,11 @@
         </p>
         @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
         {
-            <CredentialIssuanceComponent ActionInput="credentialIssuance" OnChange="OnChange"/>
+            var triggerParameters = GetTriggerParameters();
+            <CredentialIssuanceComponent 
+                ActionInput="credentialIssuance" 
+                OnChange="OnChange"
+                TriggerParameters="triggerParameters"/>
         }
         else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
         {
@@ -109,6 +113,16 @@
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
     private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
 
+    private IEnumerable<string>? GetTriggerParameters()
+    {
+        var trigger = flowItems.FirstOrDefault(x => x is Core.Domain.ProcessFlow.Trigger.Trigger) as Core.Domain.ProcessFlow.Trigger.Trigger;
+        if (trigger?.Input is TriggerInputIncomingRequest incomingRequest)
+        {
+            return incomingRequest.Parameters.Keys;
+        }
+        return null;
+    }
+
     private async Task HandleTriggerSave(TriggerInputIncomingRequest updatedInput)
     {
         if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
@@ -118,7 +132,7 @@
         }
     }
 
-    private async Task CreateNewItem(object itemType)
+private async Task CreateNewItem(object itemType)
     {
         object newItem = itemType switch
         {
