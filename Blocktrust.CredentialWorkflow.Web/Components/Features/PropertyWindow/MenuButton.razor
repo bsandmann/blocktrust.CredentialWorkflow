@@ -1,0 +1,28 @@
+﻿@code {
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public EventCallback<bool> OnClick { get; set; }
+    [Parameter] public bool ShowAddButton { get; set; }
+    [Parameter] public bool IsSubItem { get; set; }
+
+    private async Task HandleClick(bool addOnly)
+    {
+        await OnClick.InvokeAsync(addOnly);
+    }
+}
+
+<div class="@(IsSubItem ? "ml-6" : "") flex items-center justify-between py-1">
+    <button @onclick="() => HandleClick(false)" 
+            class="flex items-center text-xs text-gray-600 hover:text-gray-900 transition-colors">
+        <span class="material-symbols-outlined text-sm mr-2">@Icon</span>
+        @Label
+    </button>
+    @if (ShowAddButton)
+    {
+        <button @onclick="() => HandleClick(true)"
+                class="text-blue-500 hover:text-blue-700 transition-colors"
+                title="Quick add">
+            <span class="material-symbols-outlined text-sm">add</span>
+        </button>
+    }
+</div>

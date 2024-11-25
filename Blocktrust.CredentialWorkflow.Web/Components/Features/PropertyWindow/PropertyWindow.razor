@@ -11,105 +11,128 @@
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
     {
-        <h3 class="text-lg font-bold mb-2">Create new Action/Trigger</h3>
-        <div class="mb-4">
-            <h4 class="text-md font-semibold mb-2">Triggers:</h4>
-            <ul class="list-disc list-inside">
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.IncomingRequest)">Incoming Request</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.RecurringTimer)">Recurring Timer</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.OnDemand)">On Demand</button>
-                </li>
-            </ul>
+        <h3 class="text-lg font-medium text-gray-800 mb-6">Create new Action/Trigger</h3>
+
+        <!-- Triggers Section -->
+        <div class="mb-6">
+            <div class="flex items-center mb-3">
+                <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
+                <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
+            </div>
+
+            <div class="space-y-2 ml-8">
+                <!-- Incoming Requests Group -->
+                <div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="material-symbols-outlined mr-2">http</span>
+                        Incoming requests
+                    </div>
+                    <div class="ml-6 space-y-1 mt-1">
+                        <MenuButton Icon="description" Label="Credential Issuance" OnClick="@(() => CreateNewItem(ETriggerType.IncomingRequest))" ShowAddButton="true" />
+                        <MenuButton Icon="verified" Label="Credential Verification" OnClick="@(() => CreateNewItem(ETriggerType.IncomingRequest))" ShowAddButton="true" />
+                    </div>
+                </div>
+
+                <MenuButton Icon="schedule" Label="Recurring timer" OnClick="@(() => CreateNewItem(ETriggerType.RecurringTimer))" />
+                <MenuButton Icon="play_circle" Label="On demand" OnClick="@(() => CreateNewItem(ETriggerType.OnDemand))" />
+            </div>
         </div>
-        <div class="mb-4">
-            <h4 class="text-md font-semibold mb-2">Actions:</h4>
-            <ul class="list-disc list-inside">
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialIssuance)">Credential Issuance</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.OutgoingRequest)">Outgoing Request</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialVerification)">Credential Verification</button>
-                </li>
-            </ul>
+
+        <!-- Actions Section -->
+        <div class="mb-6">
+            <div class="flex items-center mb-3">
+                <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
+                <h4 class="text-sm font-medium text-gray-700">Actions</h4>
+            </div>
+
+            <div class="space-y-2 ml-8">
+                <!-- Issue Credential Group -->
+                <MenuGroup Label="Issue credential" Icon="add_card" IsExpanded="@isIssueCredentialExpanded" OnToggle="@(() => ToggleGroup("issueCredential"))">
+                    <MenuButton Icon="create" Label="Create credential" OnClick="@(() => CreateNewItem(EActionType.CredentialIssuance))" ShowAddButton="true" />
+                    <MenuButton Icon="draw" Label="Sign credential" OnClick="@(() => CreateNewItem(EActionType.CredentialIssuance))" ShowAddButton="true" />
+                </MenuGroup>
+
+                <!-- Verify Credential Group -->
+                <MenuGroup Label="Verify credential" Icon="verified_user" IsExpanded="@isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
+                    <MenuButton Icon="check" Label="Check signature" OnClick="@(() => CreateNewItem(EActionType.CredentialVerification))" ShowAddButton="true" />
+                    <MenuButton Icon="schedule" Label="Check expiry" OnClick="@(() => CreateNewItem(EActionType.CredentialVerification))" ShowAddButton="true" />
+                    <MenuButton Icon="block" Label="Check revocation" OnClick="@(() => CreateNewItem(EActionType.CredentialVerification))" ShowAddButton="true" />
+                    <MenuButton Icon="verified" Label="Check trust registry" OnClick="@(() => CreateNewItem(EActionType.CredentialVerification))" ShowAddButton="true" />
+                </MenuGroup>
+
+                <!-- Outgoing Request Group -->
+                <MenuGroup Label="Outgoing request" Icon="send" IsExpanded="@isOutgoingRequestExpanded" OnToggle="@(() => ToggleGroup("outgoingRequest"))">
+                    <MenuButton Icon="swap_horiz" Label="DIDComm trust ping" OnClick="@(() => CreateNewItem(EActionType.OutgoingRequest))" ShowAddButton="true" />
+                    <MenuButton Icon="message" Label="DIDComm message" OnClick="@(() => CreateNewItem(EActionType.OutgoingRequest))" ShowAddButton="true" />
+                    <MenuButton Icon="http" Label="HTTP Post" OnClick="@(() => CreateNewItem(EActionType.OutgoingRequest))" ShowAddButton="true" />
+                    <MenuButton Icon="mail" Label="Send email" OnClick="@(() => CreateNewItem(EActionType.OutgoingRequest))" ShowAddButton="true" />
+                </MenuGroup>
+            </div>
         </div>
+
+        <!-- Outcome Section -->
         @if (hasActions && !hasOutcome)
         {
-            <div>
-                <h4 class="text-md font-semibold mb-2">Outcome:</h4>
-                <ul class="list-disc list-inside">
-                    <li>
-                        <button class="text-blue-500 hover:underline" @onclick="CreateNewOutcome">Add Workflow Outcome</button>
-                    </li>
-                </ul>
+            <div class="mb-6">
+                <div class="flex items-center mb-3">
+                    <span class="material-symbols-outlined text-gray-600 mr-2">flag</span>
+                    <h4 class="text-sm font-medium text-gray-700">Outcome</h4>
+                </div>
+
+                <div class="space-y-2 ml-8">
+                    <MenuButton Icon="post_add" Label="Post outcome" OnClick="@CreateNewOutcome" ShowAddButton="true" />
+                    <MenuButton Icon="note_add" Label="Log outcome" OnClick="@CreateNewOutcome" ShowAddButton="true" />
+                </div>
             </div>
         }
     }
-    else if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
+    else
     {
-        <h3 class="text-lg font-bold mb-2">Trigger Properties</h3>
-        <p>
-            <strong>Type:</strong> @trigger.Type
-        </p>
-        @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
-        {
-            <IncomingRequestComponent 
-                TriggerInput="incomingRequest" 
-                OnChange="OnChange"/>
-        }
-        else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
-        {
-            <div class="text-yellow-600">Recurring Timer properties editing not yet implemented</div>
-        }
-        else if (trigger.Input is TriggerInputOnDemand onDemand)
-        {
-            <div class="text-yellow-600">On Demand properties editing not yet implemented</div>
-        }
-    }
-    else if (SelectedItem is WorkflowAction action)
-    {
-        <h3 class="text-lg font-bold mb-2">Action Properties</h3>
-        <p>
-            <strong>Type:</strong> @action.Type
-        </p>
-        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
-        {
-            var triggerParameters = GetTriggerParameters();
-            <CredentialIssuanceComponent 
-                ActionInput="credentialIssuance" 
-                OnChange="OnChange"
-                TriggerParameters="triggerParameters"/>
-        }
-        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
-        {
-            <OutgoingRequestComponent ActionInput="outgoingRequest" OnChange="OnChange"/>
-        }
-        else if (action.Input is ActionInputCredentialVerification credentialVerification)
-        {
-            <div class="text-yellow-600">Credential Verification properties editing not yet implemented</div>
-        }
-    }
-    else if (SelectedItem is WorkflowOutcomeDefinition outcome)
-    {
-        <h3 class="text-lg font-bold mb-2">Outcome Properties</h3>
+        <PropertyEditor Item="@SelectedItem" OnChange="@OnChange" TriggerParameters="@GetTriggerParameters()" />
     }
 </div>
 
 @code {
+    
     [Parameter] public object? SelectedItem { get; set; }
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public List<object> flowItems { get; set; } = new();
-    
+
+    private bool isIssueCredentialExpanded;
+    private bool isVerifyCredentialExpanded;
+    private bool isOutgoingRequestExpanded;
+
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
     private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
+
+    private void ToggleGroup(string group)
+    {
+        switch (group)
+        {
+            case "issueCredential":
+                isIssueCredentialExpanded = !isIssueCredentialExpanded;
+                break;
+            case "verifyCredential":
+                isVerifyCredentialExpanded = !isVerifyCredentialExpanded;
+                break;
+            case "outgoingRequest":
+                isOutgoingRequestExpanded = !isOutgoingRequestExpanded;
+                break;
+        }
+    }
+
+    private async Task HandleItemClick(object itemType, bool addOnly)
+    {
+        var newItem = CreateNewItem(itemType);
+        await OnItemCreated.InvokeAsync(newItem);
+        
+        if (!addOnly)
+        {
+            // Set selected item to show configuration
+            SelectedItem = newItem;
+        }
+    }
 
     private IEnumerable<string>? GetTriggerParameters()
     {
