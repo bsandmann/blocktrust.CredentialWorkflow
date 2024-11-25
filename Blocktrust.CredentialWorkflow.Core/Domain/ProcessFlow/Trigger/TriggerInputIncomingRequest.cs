@@ -47,11 +47,30 @@ public static class RequestTemplates
                     Description = "Email address or Peer DID depending on delivery method"
                 }
             }
+        },
+        ["credential-verification"] = new RequestTemplate
+        {
+            Endpoint = "/credentials/verify/{workflowId}",
+            Method = "POST",
+            Parameters = new Dictionary<string, ParameterDefinition>
+            {
+                ["credential"] = new ParameterDefinition 
+                { 
+                    Type = ParameterType.String, 
+                    Required = true,
+                    Description = "The credential to verify"
+                },
+                ["verificationMethods"] = new ParameterDefinition
+                {
+                    Type = ParameterType.String,
+                    Required = true,
+                    AllowedValues = new[] { "signature", "expiry", "revocation", "trustRegistry" },
+                    Description = "Verification methods to apply"
+                }
+            }
         }
-        // Other templates can be added here later
     };
 }
-
 public class RequestTemplate
 {
     public string Endpoint { get; set; } = string.Empty;
