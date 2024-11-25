@@ -2,114 +2,202 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Action
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow.Trigger.IncomingRequests
-@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
     {
-        <h3 class="text-lg font-bold mb-2">Create new Action/Trigger</h3>
-        <div class="mb-4">
-            <h4 class="text-md font-semibold mb-2">Triggers:</h4>
-            <ul class="list-disc list-inside">
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.IncomingRequest)">Incoming Request</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.RecurringTimer)">Recurring Timer</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(ETriggerType.OnDemand)">On Demand</button>
-                </li>
-            </ul>
-        </div>
-        <div class="mb-4">
-            <h4 class="text-md font-semibold mb-2">Actions:</h4>
-            <ul class="list-disc list-inside">
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialIssuance)">Credential Issuance</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.OutgoingRequest)">Outgoing Request</button>
-                </li>
-                <li>
-                    <button class="text-blue-500 hover:underline" @onclick="() => CreateNewItem(EActionType.CredentialVerification)">Credential Verification</button>
-                </li>
-            </ul>
-        </div>
-        @if (hasActions && !hasOutcome)
-        {
-            <div>
-                <h4 class="text-md font-semibold mb-2">Outcome:</h4>
-                <ul class="list-disc list-inside">
-                    <li>
-                        <button class="text-blue-500 hover:underline" @onclick="CreateNewOutcome">Add Workflow Outcome</button>
-                    </li>
-                </ul>
+        <h3 class="text-lg font-medium text-gray-800 mb-6">Create new Action/Trigger</h3>
+
+        <!-- Triggers Section -->
+        <div class="mb-6">
+            <div class="flex items-center mb-3">
+                <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
+                <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
             </div>
-        }
+
+            <div class="space-y-2 ml-8">
+                <!-- Incoming Requests Group -->
+                <MenuGroup Label="Incoming requests" Icon="http" IsExpanded="@isIncomingRequestsExpanded" OnToggle="@(() => ToggleGroup("incomingRequests"))">
+                    <MenuButton Icon="description" Label="Credential Issuance" 
+                               OnClick="@((action) => HandleItemClick(ETriggerType.CredentialIssuanceTrigger, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="verified" Label="Credential Verification" 
+                               OnClick="@((action) => HandleItemClick(ETriggerType.CredentialVerificationTrigger, action))" 
+                               ShowAddButton="true" />
+                </MenuGroup>
+
+                <!-- Timer Trigger Group -->
+                <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@isTimerTriggersExpanded" OnToggle="@(() => ToggleGroup("timerTriggers"))">
+                    <MenuButton Icon="update" Label="Recurring timer" 
+                               OnClick="@((action) => HandleItemClick(ETriggerType.RecurringTimer, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="play_circle" Label="On demand" 
+                               OnClick="@((action) => HandleItemClick(ETriggerType.OnDemand, action))" 
+                               ShowAddButton="true" />
+                </MenuGroup>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="mb-6">
+            <div class="flex items-center mb-3">
+                <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
+                <h4 class="text-sm font-medium text-gray-700">Actions</h4>
+            </div>
+
+            <div class="space-y-2 ml-8">
+                <!-- Issue Credential Group -->
+                <MenuGroup Label="Issue credential" Icon="add_card" IsExpanded="@isIssueCredentialExpanded" OnToggle="@(() => ToggleGroup("issueCredential"))">
+                    <MenuButton Icon="create" Label="Create credential" 
+                               OnClick="@((action) => HandleItemClick(EActionType.CreateCredential, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="draw" Label="Sign credential" 
+                               OnClick="@((action) => HandleItemClick(EActionType.SignCredential, action))" 
+                               ShowAddButton="true" />
+                </MenuGroup>
+
+                <!-- Verify Credential Group -->
+                <MenuGroup Label="Verify credential" Icon="verified_user" IsExpanded="@isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
+                    <MenuButton Icon="check" Label="Check signature" 
+                               OnClick="@((action) => HandleItemClick(EActionType.CheckSignature, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="schedule" Label="Check expiry" 
+                               OnClick="@((action) => HandleItemClick(EActionType.CheckExpiry, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="block" Label="Check revocation" 
+                               OnClick="@((action) => HandleItemClick(EActionType.CheckRevocation, action))" 
+                               ShowAddButton="true" />
+                    <MenuButton Icon="verified" Label="Check trust registry" 
+                               OnClick="@((action) => HandleItemClick(EActionType.CheckTrustRegistry, action))" 
+                               ShowAddButton="true" />
+                </MenuGroup>
+
+                <!-- Outgoing Request Group -->
+                      <MenuGroup Label="Outgoing request" Icon="send" IsExpanded="@isOutgoingRequestExpanded" OnToggle="@(() => ToggleGroup("outgoingRequest"))">
+                                    <MenuButton Icon="swap_horiz" Label="DIDComm trust ping" 
+                                               OnClick="@((action) => HandleItemClick(EActionType.DIDCommTrustPing, action))" 
+                                               ShowAddButton="true" />
+                                    <MenuButton Icon="message" Label="DIDComm message" 
+                                               OnClick="@((action) => HandleItemClick(EActionType.DIDCommMessage, action))" 
+                                               ShowAddButton="true" />
+                                    <MenuButton Icon="http" Label="HTTP Post" 
+                                               OnClick="@((action) => HandleItemClick(EActionType.HTTPPost, action))" 
+                                               ShowAddButton="true" />
+                                    <MenuButton Icon="mail" Label="Send email" 
+                                               OnClick="@((action) => HandleItemClick(EActionType.SendEmail, action))" 
+                                               ShowAddButton="true" />
+                                </MenuGroup>
+            </div>
+        </div>
+
+        <!-- Outcome Section -->
+        <div class="mb-6 @(!hasActions ? "opacity-50" : "")">
+            <div class="flex items-center mb-3">
+                <span class="material-symbols-outlined text-gray-600 mr-2">flag</span>
+                <h4 class="text-sm font-medium text-gray-700">Outcome</h4>
+            </div>
+
+            <div class="space-y-2 ml-8">
+                <MenuButton Icon="post_add" Label="Post outcome" 
+                           OnClick="@((action) => HandleItemClick("outcome", action))" 
+                           ShowAddButton="true" />
+                <MenuButton Icon="note_add" Label="Log outcome" 
+                           OnClick="@((action) => HandleItemClick("outcome", action))" 
+                           ShowAddButton="true" />
+            </div>
+        </div>
     }
-    else if (SelectedItem is Core.Domain.ProcessFlow.Trigger.Trigger trigger)
+    else
     {
-        <h3 class="text-lg font-bold mb-2">Trigger Properties</h3>
-        <p>
-            <strong>Type:</strong> @trigger.Type
-        </p>
-        @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
-        {
-            <IncomingRequestComponent 
-                TriggerInput="incomingRequest" 
-                OnChange="OnChange"/>
-        }
-        else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
-        {
-            <div class="text-yellow-600">Recurring Timer properties editing not yet implemented</div>
-        }
-        else if (trigger.Input is TriggerInputOnDemand onDemand)
-        {
-            <div class="text-yellow-600">On Demand properties editing not yet implemented</div>
-        }
+        <PropertyEditor 
+            Item="@SelectedItem" 
+            OnBack="@(() => SelectItem(null))"
+            OnChange="@OnChange" 
+            TriggerParameters="@GetTriggerParameters()" />
     }
-    else if (SelectedItem is WorkflowAction action)
+
+    @if (showError)
     {
-        <h3 class="text-lg font-bold mb-2">Action Properties</h3>
-        <p>
-            <strong>Type:</strong> @action.Type
-        </p>
-        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
-        {
-            var triggerParameters = GetTriggerParameters();
-            <CredentialIssuanceComponent 
-                ActionInput="credentialIssuance" 
-                OnChange="OnChange"
-                TriggerParameters="triggerParameters"/>
-        }
-        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
-        {
-            <OutgoingRequestComponent ActionInput="outgoingRequest" OnChange="OnChange"/>
-        }
-        else if (action.Input is ActionInputCredentialVerification credentialVerification)
-        {
-            <div class="text-yellow-600">Credential Verification properties editing not yet implemented</div>
-        }
-    }
-    else if (SelectedItem is WorkflowOutcomeDefinition outcome)
-    {
-        <h3 class="text-lg font-bold mb-2">Outcome Properties</h3>
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 max-w-md">
+                <h3 class="text-xl font-bold mb-4">Warning</h3>
+                <p class="text-gray-700 mb-6">@errorMessage</p>
+                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
+                        @onclick="CloseError">
+                    OK
+                </button>
+            </div>
+        </div>
     }
 </div>
-
 @code {
     [Parameter] public object? SelectedItem { get; set; }
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public List<object> flowItems { get; set; } = new();
+    private string? errorMessage;
+    private bool showError;
+
+
+    private bool isIncomingRequestsExpanded = true;
+    private bool isTimerTriggersExpanded;
+    private bool isIssueCredentialExpanded;
+    private bool isVerifyCredentialExpanded;
+    private bool isOutgoingRequestExpanded;
     
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
     private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
+
+    private void ToggleGroup(string group)
+    {
+        switch (group)
+        {
+            case "incomingRequests":
+                isIncomingRequestsExpanded = !isIncomingRequestsExpanded;
+                break;
+            case "timerTriggers":
+                isTimerTriggersExpanded = !isTimerTriggersExpanded;
+                break;
+            case "issueCredential":
+                isIssueCredentialExpanded = !isIssueCredentialExpanded;
+                break;
+            case "verifyCredential":
+                isVerifyCredentialExpanded = !isVerifyCredentialExpanded;
+                break;
+            case "outgoingRequest":
+                isOutgoingRequestExpanded = !isOutgoingRequestExpanded;
+                break;
+        }
+    }
+
+    private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action)
+    {
+        if (!hasActions && itemType is string && (string)itemType == "outcome")
+        {
+            await HandleError("Cannot add outcome before adding actions. Please add actions first.");
+            return;
+        }
+
+        var newItem = CreateNewItem(itemType);
+        if (newItem != null)
+        {
+            await OnItemCreated.InvokeAsync(newItem);
+            
+            if (action == MenuButton.MenuButtonAction.Configure)
+            {
+                await SelectItem(newItem);
+            }
+        }
+    }
+    
+    private async Task SelectItem(object? item)
+    {
+        SelectedItem = item;
+        StateHasChanged();
+    }
 
     private IEnumerable<string>? GetTriggerParameters()
     {
@@ -121,27 +209,39 @@
         return null;
     }
 
-    private async Task CreateNewItem(object itemType)
+    private async Task HandleError(string message)
     {
-        object newItem = itemType switch
-        {
-            ETriggerType triggerType => CreateNewTrigger(triggerType),
-            EActionType actionType => CreateNewAction(actionType),
-            _ => throw new ArgumentException("Invalid item type")
-        };
-        await OnItemCreated.InvokeAsync(newItem);
+        errorMessage = message;
+        showError = true;
+        StateHasChanged();
     }
 
-    private async Task CreateNewOutcome()
+    private void CloseError()
     {
-        var outcome = new WorkflowOutcomeDefinition
-        {
-            Type = EOutcomeType.Success,
-            Message = "Workflow completed successfully"
-        };
-        await OnItemCreated.InvokeAsync(outcome);
+        errorMessage = null;
+        showError = false;
+        StateHasChanged();
     }
 
+    private object CreateNewItem(object itemType)
+    {
+        try
+        {
+            return itemType switch
+            {
+                ETriggerType triggerType => CreateNewTrigger(triggerType),
+                EActionType actionType => CreateNewAction(actionType),
+                string s when s == "outcome" => CreateNewOutcome(),
+                _ => throw new ArgumentException("Invalid item type")
+            };
+        }
+        catch (Exception ex)
+        {
+            HandleError(ex.Message);
+            throw;
+        }
+    }
+    
     private Core.Domain.ProcessFlow.Trigger.Trigger CreateNewTrigger(ETriggerType triggerType)
     {
         return new Core.Domain.ProcessFlow.Trigger.Trigger
@@ -149,13 +249,21 @@
             Type = triggerType,
             Input = triggerType switch
             {
-                ETriggerType.IncomingRequest => new TriggerInputIncomingRequest
+                ETriggerType.CredentialIssuanceTrigger => new TriggerInputIncomingRequest
                 {
                     Id = Guid.NewGuid(),
                     Method = "POST",
                     Endpoint = "/credentials/issue/{workflowId}",
                     Template = "credential-issuance",
                     Parameters = RequestTemplates.Templates["credential-issuance"].Parameters
+                },
+                ETriggerType.CredentialVerificationTrigger => new TriggerInputIncomingRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Endpoint = "/credentials/verify/{workflowId}",
+                    Template = "credential-verification",
+                    Parameters = RequestTemplates.Templates["credential-verification"].Parameters
                 },
                 ETriggerType.RecurringTimer => new TriggerInputRecurringTimer
                 {
@@ -166,58 +274,129 @@
                 {
                     Id = Guid.NewGuid()
                 },
-                _ => throw new NotImplementedException($"Trigger type {triggerType} is not implemented.")
+                _ => throw new ArgumentException($"Trigger type {triggerType} is not implemented.")
             }
         };
     }
-
-    private WorkflowAction CreateNewAction(EActionType actionType)
+    private WorkflowOutcomeDefinition CreateNewOutcome()
     {
-        return new WorkflowAction
+        return new WorkflowOutcomeDefinition
         {
-            Type = actionType,
-            Input = actionType switch
-            {
-                EActionType.CredentialIssuance => new ActionInputCredentialIssuance
-                {
-                    Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
-                    {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid",
-                        DefaultValue = ""
-                    },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid",
-                        DefaultValue = ""
-                    },
-                    Claims = new Dictionary<string, ClaimValue>()
-                },
-                EActionType.OutgoingRequest => new ActionInputOutgoingRequest
-                {
-                    Id = Guid.NewGuid(),
-                    Method = "GET",
-                    Uri = "https://example.com/api",
-                    Body = "",
-                    Headers = new Dictionary<string, string>()
-                },
-                EActionType.CredentialVerification => new ActionInputCredentialVerification
-                {
-                    Id = Guid.NewGuid(),
-                    CheckExpiration = true,
-                    CheckSignature = true,
-                    CheckIssuer = false,
-                    RequiredIssuer = null,
-                    CheckSchema = false,
-                    RequiredSchema = null,
-                    CheckClaims = false,
-                    RequiredClaims = new Dictionary<string, string>()
-                },
-                _ => throw new NotImplementedException($"Action type {actionType} is not implemented.")
-            },
-            RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+            Type = EOutcomeType.Success,
+            Message = "Workflow completed successfully"
         };
     }
+    private WorkflowAction CreateNewAction(EActionType actionType)
+{
+    return new WorkflowAction
+    {
+        Type = actionType,
+        Input = actionType switch
+        {
+            // Issue Credential Actions
+            EActionType.CreateCredential => new ActionInputCredentialIssuance
+            {
+                Id = Guid.NewGuid(),
+                SubjectDid = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = "subjectDid",
+                    DefaultValue = ""
+                },
+                IssuerDid = new ParameterReference
+                {
+                    Source = ParameterSource.AppSettings,
+                    Path = "DefaultIssuerDid",
+                    DefaultValue = ""
+                },
+                Claims = new Dictionary<string, ClaimValue>()
+            },
+            EActionType.SignCredential => new ActionInputCredentialIssuance
+            {
+                Id = Guid.NewGuid(),
+                // Configure for signing specific parameters
+            },
+            
+            // Verify Credential Actions
+            EActionType.CheckSignature => new ActionInputCredentialVerification
+            {
+                Id = Guid.NewGuid(),
+                CheckSignature = true,
+                CheckExpiration = false,
+                CheckIssuer = false,
+                RequiredIssuer = null,
+                CheckSchema = false,
+                RequiredSchema = null,
+                CheckClaims = false,
+                RequiredClaims = null
+            },
+            EActionType.CheckExpiry => new ActionInputCredentialVerification
+            {
+                Id = Guid.NewGuid(),
+                CheckSignature = false,
+                CheckExpiration = true,
+                CheckIssuer = false,
+                RequiredIssuer = null,
+                CheckSchema = false,
+                RequiredSchema = null,
+                CheckClaims = false,
+                RequiredClaims = null
+            },
+            EActionType.CheckRevocation => new ActionInputCredentialVerification
+            {
+                Id = Guid.NewGuid(),
+                // Configure for revocation check specific parameters
+            },
+            EActionType.CheckTrustRegistry => new ActionInputCredentialVerification
+            {
+                Id = Guid.NewGuid(),
+                // Configure for trust registry check specific parameters
+            },
+            
+            // Outgoing Request Actions
+            EActionType.DIDCommTrustPing => new ActionInputOutgoingRequest
+            {
+                Id = Guid.NewGuid(),
+                Method = "POST",
+                Uri = "didcomm://trustping",
+                Headers = new Dictionary<string, string>
+                {
+                    ["Content-Type"] = "application/didcomm-message+json"
+                }
+            },
+            EActionType.DIDCommMessage => new ActionInputOutgoingRequest
+            {
+                Id = Guid.NewGuid(),
+                Method = "POST",
+                Uri = "didcomm://message",
+                Headers = new Dictionary<string, string>
+                {
+                    ["Content-Type"] = "application/didcomm-message+json"
+                }
+            },
+            EActionType.HTTPPost => new ActionInputOutgoingRequest
+            {
+                Id = Guid.NewGuid(),
+                Method = "POST",
+                Uri = "https://api.example.com",
+                Headers = new Dictionary<string, string>
+                {
+                    ["Content-Type"] = "application/json"
+                }
+            },
+            EActionType.SendEmail => new ActionInputOutgoingRequest
+            {
+                Id = Guid.NewGuid(),
+                Method = "POST",
+                Uri = "smtp://email",
+                Headers = new Dictionary<string, string>
+                {
+                    ["Content-Type"] = "text/plain"
+                }
+            },
+            _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
+        },
+        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+    };
+}
 }

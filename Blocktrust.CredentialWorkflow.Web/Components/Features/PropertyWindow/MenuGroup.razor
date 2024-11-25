@@ -1,0 +1,30 @@
+﻿@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public bool IsExpanded { get; set; }
+    [Parameter] public EventCallback OnToggle { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task Toggle()
+    {
+        await OnToggle.InvokeAsync();
+    }
+}
+
+<div class="space-y-1">
+    <button @onclick="Toggle" 
+            class="w-full flex items-center text-xs text-gray-600 hover:text-gray-900 transition-colors">
+        <span class="material-symbols-outlined text-sm mr-2">@Icon</span>
+        @Label
+        <span class="material-symbols-outlined text-sm ml-auto">
+            @(IsExpanded ? "expand_less" : "expand_more")
+        </span>
+    </button>
+    
+    @if (IsExpanded)
+    {
+        <div class="ml-4 space-y-1">
+            @ChildContent
+        </div>
+    }
+</div>
