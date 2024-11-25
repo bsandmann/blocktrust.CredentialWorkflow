@@ -16,7 +16,6 @@ public class TriggerInputIncomingRequest : TriggerInput
     public Dictionary<string, ParameterDefinition> Parameters { get; set; } = new();
 }
 
-// Separate class to define request templates
 public static class RequestTemplates
 {
     public static readonly Dictionary<string, RequestTemplate> Templates = new()
@@ -33,19 +32,7 @@ public static class RequestTemplates
                     Required = true,
                     Description = "DID of the credential subject"
                 },
-                ["deliveryMethod"] = new ParameterDefinition
-                {
-                    Type = ParameterType.String,
-                    Required = true,
-                    AllowedValues = new[] { "email", "didcomm" },
-                    Description = "Delivery method for the credential"
-                },
-                ["destination"] = new ParameterDefinition
-                {
-                    Type = ParameterType.String,
-                    Required = true,
-                    Description = "Email address or Peer DID depending on delivery method"
-                }
+        
             }
         },
         ["credential-verification"] = new RequestTemplate
