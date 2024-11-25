@@ -1,8 +1,5 @@
-using ActionType = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.EActionType;
 using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
-using Blocktrust.CredentialWorkflow.Core.Factories;
-using Blocktrust.CredentialWorkflow.Core.Domain.Handlers.Actions;
 using Blocktrust.CredentialWorkflow.Core.Services;
 using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
 using Blocktrust.CredentialWorkflow.Core.Settings;
@@ -33,30 +30,16 @@ builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<WorkflowChangeTrackerService>();
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 
-// Add Credential Workflow Services
+// Add Core Services
 builder.Services.AddScoped<ICredentialService, CredentialService>();
 builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
 builder.Services.AddScoped<IDeliveryService, DeliveryService>();
 
-// Register Action Handlers
-builder.Services.AddScoped<CredentialIssuanceActionHandler>();
-builder.Services.AddScoped<DeliveryActionHandler>();
-
-// Configure strongly typed settings object
+// Configure strongly typed settings
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<CredentialSettings>(
     builder.Configuration.GetSection("CredentialSettings"));
-
-// Register Action Handler Factory
-builder.Services.AddSingleton<IActionHandlerFactory>(provider => new ActionHandlerFactory(
-    new Dictionary<ActionType, Type>
-    {
-        { ActionType.CredentialIssuance, typeof(CredentialIssuanceActionHandler) },
-        { ActionType.Delivery, typeof(DeliveryActionHandler) }
-    },
-    provider
-));
 
 builder.Services.AddAuthentication(options =>
     {
@@ -106,22 +89,17 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Add routing middleware
 app.UseRouting();
 
-// Add authentication & authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add antiforgery middleware after authentication/authorization but before endpoints
 app.UseAntiforgery();
 
-// Map endpoints
 app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
