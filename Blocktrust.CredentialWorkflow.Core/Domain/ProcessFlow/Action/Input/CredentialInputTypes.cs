@@ -46,3 +46,66 @@ public class ActionInputAnoncredCredential : ActionInput
     [JsonPropertyName("attributes")]
     public Dictionary<string, ClaimValue> Attributes { get; set; } = new();
 }
+
+public class ActionInputVerifyW3cCredential : ActionInput
+{
+    [JsonPropertyName("checkSignature")]
+    public bool CheckSignature { get; set; } = true;
+
+    [JsonPropertyName("checkStatus")]
+    public bool CheckStatus { get; set; } = true;
+
+    [JsonPropertyName("checkSchema")]
+    public bool CheckSchema { get; set; } = true;
+
+    [JsonPropertyName("checkTrustRegistry")]
+    public bool CheckTrustRegistry { get; set; } = false;
+
+    [JsonPropertyName("checkExpiry")]
+    public bool CheckExpiry { get; set; } = true;
+
+    [JsonPropertyName("requiredIssuerId")]
+    public string? RequiredIssuerId { get; set; }
+}
+
+
+
+public class ActionInputVerifyW3cSdCredential : ActionInput
+{
+    [JsonPropertyName("checkSignature")]
+    public bool CheckSignature { get; set; } = true;
+
+    [JsonPropertyName("checkStatus")]
+    public bool CheckStatus { get; set; } = true;
+
+    [JsonPropertyName("checkSchema")]
+    public bool CheckSchema { get; set; } = true;
+
+    [JsonPropertyName("checkTrustRegistry")]
+    public bool CheckTrustRegistry { get; set; } = false;
+
+    [JsonPropertyName("checkExpiry")]
+    public bool CheckExpiry { get; set; } = true;
+
+    // SD-VC specific properties can be added later
+}
+
+public class ActionInputVerifyAnoncredCredential : ActionInput
+{
+    [JsonPropertyName("checkSignature")]
+    public bool CheckSignature { get; set; } = true;
+
+    [JsonPropertyName("checkStatus")]
+    public bool CheckStatus { get; set; } = true;
+
+    [JsonPropertyName("checkSchema")]
+    public bool CheckSchema { get; set; } = true;
+
+    [JsonPropertyName("checkTrustRegistry")]
+    public bool CheckTrustRegistry { get; set; } = false;
+
+    [JsonPropertyName("checkExpiry")]
+    public bool CheckExpiry { get; set; } = true;
+
+    // Anoncred specific properties can be added later
+}

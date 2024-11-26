@@ -7,6 +7,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Input
 
 
+
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
     {
@@ -64,18 +65,15 @@
                 </MenuGroup>
           
                 <!-- Verify Credential Group -->
-                <MenuGroup Label="Verify credential" Icon="verified_user" IsExpanded="@isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
-                    <MenuButton Icon="check" Label="Check signature" 
-                               OnClick="@(action => HandleItemClick(EActionType.CheckSignature, action))" 
+                <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
+                    <MenuButton Icon="verified" Label="Verify W3C VC" 
+                               OnClick="@(action => HandleItemClick(EActionType.VerifyW3cCredential, action))" 
                                ShowAddButton="true" />
-                    <MenuButton Icon="schedule" Label="Check expiry" 
-                               OnClick="@(action => HandleItemClick(EActionType.CheckExpiry, action))" 
+                    <MenuButton Icon="verified_user" Label="Verify W3C SD-VC" 
+                               OnClick="@(action => HandleItemClick(EActionType.VerifyW3cSdCredential, action))" 
                                ShowAddButton="true" />
-                    <MenuButton Icon="block" Label="Check revocation" 
-                               OnClick="@(action => HandleItemClick(EActionType.CheckRevocation, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="verified" Label="Check trust registry" 
-                               OnClick="@(action => HandleItemClick(EActionType.CheckTrustRegistry, action))" 
+                    <MenuButton Icon="fingerprint" Label="Verify Anoncred" 
+                               OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))" 
                                ShowAddButton="true" />
                 </MenuGroup>
 
@@ -290,6 +288,7 @@
             Message = "Workflow completed successfully"
         };
     }
+    
     private WorkflowAction CreateNewAction(EActionType actionType)
 {
     return new WorkflowAction
@@ -344,63 +343,34 @@
                 CredentialDefinitionId = "",
                 Attributes = new Dictionary<string, ClaimValue>()
             },
-            EActionType.CreateCredential => new ActionInputCredentialIssuance
-            {
-                Id = Guid.NewGuid(),
-                SubjectDid = new ParameterReference
-                {
-                    Source = ParameterSource.TriggerInput,
-                    Path = "subjectDid",
-                    DefaultValue = ""
-                },
-                IssuerDid = new ParameterReference
-                {
-                    Source = ParameterSource.AppSettings,
-                    Path = "DefaultIssuerDid",
-                    DefaultValue = ""
-                },
-                Claims = new Dictionary<string, ClaimValue>()
-            },
-            EActionType.SignCredential => new ActionInputCredentialIssuance
-            {
-                Id = Guid.NewGuid(),
-                // Configure for signing specific parameters
-            },
-            
+
             // Verify Credential Actions
-            EActionType.CheckSignature => new ActionInputCredentialVerification
+            EActionType.VerifyW3cCredential => new ActionInputVerifyW3cCredential
             {
                 Id = Guid.NewGuid(),
                 CheckSignature = true,
-                CheckExpiration = false,
-                CheckIssuer = false,
-                RequiredIssuer = null,
-                CheckSchema = false,
-                RequiredSchema = null,
-                CheckClaims = false,
-                RequiredClaims = null
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
             },
-            EActionType.CheckExpiry => new ActionInputCredentialVerification
+            EActionType.VerifyW3cSdCredential => new ActionInputVerifyW3cSdCredential
             {
                 Id = Guid.NewGuid(),
-                CheckSignature = false,
-                CheckExpiration = true,
-                CheckIssuer = false,
-                RequiredIssuer = null,
-                CheckSchema = false,
-                RequiredSchema = null,
-                CheckClaims = false,
-                RequiredClaims = null
+                CheckSignature = true,
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
             },
-            EActionType.CheckRevocation => new ActionInputCredentialVerification
+            EActionType.VerifyAnoncredCredential => new ActionInputVerifyAnoncredCredential
             {
                 Id = Guid.NewGuid(),
-                // Configure for revocation check specific parameters
-            },
-            EActionType.CheckTrustRegistry => new ActionInputCredentialVerification
-            {
-                Id = Guid.NewGuid(),
-                // Configure for trust registry check specific parameters
+                CheckSignature = true,
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
             },
             
             // Outgoing Request Actions

@@ -8,18 +8,18 @@ public enum EActionType
     CreateAnoncredCredential,
     
     // Credential Verification Actions
-    CheckSignature,
-    CheckExpiry,
-    CheckRevocation,
-    CheckTrustRegistry,
-    
+    VerifyW3cCredential,
+    VerifyW3cSdCredential,
+    VerifyAnoncredCredential,
+
     // Communication Actions
     DIDCommTrustPing,
     DIDCommMessage,
     HTTPPost,
-    SendEmail
+    SendEmail,
     
     
+   
    
 
 }
