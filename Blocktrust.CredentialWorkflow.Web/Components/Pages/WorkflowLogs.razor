@@ -1,0 +1,42 @@
+﻿@page "/workflowlogs"
+@using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Blocktrust.CredentialWorkflow.Core.Domain.Outcome
+@using Blocktrust.CredentialWorkflow.Web.Components.Layout
+@using MediatR
+@inject IMediator Mediator
+@layout DesignerLayout
+
+<div class="p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">Workflow Logs</h1>
+        <p class="mt-2 text-sm text-gray-600">Execution history for workflow @WorkflowId</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="flex items-center justify-center h-64">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-lg shadow">
+            <!-- Content will go here -->
+            <div class="p-4 text-sm text-gray-600">
+                Workflow execution logs will be implemented here
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid WorkflowId { get; set; }
+    
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = false;
+    }
+}

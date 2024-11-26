@@ -1,16 +1,20 @@
 ﻿@inherits LayoutComponentBase
 
-<div>
+<div class="min-h-screen flex flex-col">
     <TopBar/>
-    <main>
-        <article>
+    <main class="flex-1 bg-gray-50">
+        <article class="container mx-auto p-6">
             @Body
         </article>
     </main>
-</div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+    <div id="blazor-error-ui" class="fixed bottom-0 left-0 right-0 bg-red-500 text-white hidden">
+        <div class="container mx-auto p-4 flex justify-between items-center">
+            <span>An unhandled error has occurred.</span>
+            <div class="flex space-x-4">
+                <a href="" class="underline hover:text-gray-200 transition-colors">Reload</a>
+                <a class="cursor-pointer hover:text-gray-200 transition-colors">🗙</a>
+            </div>
+        </div>
+    </div>
 </div>
