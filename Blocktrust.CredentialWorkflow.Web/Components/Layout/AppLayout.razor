@@ -1,18 +1,18 @@
 ﻿@inherits LayoutComponentBase
 
-
-<div>
+<div class="min-h-screen flex flex-col">
     <TopBar/>
-    <main class="flex flex-row">
-        <LeftNavMenu/>
-        <div class="main-content w-full">
-            @Body
-        </div>
+    <main class="flex-1 bg-gray-50">
+        @Body
     </main>
-</div>
-
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+    
+    <div id="blazor-error-ui" class="fixed bottom-0 w-full bg-red-500 text-white p-4 hidden">
+        <div class="container mx-auto flex justify-between items-center">
+            <span>An unhandled error has occurred.</span>
+            <div class="flex gap-4">
+                <a href="" class="underline hover:text-gray-200">Reload</a>
+                <a class="cursor-pointer hover:text-gray-200">🗙</a>
+            </div>
+        </div>
+    </div>
 </div>

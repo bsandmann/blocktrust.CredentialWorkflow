@@ -2,17 +2,28 @@
 @inject NavigationManager NavigationManager
 @inject AppStateService AppStateService
 
-<div class="bg-gray-100 flex w-48 left-Nav-Menu border-r-2 border-slate-200">
-    <div class="flex flex-col w-full">
-        <NavLink class="@ActivePage("Workflows")" href="Workflow" Match="NavLinkMatch.All">Workflows</NavLink>
-        <NavLink class="@ActivePage("Designer")" href="Designer" Match="NavLinkMatch.All">Designer</NavLink>
-        <NavLink class="@ActivePage("Logs")" href="Log" Match="NavLinkMatch.All">Logs</NavLink>
+<div class="w-64 min-h-screen bg-slate-50 border-r border-slate-200">
+    <div class="flex flex-col py-6 space-y-2">
+        <NavLink href="designer" Match="NavLinkMatch.All" class="@GetNavLinkClass("designer")">
+            <div class="flex items-center h-10 px-4">
+                <span class="material-symbols-outlined mr-3 !text-[20px] flex items-center">edit_note</span>
+                <span class="text-sm">Design</span>
+            </div>
+        </NavLink>
+        
+        <NavLink href="Workflowlogs" Match="NavLinkMatch.All" class="@GetNavLinkClass("log")">
+            <div class="flex items-center h-10 px-4">
+                <span class="material-symbols-outlined mr-3 !text-[20px] flex items-center">monitoring</span>
+                <span class="text-sm">Logs</span>
+            </div>
+        </NavLink>
     </div>
 </div>
 
 @code {
-    private string ActivePage(string page)
+    private string GetNavLinkClass(string page)
     {
-        return NavigationManager.Uri.Contains(page, StringComparison.InvariantCultureIgnoreCase) ? "p-2 pl-4 bg-zinc-200 cursor-pointer" : "p-2 pl-4 hover:bg-zinc-200 cursor-pointer";
+        var isActive = NavigationManager.Uri.Contains(page, StringComparison.InvariantCultureIgnoreCase);
+        return $"transition-colors duration-150 rounded-lg mx-2 {(isActive ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")}";
     }
 }
