@@ -9,6 +9,10 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
 [JsonDerivedType(typeof(ActionInputOutgoingRequest), typeDiscriminator: "outgoingRequest")]
 [JsonDerivedType(typeof(ActionInputDIDCommTrustPing), typeDiscriminator: "didcommTrustPing")]
 [JsonDerivedType(typeof(ActionInputDIDCommMessage), typeDiscriminator: "didcommMessage")]
+
+[JsonDerivedType(typeof(ActionInputW3cCredential), typeDiscriminator: "w3cCredential")]
+[JsonDerivedType(typeof(ActionInputW3cSdCredential), typeDiscriminator: "w3cSdCredential")]
+[JsonDerivedType(typeof(ActionInputAnoncredCredential), typeDiscriminator: "anoncredCredential")]
 public abstract class ActionInput
 {
     [JsonPropertyName("id")] 
