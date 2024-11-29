@@ -1,6 +1,5 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetLatestUpdatedWorkflow;
 
-using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 using Domain.Workflow;
 using FluentResults;
 using MediatR;
