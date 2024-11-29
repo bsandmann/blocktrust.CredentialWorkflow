@@ -1,11 +1,12 @@
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeById;
 
-using Blocktrust.CredentialWorkflow.Core.Domain.Outcome;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-public class GetOutcomeByIdHandler : IRequestHandler<GetOutcomeByIdRequest, Result<Outcome>>
+public class GetOutcomeByIdHandler : IRequestHandler<GetOutcomeByIdRequest, Result<ActionOutcome>>
 {
     private readonly DataContext _context;
 
@@ -14,7 +15,7 @@ public class GetOutcomeByIdHandler : IRequestHandler<GetOutcomeByIdRequest, Resu
         _context = context;
     }
 
-    public async Task<Result<Outcome>> Handle(GetOutcomeByIdRequest request, CancellationToken cancellationToken)
+    public async Task<Result<ActionOutcome>> Handle(GetOutcomeByIdRequest request, CancellationToken cancellationToken)
     {
         var outcomeEntity = await _context.OutcomeEntities
             .FirstOrDefaultAsync(o => o.OutcomeEntityId == request.OutcomeId, cancellationToken);

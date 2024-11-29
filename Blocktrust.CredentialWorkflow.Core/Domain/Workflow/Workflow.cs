@@ -1,7 +1,8 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
 using Enums;
-using Outcome;
 using ProcessFlow;
 using Tenant;
 
@@ -23,5 +24,5 @@ public record Workflow
     public Tenant Tenant { get; init; }
     public Guid TenantId { get; init; }
     
-    public List<Outcome> Outcomes { get; init; }
+    public List<ActionOutcome> Outcomes { get; init; }
 }

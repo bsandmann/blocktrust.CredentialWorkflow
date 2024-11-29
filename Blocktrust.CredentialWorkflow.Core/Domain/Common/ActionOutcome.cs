@@ -1,9 +1,8 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.Outcome;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
-using Enums;
-using Workflow;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
-public class Outcome
+public class ActionOutcome
 {
     public Guid OutcomeId { get; set; }
     
@@ -18,6 +17,6 @@ public class Outcome
     public string? OutcomeJson { get; set; }
    
     // FK
-    public Workflow Workflow { get; set; }
+    public Workflow.Workflow Workflow { get; set; }
     public Guid WorkflowId { get; set; }
 }

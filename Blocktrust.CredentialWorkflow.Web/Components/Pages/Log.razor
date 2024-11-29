@@ -4,13 +4,13 @@
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes
-@using Blocktrust.CredentialWorkflow.Core.Domain.Outcome
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
-@inject ILogger<Outcome> Logger
+@inject ILogger<ActionOutcome> Logger
 @inject NavigationManager NavigationManager
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
@@ -64,7 +64,7 @@
                                         @if (outcome.OutcomeState == EOutcomeState.Success)
                                         {
                                             <p>
-                                                <strong>Outcomes JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
                                             </p>
                                         }
                                         else if (outcome.OutcomeState == EOutcomeState.NotStarted)
@@ -74,7 +74,7 @@
                                         else
                                         {
                                             <p>
-                                                <strong>Outcomes JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
                                             </p>
                                             <p>
                                                 <strong>Error JSON:</strong> @(string.IsNullOrEmpty(outcome.ErrorJson) ? "N/A" : outcome.ErrorJson)
@@ -103,7 +103,7 @@ else
 @code {
     private readonly CancellationTokenSource cts = new CancellationTokenSource();
     private Guid? selectedWorkflowId;
-    private List<Outcome> outcomes = new List<Outcome>();
+    private List<ActionOutcome> outcomes = new List<ActionOutcome>();
     private Guid? expandedOutcomeId;
 
     protected override async Task OnInitializedAsync()

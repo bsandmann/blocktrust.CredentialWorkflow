@@ -1,11 +1,10 @@
-﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes
-
+﻿@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 <div class="w-80 h-32 bg-gray-200 hover:bg-gray-100 shadow-md rounded-lg p-3 flex flex-col cursor-pointer text-sm relative transition-all duration-200 @(IsSelected ? "border-2 border-blue-500" : "")">
     <div class="overflow-hidden hover:overflow-visible hover:absolute hover:z-50 hover:bg-gray-100 hover:h-auto hover:w-80 hover:shadow-xl hover:rounded-lg hover:p-3">
-        <h3 class="text-base font-bold mb-1">Workflow Outcomes</h3>
+        <h3 class="text-base font-bold mb-1">Workflow ActionWorkflowOutcome</h3>
         <div class="flex items-center space-x-2 mb-2">
-            <span class="@(Definition.Type == EOutcomeType.Success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") px-2 py-1 rounded-full text-xs">
-                @Definition.Type
+            <span class="@(Definition.Outcome == EOutcome.Success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") px-2 py-1 rounded-full text-xs">
+                @Definition.Outcome
             </span>
         </div>
         <p class="text-xs truncate hover:whitespace-normal">
@@ -20,7 +19,7 @@
 </div>
 
 @code {
-    [Parameter] public WorkflowOutcomeDefinition Definition { get; set; } = null!;
+    [Parameter] public WorkflowOutcome Definition { get; set; } = null!;
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
 }

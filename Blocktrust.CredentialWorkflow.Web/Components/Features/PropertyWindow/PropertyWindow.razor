@@ -3,8 +3,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 
 
 
@@ -95,11 +95,11 @@
             </div>
         </div>
 
-        <!-- Outcomes Section -->
+        <!-- ActionWorkflowOutcome Section -->
         <div class="mb-6 @(!hasActions ? "opacity-50" : "")">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">flag</span>
-                <h4 class="text-sm font-medium text-gray-700">Outcomes</h4>
+                <h4 class="text-sm font-medium text-gray-700">ActionWorkflowOutcome</h4>
             </div>
 
             <div class="space-y-2 ml-8">
@@ -151,7 +151,7 @@
     private bool isOutgoingRequestExpanded;
     
     private bool hasActions => flowItems.Any(x => x is WorkflowAction);
-    private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcomeDefinition);
+    private bool hasOutcome => flowItems.Any(x => x is WorkflowOutcome);
 
     private void ToggleGroup(string group)
     {
@@ -233,7 +233,7 @@
             {
                 ETriggerType triggerType => CreateNewTrigger(triggerType),
                 EActionType actionType => CreateNewAction(actionType),
-                string s when s == "outcome" => CreateNewOutcome(),
+                // string s when s == "outcome" => CreateNewOutcome(),
                 _ => throw new ArgumentException("Invalid item type")
             };
         }
@@ -280,14 +280,14 @@
             }
         };
     }
-    private WorkflowOutcomeDefinition CreateNewOutcome()
-    {
-        return new WorkflowOutcomeDefinition
-        {
-            Type = EOutcomeType.Success,
-            Message = "Workflow completed successfully"
-        };
-    }
+    // private WorkflowOutcome CreateNewOutcome()
+    // {
+    //     return new WorkflowOutcome
+    //     {
+    //         Outcome = EOutcome.Success,
+    //         Message = "Workflow completed successfully"
+    //     };
+    // }
     
     private WorkflowAction CreateNewAction(EActionType actionType)
 {

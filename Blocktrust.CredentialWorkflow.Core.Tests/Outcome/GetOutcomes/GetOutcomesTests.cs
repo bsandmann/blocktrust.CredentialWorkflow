@@ -27,7 +27,7 @@ public partial class TestSetup
         createWorkflowResult.Should().BeSuccess();
         var workflowId = createWorkflowResult.Value.WorkflowId;
 
-        // 3. Create multiple Outcomes
+        // 3. Create multiple WorkflowOutcome
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
         var expectedOutcomeIds = new List<Guid>();
         for (int i = 0; i < 3; i++)
@@ -123,7 +123,7 @@ public partial class TestSetup
             workflowIds.Add(createWorkflowResult.Value.WorkflowId);
         }
 
-        // 3. Create Outcomes for each Workflow
+        // 3. Create WorkflowOutcome for each Workflow
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
         var expectedOutcomeIds = new List<Guid>();
         foreach (var workflowId in workflowIds)

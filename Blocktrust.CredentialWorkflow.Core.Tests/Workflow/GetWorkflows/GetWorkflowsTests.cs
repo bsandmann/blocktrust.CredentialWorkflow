@@ -4,9 +4,9 @@
 // using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow;
 // using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflows;
 // using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
-// using Blocktrust.CredentialWorkflow.Core.Entities.Outcomes;
+// using Blocktrust.CredentialWorkflow.Core.Entities.WorkflowOutcome;
 // using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
-// using Commands.Outcomes.CreateOutcome;
+// using Commands.WorkflowOutcome.CreateOutcome;
 // using FluentAssertions;
 // using FluentResults.Extensions.FluentAssertions;
 // using Microsoft.EntityFrameworkCore;
@@ -30,7 +30,7 @@
 //         workflow1Result.Should().BeSuccess();
 //         workflow2Result.Should().BeSuccess();
 //
-//         // 3. Add Outcomes to Workflows
+//         // 3. Add WorkflowOutcome to Workflows
 //         var workflow1 = await _context.WorkflowEntities.FindAsync(workflow1Result.Value.WorkflowId);
 //         var workflow2 = await _context.WorkflowEntities.FindAsync(workflow2Result.Value.WorkflowId);
 //

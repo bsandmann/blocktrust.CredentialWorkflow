@@ -1,7 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
@@ -145,14 +145,14 @@
                 break;
         }
     }
-    else if (Item is WorkflowOutcomeDefinition outcome)
+    else if (Item is WorkflowOutcome outcome)
     {
         <div class="text-sm text-yellow-600">
-            Outcomes configuration will be implemented soon.
+            ActionWorkflowOutcome configuration will be implemented soon.
             <div class="mt-2">Expected configuration options:</div>
             <ul class="list-disc ml-6 mt-1">
                 <li>Success/Failure status</li>
-                <li>Outcomes message</li>
+                <li>ActionWorkflowOutcome message</li>
                 <li>Additional metadata</li>
             </ul>
         </div>

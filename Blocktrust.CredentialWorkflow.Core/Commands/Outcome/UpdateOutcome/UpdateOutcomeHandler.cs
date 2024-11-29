@@ -1,12 +1,13 @@
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.UpdateOutcome;
 
-using Domain.Outcome;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Domain.Enums;
 
-public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result<Outcome>>
+public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result<ActionOutcome>>
 {
     private readonly DataContext _context;
 
@@ -15,7 +16,7 @@ public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result
         _context = context;
     }
 
-    public async Task<Result<Outcome>> Handle(UpdateOutcomeRequest request, CancellationToken cancellationToken)
+    public async Task<Result<ActionOutcome>> Handle(UpdateOutcomeRequest request, CancellationToken cancellationToken)
     {
         _context.ChangeTracker.Clear();
         var outcomeEntity = await _context.OutcomeEntities
@@ -23,7 +24,7 @@ public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result
 
         if (outcomeEntity is null)
         {
-            return Result.Fail<Outcome>("The outcome does not exist in the database. The outcome cannot be updated.");
+            return Result.Fail<ActionOutcome>("The outcome does not exist in the database. The outcome cannot be updated.");
         }
         
         outcomeEntity.OutcomeState = request.OutcomeState;

@@ -1,3 +1,4 @@
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 
@@ -21,9 +22,9 @@ public class OutcomeEntity
     public WorkflowEntity WorkflowEntity { get; set; }
     public Guid WorkflowEntityId { get; set; }
 
-    public Domain.Outcome.Outcome Map()
+    public ActionOutcome Map()
     {
-        return new Domain.Outcome.Outcome
+        return new ActionOutcome
         {
             OutcomeId = OutcomeEntityId,
             OutcomeState = OutcomeState,

@@ -60,7 +60,7 @@
                                     <div>Name</div>
                                     <div>Last Updated</div>
                                     <div>State</div>
-                                    <div>Last Run Outcomes</div>
+                                    <div>Last Run ActionOutcomes</div>
                                     <div>Last Run Started</div>
                                     <div>Last Run Ended</div>
                                 </div>
@@ -168,7 +168,7 @@
 
 @code {
     private readonly CancellationTokenSource cts = new();
-    private List<WorkflowWithLastResult> workflows = new();
+    private List<WorkflowOutcome> workflows = new();
     private bool isJsonImportModalOpen;
     private string jsonInput = "";
     private string errorMessage = "";

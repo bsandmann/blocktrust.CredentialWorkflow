@@ -94,7 +94,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcomes.OutcomeEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.WorkflowOutcome.OutcomeEntity", b =>
                 {
                     b.Property<Guid>("OutcomeEntityId")
                         .ValueGeneratedOnAdd()
@@ -322,7 +322,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Navigation("TenantEntity");
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcomes.OutcomeEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.WorkflowOutcome.OutcomeEntity", b =>
                 {
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", "WorkflowEntity")
                         .WithMany("OutcomeEntities")
