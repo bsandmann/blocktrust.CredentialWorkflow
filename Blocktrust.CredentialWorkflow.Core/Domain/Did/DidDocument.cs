@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.Models.Did;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.Did;
 
 public class DidDocument
 {

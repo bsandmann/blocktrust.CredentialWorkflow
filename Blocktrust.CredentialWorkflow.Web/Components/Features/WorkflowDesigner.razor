@@ -1,7 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
-@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
 <div class="h-full w-full p-4">
     <div class="flex flex-col items-center">
@@ -19,7 +19,7 @@
                 <div class="overflow-hidden hover:overflow-visible hover:absolute hover:z-50 hover:bg-gray-100 hover:h-auto hover:w-80 hover:shadow-xl hover:rounded-lg hover:p-3">
                     @if (item is Trigger trigger)
                     {
-                        <h3 class="text-base font-bold mb-1">Trigger: @trigger.Type</h3>
+                        <h3 class="text-base font-bold mb-1">Triggers: @trigger.Type</h3>
                         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
                         {
                             <p class="text-xs">
@@ -53,7 +53,7 @@
                     }
                     else if (item is Action action)
                     {
-                        <h3 class="text-base font-bold mb-1">Action: @action.Type</h3>
+                        <h3 class="text-base font-bold mb-1">Actions: @action.Type</h3>
                         @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
                         {
                             <p class="text-xs truncate hover:whitespace-normal">
@@ -111,7 +111,7 @@
             <div>
                 <span class="material-symbols-outlined text-2xl">add_circle_outline</span>
             </div>
-            <p class="text-base font-bold text-center">Create new Action/Trigger</p>
+            <p class="text-base font-bold text-center">Create new Actions/Triggers</p>
         </div>
     </div>
 
@@ -227,7 +227,7 @@
             }
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Trigger removed successfully" : "Action removed successfully");
+            await ShowToast(item is Trigger ? "Triggers removed successfully" : "Actions removed successfully");
         }
     }
 
@@ -270,7 +270,7 @@
         {
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Trigger added successfully" : "Action added successfully");
+            await ShowToast(item is Trigger ? "Triggers added successfully" : "Actions added successfully");
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
 public enum ETriggerType
 {

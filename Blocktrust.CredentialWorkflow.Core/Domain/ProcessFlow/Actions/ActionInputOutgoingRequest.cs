@@ -1,6 +1,6 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-
 using System.Text.Json.Serialization;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 public class ActionInputOutgoingRequest : ActionInput
 {

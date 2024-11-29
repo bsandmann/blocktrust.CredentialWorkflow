@@ -1,4 +1,4 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Domain.Models.Did;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Did;
 using FluentResults;
 
 namespace Blocktrust.CredentialWorkflow.Core.Services.Interfaces;

@@ -1,6 +1,6 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
+﻿using System.Text.Json.Serialization;
 
-using System.Text.Json.Serialization;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
 public class TriggerInputRecurringTimer : TriggerInput
 {

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Input;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(ActionInputCredentialIssuance), typeDiscriminator: "credentialIssuance")]

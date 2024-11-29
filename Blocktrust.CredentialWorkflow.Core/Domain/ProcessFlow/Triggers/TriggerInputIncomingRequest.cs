@@ -1,6 +1,7 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
-
 using System.Text.Json.Serialization;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
+
 public class TriggerInputIncomingRequest : TriggerInput
 {
     [JsonPropertyName("endpoint")]

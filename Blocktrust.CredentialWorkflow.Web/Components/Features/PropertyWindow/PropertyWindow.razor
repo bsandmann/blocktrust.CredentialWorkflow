@@ -1,23 +1,23 @@
-﻿@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
+﻿@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 
 
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
     {
-        <h3 class="text-lg font-medium text-gray-800 mb-6">Create new Action/Trigger</h3>
+        <h3 class="text-lg font-medium text-gray-800 mb-6">Create new Actions/Triggers</h3>
 
-        <!-- Triggers Section -->
+        <!-- Triggerss Section -->
         <div class="mb-6">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
-                <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
+                <h4 class="text-sm font-medium text-gray-700">Triggerss</h4>
             </div>
 
             <div class="space-y-2 ml-8">
@@ -31,7 +31,7 @@
                                ShowAddButton="true" />
                 </MenuGroup>
 
-                <!-- Timer Trigger Group -->
+                <!-- Timer Triggers Group -->
                 <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@isTimerTriggersExpanded" OnToggle="@(() => ToggleGroup("timerTriggers"))">
                     <MenuButton Icon="update" Label="Recurring timer" 
                                OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))" 
@@ -43,11 +43,11 @@
             </div>
         </div>
 
-        <!-- Actions Section -->
+        <!-- Actionss Section -->
         <div class="mb-6">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
-                <h4 class="text-sm font-medium text-gray-700">Actions</h4>
+                <h4 class="text-sm font-medium text-gray-700">Actionss</h4>
             </div>
 
             <div class="space-y-2 ml-8">
@@ -95,11 +95,11 @@
             </div>
         </div>
 
-        <!-- Outcome Section -->
+        <!-- Outcomes Section -->
         <div class="mb-6 @(!hasActions ? "opacity-50" : "")">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">flag</span>
-                <h4 class="text-sm font-medium text-gray-700">Outcome</h4>
+                <h4 class="text-sm font-medium text-gray-700">Outcomes</h4>
             </div>
 
             <div class="space-y-2 ml-8">
@@ -276,7 +276,7 @@
                 {
                     Id = Guid.NewGuid()
                 },
-                _ => throw new ArgumentException($"Trigger type {triggerType} is not implemented.")
+                _ => throw new ArgumentException($"Triggers type {triggerType} is not implemented.")
             }
         };
     }
@@ -414,7 +414,7 @@
                     ["Content-Type"] = "text/plain"
                 }
             },
-            _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
+            _ => throw new ArgumentException($"Actions type {actionType} is not implemented.")
         },
         RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
     };

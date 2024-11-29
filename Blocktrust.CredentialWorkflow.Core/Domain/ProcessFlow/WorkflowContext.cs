@@ -1,4 +1,4 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 

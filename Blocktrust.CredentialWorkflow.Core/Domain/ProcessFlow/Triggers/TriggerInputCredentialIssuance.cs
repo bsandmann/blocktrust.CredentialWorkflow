@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
 public class TriggerInputCredentialIssuance : TriggerInput
 {

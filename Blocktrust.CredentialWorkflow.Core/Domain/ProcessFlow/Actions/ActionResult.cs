@@ -1,4 +1,4 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 public class ActionResult
 {

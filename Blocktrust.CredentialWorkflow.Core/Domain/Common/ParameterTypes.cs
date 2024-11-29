@@ -54,6 +54,6 @@ public enum ParameterSource
     TriggerInput,
     AppSettings,
     
-    // To do Action outcome to specify the action
+    // To do Actions outcome to specify the action
     ActionOutcome
 }

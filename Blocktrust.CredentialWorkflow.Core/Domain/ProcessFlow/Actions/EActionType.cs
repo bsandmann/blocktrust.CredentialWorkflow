@@ -17,9 +17,7 @@ public enum EActionType
     DIDCommMessage,
     HTTPPost,
     SendEmail,
-    
-    
-   
+
    
 
 }

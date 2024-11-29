@@ -4,9 +4,9 @@
 // using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow;
 // using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflows;
 // using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
-// using Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
+// using Blocktrust.CredentialWorkflow.Core.Entities.Outcomes;
 // using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
-// using Commands.Outcome.CreateOutcome;
+// using Commands.Outcomes.CreateOutcome;
 // using FluentAssertions;
 // using FluentResults.Extensions.FluentAssertions;
 // using Microsoft.EntityFrameworkCore;

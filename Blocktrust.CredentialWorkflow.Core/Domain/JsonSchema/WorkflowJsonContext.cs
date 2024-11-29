@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Input;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
-using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
+using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.JsonSchema;
 

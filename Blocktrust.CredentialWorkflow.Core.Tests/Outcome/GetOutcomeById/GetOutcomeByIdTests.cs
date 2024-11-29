@@ -27,7 +27,7 @@ public partial class TestSetup
         createWorkflowResult.Should().BeSuccess();
         var workflowId = createWorkflowResult.Value.WorkflowId;
 
-        // 3. Create an Outcome
+        // 3. Create an Outcomes
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
         var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId), CancellationToken.None);
         createOutcomeResult.Should().BeSuccess();

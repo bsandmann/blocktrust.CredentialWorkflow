@@ -1,21 +1,21 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 
 public class ProcessFlow
 {
     [JsonPropertyName("triggers")] 
-    public Dictionary<Guid, Trigger.Trigger> Triggers { get; set; } = new();
+    public Dictionary<Guid, Triggers.Trigger> Triggers { get; set; } = new();
     
     [JsonPropertyName("actions")] 
-    public Dictionary<Guid, Action.Action> Actions { get; set; } = new();
+    public Dictionary<Guid, Actions.Action> Actions { get; set; } = new();
     
     [JsonPropertyName("outcome")]
     public WorkflowOutcomeDefinition? Outcome { get; set; }
 
-    public void AddTrigger(Trigger.Trigger trigger)
+    public void AddTrigger(Triggers.Trigger trigger)
     {
         if (Triggers.Any())
         {
@@ -25,7 +25,7 @@ public class ProcessFlow
         Triggers.Add(triggerId, trigger);
     }
 
-    public void AddAction(Action.Action action)
+    public void AddAction(Actions.Action action)
     {
         if (Outcome != null)
         {

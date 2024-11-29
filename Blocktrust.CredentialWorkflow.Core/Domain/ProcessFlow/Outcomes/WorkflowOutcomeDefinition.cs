@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcome;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Outcomes;
 
 public class WorkflowOutcomeDefinition
 {

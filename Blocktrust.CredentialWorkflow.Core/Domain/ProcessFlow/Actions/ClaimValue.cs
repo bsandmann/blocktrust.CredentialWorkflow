@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 public class ClaimValue
 {
