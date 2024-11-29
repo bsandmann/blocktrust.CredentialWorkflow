@@ -3,9 +3,9 @@ public enum EActionType
     // Credential Issuance Actions
     CreateCredential,
     SignCredential,
-    CreateW3cCredential,
-    CreateW3cSdCredential,
-    CreateAnoncredCredential,
+    IssueW3cCredential,
+    IssueW3cSdCredential,
+    IssueAnoncredCredential,
     
     // Credential Verification Actions
     VerifyW3cCredential,

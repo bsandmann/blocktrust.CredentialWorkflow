@@ -1,5 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
@@ -68,11 +70,11 @@
     {
         @switch (action.Type)
         {
-            case EActionType.CreateW3cCredential:
-                @if (action.Input is ActionInputW3cCredential  createW3cCredential )
+            case EActionType.IssueW3cCredential:
+                @if (action.Input is IssueW3cCredential  issueW3cCredential )
                 {
-                    <CreateCredentialAction 
-                        ActionInput="createW3cCredential" 
+                    <IssueW3CCredential 
+                        ActionInput="issueW3cCredential" 
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
@@ -89,7 +91,7 @@
                 </div>
                 break;
             case EActionType.VerifyW3cCredential:
-                @if (action.Input is ActionInputVerifyW3cCredential  verifyW3cCredential )
+                @if (action.Input is VerifyW3cCredential  verifyW3cCredential )
                 {
                     <VerifyW3cCredentialAction 
                         ActionInput="verifyW3cCredential" 

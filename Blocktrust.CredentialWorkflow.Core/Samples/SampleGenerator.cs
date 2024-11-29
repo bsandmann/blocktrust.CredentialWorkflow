@@ -50,7 +50,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
                 //         new Actions
                 //         {
                 //             Type = EActionType.CredentialIssuance,
-                //             Input = new ActionInputCredentialIssuance
+                //             Input = new IssueW3cCredentialInput
                 //             {
                 //                 Id = Guid.NewGuid(),
                 //                 Subject = "did:example:123456789abcdefghi",

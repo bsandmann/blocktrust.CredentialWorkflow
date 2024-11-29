@@ -1,6 +1,8 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
 <div class="h-full w-full p-4">
@@ -54,46 +56,47 @@
                     else if (item is Action action)
                     {
                         <h3 class="text-base font-bold mb-1">Actions: @action.Type</h3>
-                        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
-                        {
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>Subject DID:</strong> @(credentialIssuance.SubjectDid.Path)
-                                <span class="text-xs text-gray-500">
-                                    (@credentialIssuance.SubjectDid.Source)
-                                </span>
-                            </p>
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>Issuer DID:</strong> @(credentialIssuance.IssuerDid.Path)
-                                <span class="text-xs text-gray-500">
-                                    (@credentialIssuance.IssuerDid.Source)
-                                </span>
-                            </p>
-                            @if (credentialIssuance.Claims.Any())
-                            {
-                                <div class="mt-1 space-y-1">
-                                    <p class="text-xs">
-                                        <strong>Claims (@credentialIssuance.Claims.Count):</strong>
-                                    </p>
-                                    <div class="text-xs space-y-1">
-                                        @foreach (var claim in credentialIssuance.Claims)
-                                        {
-                                            <p class="truncate hover:whitespace-normal">
-                                                <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value)
-                                            </p>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
-                        {
-                            <p class="text-xs">
-                                <strong>Method:</strong> @outgoingRequest.Method
-                            </p>
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>URI:</strong> @outgoingRequest.Uri
-                            </p>
-                        }
+                        @* @if (action.Input is IssueW3CCredential issueW3CCredential ) *@
+                        @* { *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>Subject DID:</strong> @(issueW3CCredential.SubjectDid.Path) *@
+                        @*         <span class="text-xs text-gray-500"> *@
+                        @*             (@issueW3CCredential.SubjectDid.Source) *@
+                        @*         </span> *@
+                        @*     </p> *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>Issuer DID:</strong> @(issueW3CCredential.IssuerDid.Path) *@
+                        @*         <span class="text-xs text-gray-500"> *@
+                        @*             (@issueW3CCredential.IssuerDid.Source) *@
+                        @*         </span> *@
+                        @*     </p> *@
+                        @*     @if (issueW3CCredential.Claims.Any()) *@
+                        @*     { *@
+                        @*         <div class="mt-1 space-y-1"> *@
+                        @*             <p class="text-xs"> *@
+                        @*                 <strong>Claims (@issueW3CCredential.Claims.Count):</strong> *@
+                        @*             </p> *@
+                        @*             <div class="text-xs space-y-1"> *@
+                        @*                 @foreach (var claim in issueW3CCredential.Claims) *@
+                        @*                 { *@
+                        @*                     <p class="truncate hover:whitespace-normal"> *@
+                        @*                         <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value) *@
+                        @*                     </p> *@
+                        @*                 } *@
+                        @*             </div> *@
+                        @*         </div> *@
+                        @*     } *@
+                        @* } *@
+                        // else 
+                        @* if (action.Input is ActionInputOutgoingRequest outgoingRequest) *@
+                        @* { *@
+                        @*     <p class="text-xs"> *@
+                        @*         <strong>Method:</strong> @outgoingRequest.Method *@
+                        @*     </p> *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>URI:</strong> @outgoingRequest.Uri *@
+                        @*     </p> *@
+                        @* } *@
                     }
                 </div>
 

@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
 
-public class ActionInputCredentialIssuance : ActionInput
+public class IssueW3cCredential : ActionInput
 {
     [JsonPropertyName("subjectDid")]
     public ParameterReference SubjectDid { get; set; } = new()
@@ -22,4 +22,5 @@ public class ActionInputCredentialIssuance : ActionInput
     [JsonPropertyName("claims")]
     public Dictionary<string, ClaimValue> Claims { get; set; } = new();
 }
+
 

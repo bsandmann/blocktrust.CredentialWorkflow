@@ -1,22 +1,27 @@
 using System.Text.Json.Serialization;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-[JsonDerivedType(typeof(ActionInputCredentialIssuance), typeDiscriminator: "credentialIssuance")]
-[JsonDerivedType(typeof(ActionInputCredentialVerification), typeDiscriminator: "credentialVerification")]
-[JsonDerivedType(typeof(ActionInputOutgoingRequest), typeDiscriminator: "outgoingRequest")]
-[JsonDerivedType(typeof(ActionInputDIDCommTrustPing), typeDiscriminator: "didcommTrustPing")]
-[JsonDerivedType(typeof(ActionInputDIDCommMessage), typeDiscriminator: "didcommMessage")]
+// [JsonDerivedType(typeof(ActionInputCredentialVerification), typeDiscriminator: "credentialVerification")]
+// [JsonDerivedType(typeof(ActionInputOutgoingRequest), typeDiscriminator: "outgoingRequest")]
+// [JsonDerivedType(typeof(ActionInputDIDCommTrustPing), typeDiscriminator: "didcommTrustPing")]
+// [JsonDerivedType(typeof(ActionInputDIDCommMessage), typeDiscriminator: "didcommMessage")]
 
-[JsonDerivedType(typeof(ActionInputW3cCredential), typeDiscriminator: "w3cCredential")]
-[JsonDerivedType(typeof(ActionInputW3cSdCredential), typeDiscriminator: "w3cSdCredential")]
-[JsonDerivedType(typeof(ActionInputAnoncredCredential), typeDiscriminator: "anoncredCredential")]
+[JsonDerivedType(typeof(IssueW3cCredential), typeDiscriminator: "issueW3cCredential")]
+[JsonDerivedType(typeof(IssueW3CSdCredential), typeDiscriminator: "w3cSdCredential")]
+[JsonDerivedType(typeof(IssueAnoncredCredential), typeDiscriminator: "anoncredCredential")]
 
-[JsonDerivedType(typeof(ActionInputVerifyW3cCredential), typeDiscriminator: "verifyW3cCredential")]
-[JsonDerivedType(typeof(ActionInputVerifyW3cSdCredential), typeDiscriminator: "verifyW3cSdCredential")]
-[JsonDerivedType(typeof(ActionInputVerifyAnoncredCredential), typeDiscriminator: "verifyAnoncredCredential")]
+[JsonDerivedType(typeof(VerifyW3cCredential), typeDiscriminator: "verifyW3cCredential")]
+[JsonDerivedType(typeof(VerifyW3cSdCredential), typeDiscriminator: "verifyW3cSdCredential")]
+[JsonDerivedType(typeof(VerifyAnoncredCredential), typeDiscriminator: "verifyAnoncredCredential")]
+
+
+[JsonDerivedType(typeof(OutgoingDIDComm), typeDiscriminator: "outgoingDIDCommMessage")]
+
 public abstract class ActionInput
 {
     [JsonPropertyName("id")] 

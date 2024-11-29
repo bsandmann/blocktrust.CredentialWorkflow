@@ -3,6 +3,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 
@@ -54,13 +56,13 @@
                 <!-- Issue Credential Group -->
                 <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@isIssueCredentialExpanded" OnToggle="@(() => ToggleGroup("issueCredential"))">
                     <MenuButton Icon="badge" Label="W3C VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.CreateW3cCredential, action))" 
+                               OnClick="@(action => HandleItemClick(EActionType.IssueW3cCredential, action))" 
                                ShowAddButton="true" />
                     <MenuButton Icon="verified_user" Label="W3C SD-VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.CreateW3cSdCredential, action))" 
+                               OnClick="@(action => HandleItemClick(EActionType.IssueW3cSdCredential, action))" 
                                ShowAddButton="true" />
                     <MenuButton Icon="fingerprint" Label="Anoncred" 
-                               OnClick="@(action => HandleItemClick(EActionType.CreateAnoncredCredential, action))" 
+                               OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))" 
                                ShowAddButton="true" />
                 </MenuGroup>
           
@@ -297,7 +299,7 @@
         Input = actionType switch
         {
             // Issue Credential Actions
-            EActionType.CreateW3cCredential => new ActionInputW3cCredential
+            EActionType.IssueW3cCredential => new IssueW3cCredential
             {
                 Id = Guid.NewGuid(),
                 SubjectDid = new ParameterReference
@@ -312,7 +314,7 @@
                 },
                 Claims = new Dictionary<string, ClaimValue>()
             },
-            EActionType.CreateW3cSdCredential => new ActionInputW3cSdCredential
+            EActionType.IssueW3cSdCredential => new IssueW3CSdCredential
             {
                 Id = Guid.NewGuid(),
                 SubjectDid = new ParameterReference
@@ -327,7 +329,7 @@
                 },
                 Claims = new Dictionary<string, ClaimValue>()
             },
-            EActionType.CreateAnoncredCredential => new ActionInputAnoncredCredential
+            EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
             {
                 Id = Guid.NewGuid(),
                 SubjectDid = new ParameterReference
@@ -345,7 +347,7 @@
             },
 
             // Verify Credential Actions
-            EActionType.VerifyW3cCredential => new ActionInputVerifyW3cCredential
+            EActionType.VerifyW3cCredential => new VerifyW3cCredential
             {
                 Id = Guid.NewGuid(),
                 CheckSignature = true,
@@ -354,7 +356,7 @@
                 CheckExpiry = true,
                 CheckTrustRegistry = false
             },
-            EActionType.VerifyW3cSdCredential => new ActionInputVerifyW3cSdCredential
+            EActionType.VerifyW3cSdCredential => new VerifyW3cSdCredential
             {
                 Id = Guid.NewGuid(),
                 CheckSignature = true,
@@ -363,7 +365,7 @@
                 CheckExpiry = true,
                 CheckTrustRegistry = false
             },
-            EActionType.VerifyAnoncredCredential => new ActionInputVerifyAnoncredCredential
+            EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
             {
                 Id = Guid.NewGuid(),
                 CheckSignature = true,
@@ -373,48 +375,48 @@
                 CheckTrustRegistry = false
             },
             
-            // Outgoing Request Actions
-            EActionType.DIDCommTrustPing => new ActionInputOutgoingRequest
-            {
-                Id = Guid.NewGuid(),
-                Method = "POST",
-                Uri = "didcomm://trustping",
-                Headers = new Dictionary<string, string>
-                {
-                    ["Content-Type"] = "application/didcomm-message+json"
-                }
-            },
-            EActionType.DIDCommMessage => new ActionInputOutgoingRequest
-            {
-                Id = Guid.NewGuid(),
-                Method = "POST",
-                Uri = "didcomm://message",
-                Headers = new Dictionary<string, string>
-                {
-                    ["Content-Type"] = "application/didcomm-message+json"
-                }
-            },
-            EActionType.HTTPPost => new ActionInputOutgoingRequest
-            {
-                Id = Guid.NewGuid(),
-                Method = "POST",
-                Uri = "https://api.example.com",
-                Headers = new Dictionary<string, string>
-                {
-                    ["Content-Type"] = "application/json"
-                }
-            },
-            EActionType.SendEmail => new ActionInputOutgoingRequest
-            {
-                Id = Guid.NewGuid(),
-                Method = "POST",
-                Uri = "smtp://email",
-                Headers = new Dictionary<string, string>
-                {
-                    ["Content-Type"] = "text/plain"
-                }
-            },
-            _ => throw new ArgumentException($"Actions type {actionType} is not implemented.")
+            // // Outgoing Request Actions
+            // EActionType.DIDCommTrustPing => new ActionInputOutgoingRequest
+            // {
+            //     Id = Guid.NewGuid(),
+            //     Method = "POST",
+            //     Uri = "didcomm://trustping",
+            //     Headers = new Dictionary<string, string>
+            //     {
+            //         ["Content-Type"] = "application/didcomm-message+json"
+            //     }
+            // },
+            // EActionType.DIDCommMessage => new ActionInputOutgoingRequest
+            // {
+            //     Id = Guid.NewGuid(),
+            //     Method = "POST",
+            //     Uri = "didcomm://message",
+            //     Headers = new Dictionary<string, string>
+            //     {
+            //         ["Content-Type"] = "application/didcomm-message+json"
+            //     }
+            // },
+        //     EActionType.HTTPPost => new ActionInputOutgoingRequest
+        //     {
+        //         Id = Guid.NewGuid(),
+        //         Method = "POST",
+        //         Uri = "https://api.example.com",
+        //         Headers = new Dictionary<string, string>
+        //         {
+        //             ["Content-Type"] = "application/json"
+        //         }
+        //     },
+        //     EActionType.SendEmail => new ActionInputOutgoingRequest
+        //     {
+        //         Id = Guid.NewGuid(),
+        //         Method = "POST",
+        //         Uri = "smtp://email",
+        //         Headers = new Dictionary<string, string>
+        //         {
+        //             ["Content-Type"] = "text/plain"
+        //         }
+        //     },
+        //     _ => throw new ArgumentException($"Actions type {actionType} is not implemented.")
         },
         RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
     };

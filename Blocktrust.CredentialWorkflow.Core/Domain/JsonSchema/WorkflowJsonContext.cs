@@ -17,10 +17,10 @@ using ProcessFlow = ProcessFlow.ProcessFlow;
 [JsonSerializable(typeof(TriggerInputOnDemand))]
 [JsonSerializable(typeof(Action))]
 [JsonSerializable(typeof(ActionInput))]
-[JsonSerializable(typeof(ActionInputDIDCommTrustPing))]
-[JsonSerializable(typeof(ActionInputDIDCommMessage))]
+// [JsonSerializable(typeof(ActionInputDIDCommTrustPing))]
+// [JsonSerializable(typeof(ActionInputDIDCommMessage))]
 [JsonSerializable(typeof(MessageFieldValue))]
-// Add other ActionInput derived types here
+// Add other Issue derived types here
 public partial class WorkflowJsonContext : JsonSerializerContext
 {
 }
