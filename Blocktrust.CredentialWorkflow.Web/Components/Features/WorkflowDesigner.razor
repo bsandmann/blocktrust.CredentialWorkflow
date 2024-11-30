@@ -1,8 +1,9 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
 <div class="h-full w-full p-4">
@@ -21,7 +22,7 @@
                 <div class="overflow-hidden hover:overflow-visible hover:absolute hover:z-50 hover:bg-gray-100 hover:h-auto hover:w-80 hover:shadow-xl hover:rounded-lg hover:p-3">
                     @if (item is Trigger trigger)
                     {
-                        <h3 class="text-base font-bold mb-1">Triggers: @trigger.Type</h3>
+                        <h3 class="text-base font-bold mb-1"> @trigger.Type</h3>
                         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
                         {
                             <p class="text-xs">
@@ -52,58 +53,73 @@
                                 </div>
                             }
                         }
+                        else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
+                        {
+                            <p class="text-xs">
+                                <strong>Interval:</strong> @recurringTimer.TimeSpan.ToString()
+                            </p>
+                        }
+                        else if (trigger.Input is TriggerInputOnDemand)
+                        {
+                            <p class="text-xs">On-demand trigger</p>
+                        }
                     }
                     else if (item is Action action)
                     {
-                        <h3 class="text-base font-bold mb-1">Actions: @action.Type</h3>
-                        @* @if (action.Input is IssueW3CCredential issueW3CCredential ) *@
-                        @* { *@
-                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
-                        @*         <strong>Subject DID:</strong> @(issueW3CCredential.SubjectDid.Path) *@
-                        @*         <span class="text-xs text-gray-500"> *@
-                        @*             (@issueW3CCredential.SubjectDid.Source) *@
-                        @*         </span> *@
-                        @*     </p> *@
-                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
-                        @*         <strong>Issuer DID:</strong> @(issueW3CCredential.IssuerDid.Path) *@
-                        @*         <span class="text-xs text-gray-500"> *@
-                        @*             (@issueW3CCredential.IssuerDid.Source) *@
-                        @*         </span> *@
-                        @*     </p> *@
-                        @*     @if (issueW3CCredential.Claims.Any()) *@
-                        @*     { *@
-                        @*         <div class="mt-1 space-y-1"> *@
-                        @*             <p class="text-xs"> *@
-                        @*                 <strong>Claims (@issueW3CCredential.Claims.Count):</strong> *@
-                        @*             </p> *@
-                        @*             <div class="text-xs space-y-1"> *@
-                        @*                 @foreach (var claim in issueW3CCredential.Claims) *@
-                        @*                 { *@
-                        @*                     <p class="truncate hover:whitespace-normal"> *@
-                        @*                         <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value) *@
-                        @*                     </p> *@
-                        @*                 } *@
-                        @*             </div> *@
-                        @*         </div> *@
-                        @*     } *@
-                        @* } *@
-                        // else 
-                        @* if (action.Input is ActionInputOutgoingRequest outgoingRequest) *@
-                        @* { *@
-                        @*     <p class="text-xs"> *@
-                        @*         <strong>Method:</strong> @outgoingRequest.Method *@
-                        @*     </p> *@
-                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
-                        @*         <strong>URI:</strong> @outgoingRequest.Uri *@
-                        @*     </p> *@
-                        @* } *@
+                        <h3 class="text-base font-bold mb-1">Action: @action.Type</h3>
+                        @switch (action.Input)
+                        {
+                            case IssueW3cCredential issueW3CCredential:
+                                <p class="text-xs truncate hover:whitespace-normal">
+                                    <strong>Subject DID Source:</strong> @issueW3CCredential.SubjectDid.Source
+                                </p>
+                                <p class="text-xs truncate hover:whitespace-normal">
+                                    <strong>Issuer DID:</strong> @issueW3CCredential.IssuerDid.Path
+                                </p>
+                                if (issueW3CCredential.Claims.Any())
+                                {
+                                    <div class="mt-1">
+                                        <p class="text-xs">
+                                            <strong>Claims (@issueW3CCredential.Claims.Count):</strong>
+                                        </p>
+                                        @foreach (var claim in issueW3CCredential.Claims)
+                                        {
+                                            <p class="text-xs truncate hover:whitespace-normal">
+                                                <strong>@claim.Key:</strong> @GetClaimValue(claim.Value)
+                                            </p>
+                                        }
+                                    </div>
+                                }
+                                break;
+
+                            case VerifyW3cCredential verifyW3cCredential:
+                                <p class="text-xs">
+                                    <strong>Checks:</strong>
+                                    @(string.Join(", ", GetActiveChecks(verifyW3cCredential)))
+                                </p>
+                                break;
+
+                            case VerifyW3cSdCredential verifyW3cSdCredential:
+                                <p class="text-xs">
+                                    <strong>Checks:</strong>
+                                    @(string.Join(", ", GetActiveChecks(verifyW3cSdCredential)))
+                                </p>
+                                break;
+
+                            case VerifyAnoncredCredential verifyAnoncredCredential:
+                                <p class="text-xs">
+                                    <strong>Checks:</strong>
+                                    @(string.Join(", ", GetActiveChecks(verifyAnoncredCredential)))
+                                </p>
+                                break;
+                        }
                     }
                 </div>
 
                 <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded mt-auto self-end transition-colors duration-200" 
                         @onclick:stopPropagation="true" 
                         @onclick="async () => await RemoveItem(item)">
-                    <span class="material-symbols-outlined text-xs">delete</span> 
+                    <span class="material-symbols-outlined text-xs">delete</span>
                 </button>
             </div>
             <div class="h-8 border-r-2 border-gray-300"></div>
@@ -114,7 +130,7 @@
             <div>
                 <span class="material-symbols-outlined text-2xl">add_circle_outline</span>
             </div>
-            <p class="text-base font-bold text-center">Create new Actions/Triggers</p>
+            <p class="text-base font-bold text-center">Create new Action/Trigger</p>
         </div>
     </div>
 
@@ -186,11 +202,44 @@
         StateHasChanged();
     }
 
-    private string GetClaimPreview(ClaimValue claim)
+    private string GetClaimValue(ClaimValue claim)
     {
         if (claim.Type == ClaimValueType.Static)
             return claim.Value;
         return $"{claim.ParameterReference?.Source} ({claim.ParameterReference?.Path})";
+    }
+
+    private List<string> GetActiveChecks(VerifyW3cCredential credential)
+    {
+        var checks = new List<string>();
+        if (credential.CheckSignature) checks.Add("Signature");
+        if (credential.CheckStatus) checks.Add("Status");
+        if (credential.CheckSchema) checks.Add("Schema");
+        if (credential.CheckTrustRegistry) checks.Add("Trust Registry");
+        if (credential.CheckExpiry) checks.Add("Expiry");
+        return checks;
+    }
+
+    private List<string> GetActiveChecks(VerifyW3cSdCredential credential)
+    {
+        var checks = new List<string>();
+        if (credential.CheckSignature) checks.Add("Signature");
+        if (credential.CheckStatus) checks.Add("Status");
+        if (credential.CheckSchema) checks.Add("Schema");
+        if (credential.CheckTrustRegistry) checks.Add("Trust Registry");
+        if (credential.CheckExpiry) checks.Add("Expiry");
+        return checks;
+    }
+
+    private List<string> GetActiveChecks(VerifyAnoncredCredential credential)
+    {
+        var checks = new List<string>();
+        if (credential.CheckSignature) checks.Add("Signature");
+        if (credential.CheckStatus) checks.Add("Status");
+        if (credential.CheckSchema) checks.Add("Schema");
+        if (credential.CheckTrustRegistry) checks.Add("Trust Registry");
+        if (credential.CheckExpiry) checks.Add("Expiry");
+        return checks;
     }
 
     private async Task RemoveItem(object item)
@@ -230,7 +279,7 @@
             }
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Triggers removed successfully" : "Actions removed successfully");
+            await ShowToast(item is Trigger ? "Trigger removed successfully" : "Action removed successfully");
         }
     }
 
@@ -273,7 +322,7 @@
         {
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Triggers added successfully" : "Actions added successfully");
+            await ShowToast(item is Trigger ? "Trigger added successfully" : "Action added successfully");
         }
     }
 }
