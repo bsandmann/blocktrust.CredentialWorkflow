@@ -1,7 +1,9 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action
-@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action.Action
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
 <div class="h-full w-full p-4">
     <div class="flex flex-col items-center">
@@ -19,7 +21,7 @@
                 <div class="overflow-hidden hover:overflow-visible hover:absolute hover:z-50 hover:bg-gray-100 hover:h-auto hover:w-80 hover:shadow-xl hover:rounded-lg hover:p-3">
                     @if (item is Trigger trigger)
                     {
-                        <h3 class="text-base font-bold mb-1">Trigger: @trigger.Type</h3>
+                        <h3 class="text-base font-bold mb-1">Triggers: @trigger.Type</h3>
                         @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
                         {
                             <p class="text-xs">
@@ -53,47 +55,48 @@
                     }
                     else if (item is Action action)
                     {
-                        <h3 class="text-base font-bold mb-1">Action: @action.Type</h3>
-                        @if (action.Input is ActionInputCredentialIssuance credentialIssuance)
-                        {
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>Subject DID:</strong> @(credentialIssuance.SubjectDid.Path)
-                                <span class="text-xs text-gray-500">
-                                    (@credentialIssuance.SubjectDid.Source)
-                                </span>
-                            </p>
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>Issuer DID:</strong> @(credentialIssuance.IssuerDid.Path)
-                                <span class="text-xs text-gray-500">
-                                    (@credentialIssuance.IssuerDid.Source)
-                                </span>
-                            </p>
-                            @if (credentialIssuance.Claims.Any())
-                            {
-                                <div class="mt-1 space-y-1">
-                                    <p class="text-xs">
-                                        <strong>Claims (@credentialIssuance.Claims.Count):</strong>
-                                    </p>
-                                    <div class="text-xs space-y-1">
-                                        @foreach (var claim in credentialIssuance.Claims)
-                                        {
-                                            <p class="truncate hover:whitespace-normal">
-                                                <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value)
-                                            </p>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else if (action.Input is ActionInputOutgoingRequest outgoingRequest)
-                        {
-                            <p class="text-xs">
-                                <strong>Method:</strong> @outgoingRequest.Method
-                            </p>
-                            <p class="text-xs truncate hover:whitespace-normal">
-                                <strong>URI:</strong> @outgoingRequest.Uri
-                            </p>
-                        }
+                        <h3 class="text-base font-bold mb-1">Actions: @action.Type</h3>
+                        @* @if (action.Input is IssueW3CCredential issueW3CCredential ) *@
+                        @* { *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>Subject DID:</strong> @(issueW3CCredential.SubjectDid.Path) *@
+                        @*         <span class="text-xs text-gray-500"> *@
+                        @*             (@issueW3CCredential.SubjectDid.Source) *@
+                        @*         </span> *@
+                        @*     </p> *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>Issuer DID:</strong> @(issueW3CCredential.IssuerDid.Path) *@
+                        @*         <span class="text-xs text-gray-500"> *@
+                        @*             (@issueW3CCredential.IssuerDid.Source) *@
+                        @*         </span> *@
+                        @*     </p> *@
+                        @*     @if (issueW3CCredential.Claims.Any()) *@
+                        @*     { *@
+                        @*         <div class="mt-1 space-y-1"> *@
+                        @*             <p class="text-xs"> *@
+                        @*                 <strong>Claims (@issueW3CCredential.Claims.Count):</strong> *@
+                        @*             </p> *@
+                        @*             <div class="text-xs space-y-1"> *@
+                        @*                 @foreach (var claim in issueW3CCredential.Claims) *@
+                        @*                 { *@
+                        @*                     <p class="truncate hover:whitespace-normal"> *@
+                        @*                         <span class="font-medium">@claim.Key:</span> @GetClaimPreview(claim.Value) *@
+                        @*                     </p> *@
+                        @*                 } *@
+                        @*             </div> *@
+                        @*         </div> *@
+                        @*     } *@
+                        @* } *@
+                        // else 
+                        @* if (action.Input is ActionInputOutgoingRequest outgoingRequest) *@
+                        @* { *@
+                        @*     <p class="text-xs"> *@
+                        @*         <strong>Method:</strong> @outgoingRequest.Method *@
+                        @*     </p> *@
+                        @*     <p class="text-xs truncate hover:whitespace-normal"> *@
+                        @*         <strong>URI:</strong> @outgoingRequest.Uri *@
+                        @*     </p> *@
+                        @* } *@
                     }
                 </div>
 
@@ -111,7 +114,7 @@
             <div>
                 <span class="material-symbols-outlined text-2xl">add_circle_outline</span>
             </div>
-            <p class="text-base font-bold text-center">Create new Action/Trigger</p>
+            <p class="text-base font-bold text-center">Create new Actions/Triggers</p>
         </div>
     </div>
 
@@ -227,7 +230,7 @@
             }
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Trigger removed successfully" : "Action removed successfully");
+            await ShowToast(item is Trigger ? "Triggers removed successfully" : "Actions removed successfully");
         }
     }
 
@@ -270,7 +273,7 @@
         {
             await OnChange.InvokeAsync();
             UpdateFlowItems();
-            await ShowToast(item is Trigger ? "Trigger added successfully" : "Action added successfully");
+            await ShowToast(item is Trigger ? "Triggers added successfully" : "Actions added successfully");
         }
     }
 }

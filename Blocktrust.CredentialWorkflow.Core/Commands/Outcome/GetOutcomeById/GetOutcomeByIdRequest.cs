@@ -1,10 +1,11 @@
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeById;
 
-using Blocktrust.CredentialWorkflow.Core.Domain.Outcome;
 using FluentResults;
 using MediatR;
 
-public class GetOutcomeByIdRequest : IRequest<Result<Outcome>>
+public class GetOutcomeByIdRequest : IRequest<Result<ActionOutcome>>
 {
     public GetOutcomeByIdRequest(Guid outcomeId)
     {

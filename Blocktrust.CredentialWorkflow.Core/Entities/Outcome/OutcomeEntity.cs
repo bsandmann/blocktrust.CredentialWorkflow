@@ -1,9 +1,8 @@
-namespace Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
+using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 
-using System.Runtime.InteropServices.JavaScript;
-using Domain.Enums;
-using Domain.Outcome;
-using Workflow;
+namespace Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
 
 public class OutcomeEntity
 {
@@ -23,17 +22,17 @@ public class OutcomeEntity
     public WorkflowEntity WorkflowEntity { get; set; }
     public Guid WorkflowEntityId { get; set; }
 
-    public Outcome Map()
+    public ActionOutcome Map()
     {
-        return new Outcome()
+        return new ActionOutcome
         {
-            OutcomeId = this.OutcomeEntityId,
-            OutcomeState = this.OutcomeState,
-            StartedUtc = this.StartedUtc,
-            EndedUtc = this.EndedUtc,
-            ErrorJson = this.ErrorJson,
-            OutcomeJson = this.OutcomeJson,
-            WorkflowId = this.WorkflowEntityId
+            OutcomeId = OutcomeEntityId,
+            OutcomeState = OutcomeState,
+            StartedUtc = StartedUtc,
+            EndedUtc = EndedUtc,
+            ErrorJson = ErrorJson,
+            OutcomeJson = OutcomeJson,
+            WorkflowId = WorkflowEntityId
         };
     }
 }

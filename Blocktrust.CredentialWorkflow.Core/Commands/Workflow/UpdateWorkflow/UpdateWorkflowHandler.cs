@@ -1,6 +1,5 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow;
 
-using System.Text.Json;
 using Domain.Workflow;
 using FluentResults;
 using MediatR;

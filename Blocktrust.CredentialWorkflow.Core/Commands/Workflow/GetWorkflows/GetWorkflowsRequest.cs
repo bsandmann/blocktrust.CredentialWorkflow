@@ -4,7 +4,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 using FluentResults;
 using MediatR;
 
-public class GetWorkflowsRequest : IRequest<Result<List<WorkflowWithLastResult>>>
+public class GetWorkflowsRequest : IRequest<Result<List<WorkflowOutcome>>>
 {
     public GetWorkflowsRequest(Guid tenantEntityId)
     {

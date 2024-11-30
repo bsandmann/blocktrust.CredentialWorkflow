@@ -1,11 +1,12 @@
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes;
 
-using Blocktrust.CredentialWorkflow.Core.Domain.Outcome;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-public class GetOutcomesHandler : IRequestHandler<GetOutcomesRequest, Result<List<Outcome>>>
+public class GetOutcomesHandler : IRequestHandler<GetOutcomesRequest, Result<List<ActionOutcome>>>
 {
     private readonly DataContext _context;
 
@@ -14,7 +15,7 @@ public class GetOutcomesHandler : IRequestHandler<GetOutcomesRequest, Result<Lis
         _context = context;
     }
 
-    public async Task<Result<List<Outcome>>> Handle(GetOutcomesRequest request, CancellationToken cancellationToken)
+    public async Task<Result<List<ActionOutcome>>> Handle(GetOutcomesRequest request, CancellationToken cancellationToken)
     {
         var outcomeEntities = await _context.OutcomeEntities
             .Include(o => o.WorkflowEntity) // include related workflow if require

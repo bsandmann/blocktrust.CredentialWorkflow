@@ -1,6 +1,6 @@
 ﻿using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome;
 using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeById;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,4 +1,4 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Domain.Models.Did;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Did;
 using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
 using FluentResults;
 using Microsoft.Extensions.Logging;

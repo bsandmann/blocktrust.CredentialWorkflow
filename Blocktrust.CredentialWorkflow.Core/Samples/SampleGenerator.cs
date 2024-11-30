@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Action;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Trigger;
 
 namespace Blocktrust.CredentialWorkflow.Core.Samples
 {
-    using Action = Domain.ProcessFlow.Action.Action;
-
     public class SampleGenerator
     {
         public static ProcessFlow GenerateSampleProcessFlow()
@@ -18,11 +12,11 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
 
             return new ProcessFlow
             {
-                // Triggers = new Dictionary<Guid, Trigger>
+                // Triggers = new Dictionary<Guid, Triggers>
                 // {
                 //     {
                 //         triggerId,
-                //         new Trigger
+                //         new Triggers
                 //         {
                 //             Type = ETriggerType.IncomingRequest,
                 //             Input = new TriggerInputIncomingRequest
@@ -49,14 +43,14 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
                 //         }
                 //     }
                 // },
-                // Actions = new Dictionary<Guid, Action>
+                // Actions = new Dictionary<Guid, Actions>
                 // {
                 //     {
                 //         issuanceActionId,
-                //         new Action
+                //         new Actions
                 //         {
                 //             Type = EActionType.CredentialIssuance,
-                //             Input = new ActionInputCredentialIssuance
+                //             Input = new IssueW3cCredentialInput
                 //             {
                 //                 Id = Guid.NewGuid(),
                 //                 Subject = "did:example:123456789abcdefghi",
@@ -76,7 +70,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Samples
                 //     },
                 //     {
                 //         outgoingRequestActionId,
-                //         new Action
+                //         new Actions
                 //         {
                 //             Type = EActionType.OutgoingRequest,
                 //             Input = new ActionInputOutgoingRequest

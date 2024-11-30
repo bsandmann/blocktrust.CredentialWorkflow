@@ -5,7 +5,7 @@ using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<List<WorkflowWithLastResult>>>
+public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<List<WorkflowOutcome>>>
 {
     private readonly DataContext _context;
 
@@ -14,15 +14,15 @@ public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<L
         _context = context;
     }
 
-    public async Task<Result<List<WorkflowWithLastResult>>> Handle(GetWorkflowsRequest request, CancellationToken cancellationToken)
+    public async Task<Result<List<WorkflowOutcome>>> Handle(GetWorkflowsRequest request, CancellationToken cancellationToken)
     {
         var workflow = await _context.WorkflowEntities
             .Select(p => new
             {
-                Name = p.Name,
+                p.Name,
                 WorkflowId = p.WorkflowEntityId,
-                UpdatedUtc = p.UpdatedUtc,
-                WorkflowState = p.WorkflowState,
+                p.UpdatedUtc,
+                p.WorkflowState,
                 LastOutcome = p.OutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault()
             }).ToListAsync(cancellationToken: cancellationToken);
 
@@ -31,7 +31,7 @@ public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<L
             return Result.Fail("The workflow does not exist in the database.");
         }
 
-        var result = workflow.Select(p => new WorkflowWithLastResult()
+        var result = workflow.Select(p => new WorkflowOutcome()
         {
             Name = p.Name,
             WorkflowId = p.WorkflowId,

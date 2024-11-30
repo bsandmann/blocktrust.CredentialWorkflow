@@ -29,7 +29,7 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
         {
             IEnumerable<KeyValuePair<string, StringValues>> query = [
                 new("ReturnUrl", returnUrl),
-                new("Action", ExternalLogin.LoginCallbackAction)];
+                new("Actions", ExternalLogin.LoginCallbackAction)];
 
             var redirectUrl = UriHelper.BuildRelative(
                 context.Request.PathBase,
@@ -62,7 +62,7 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
             var redirectUrl = UriHelper.BuildRelative(
                 context.Request.PathBase,
                 "/Account/Manage/ExternalLogins",
-                QueryString.Create("Action", ExternalLogins.LinkLoginCallbackAction));
+                QueryString.Create("Actions", ExternalLogins.LinkLoginCallbackAction));
 
             var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, signInManager.UserManager.GetUserId(context.User));
             return TypedResults.Challenge(properties, [provider]);
