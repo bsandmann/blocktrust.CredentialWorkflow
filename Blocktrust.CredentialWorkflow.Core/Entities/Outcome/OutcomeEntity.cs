@@ -31,7 +31,7 @@ public class OutcomeEntity
             StartedUtc = StartedUtc,
             EndedUtc = EndedUtc,
             ErrorJson = ErrorJson,
-            OutcomeJson = OutcomeJson,
+            OutputJson = OutcomeJson,
             WorkflowId = WorkflowEntityId
         };
     }

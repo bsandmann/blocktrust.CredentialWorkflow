@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
