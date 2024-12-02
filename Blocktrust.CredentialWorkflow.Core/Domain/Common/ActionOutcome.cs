@@ -14,7 +14,7 @@ public class ActionOutcome
     
     public string? ErrorJson { get; set; }
     
-    public string? OutcomeJson { get; set; }
+    public string? OutputJson { get; set; }
    
     // FK
     public Workflow.Workflow Workflow { get; set; }

@@ -64,7 +64,7 @@
                                         @if (outcome.OutcomeState == EOutcomeState.Success)
                                         {
                                             <p>
-                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutputJson) ? "N/A" : outcome.OutputJson)
                                             </p>
                                         }
                                         else if (outcome.OutcomeState == EOutcomeState.NotStarted)
@@ -74,7 +74,7 @@
                                         else
                                         {
                                             <p>
-                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutputJson) ? "N/A" : outcome.OutputJson)
                                             </p>
                                             <p>
                                                 <strong>Error JSON:</strong> @(string.IsNullOrEmpty(outcome.ErrorJson) ? "N/A" : outcome.ErrorJson)

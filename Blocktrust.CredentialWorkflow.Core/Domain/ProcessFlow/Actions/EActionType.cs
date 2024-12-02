@@ -1,21 +1,20 @@
 public enum EActionType
 {
     // Credential Issuance Actions
-    CreateCredential,
-    SignCredential,
-    IssueW3cCredential,
-    IssueW3cSdCredential,
+
+    IssueW3CCredential,
+    IssueW3CSdCredential,
     IssueAnoncredCredential,
     
     // Credential Verification Actions
-    VerifyW3cCredential,
-    VerifyW3cSdCredential,
+    VerifyW3CCredential,
+    VerifyW3CSdCredential,
     VerifyAnoncredCredential,
 
     // Communication Actions
-    DIDCommTrustPing,
-    DIDCommMessage,
-    HTTPPost,
+    DidCommTrustPing,
+    DidCommMessage,
+    HttpPost,
     SendEmail,
 
    

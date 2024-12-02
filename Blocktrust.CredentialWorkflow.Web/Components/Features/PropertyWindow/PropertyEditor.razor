@@ -3,15 +3,11 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
-
-
-
-
-
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     <div class="flex items-start mb-4">
@@ -33,36 +29,52 @@
                 }
                 break;
             case ETriggerType.CredentialVerificationTrigger:
-                <div class="text-sm text-yellow-600">
-                    Credential Verification Triggers configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Verification request format</li>
-                        <li>Required parameters</li>
-                        <li>Validation rules</li>
-                    </ul>
-                </div>
+                @if (trigger.Input is TriggerInputIncomingRequest verificationRequest)
+                {
+                    <CredentialVerificationTrigger 
+                        TriggerInput="verificationRequest" 
+                        OnChange="OnChange"/>
+                }
+                break;
+            case ETriggerType.CustomIncomingTrigger:
+                @if (trigger.Input is TriggerInputCustomIncoming customIncoming)
+                {
+                    <CustomIncomingTrigger 
+                        TriggerInput="customIncoming" 
+                        OnChange="OnChange"/>
+                }
                 break;
             case ETriggerType.RecurringTimer:
-                <div class="text-sm text-yellow-600">
-                    Recurring Timer configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Interval duration</li>
-                        <li>Start time</li>
-                        <li>End time (optional)</li>
-                    </ul>
-                </div>
+                @if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
+                {
+                    <RecurringTimerTrigger 
+                        TriggerInput="recurringTimer" 
+                        OnChange="OnChange"/>
+                }
                 break;
-            case ETriggerType.OnDemand:
-                <div class="text-sm text-yellow-600">
-                    On Demand trigger configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Triggers conditions</li>
-                        <li>Input parameters</li>
-                    </ul>
-                </div>
+            case ETriggerType.PresetTimer:
+                @if (trigger.Input is TriggerInputPresetTimer presetTimer)
+                {
+                    <PresetTimerTrigger 
+                        TriggerInput="presetTimer" 
+                        OnChange="OnChange"/>
+                }
+                break;
+            case ETriggerType.WalletInteraction:
+                @if (trigger.Input is TriggerInputWalletInteraction walletInteraction)
+                {
+                    <WalletInteractionTrigger 
+                        TriggerInput="walletInteraction" 
+                        OnChange="OnChange"/>
+                }
+                break;
+            case ETriggerType.ManualTrigger:
+                @if (trigger.Input is TriggerInputManual manualTrigger)
+                {
+                    <ManualTrigger 
+                        TriggerInput="manualTrigger" 
+                        OnChange="OnChange"/>
+                }
                 break;
         }
     }
@@ -70,8 +82,8 @@
     {
         @switch (action.Type)
         {
-            case EActionType.IssueW3cCredential:
-                @if (action.Input is IssueW3cCredential  issueW3cCredential )
+            case EActionType.IssueW3CCredential:
+                @if (action.Input is IssueW3cCredential issueW3cCredential)
                 {
                     <IssueW3CCredential 
                         ActionInput="issueW3cCredential" 
@@ -79,27 +91,15 @@
                         TriggerParameters="TriggerParameters"/>
                 }
                 break;
-            case EActionType.SignCredential:
-                <div class="text-sm text-yellow-600">
-                    Sign Credential configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Signing key selection</li>
-                        <li>Signature type</li>
-                        <li>Additional proof options</li>
-                    </ul>
-                </div>
-                break;
-            case EActionType.VerifyW3cCredential:
-                @if (action.Input is VerifyW3cCredential  verifyW3cCredential )
+            case EActionType.VerifyW3CCredential:
+                @if (action.Input is VerifyW3cCredential verifyW3cCredential)
                 {
                     <VerifyW3cCredentialAction 
                         ActionInput="verifyW3cCredential" 
-                        OnChange="OnChange"
-                        />
+                        OnChange="OnChange"/>
                 }
                 break;
-            case EActionType.DIDCommTrustPing:
+            case EActionType.DidCommTrustPing:
                 <div class="text-sm text-yellow-600">
                     DIDComm Trust Ping configuration will be implemented soon.
                     <div class="mt-2">Expected configuration options:</div>
@@ -110,7 +110,7 @@
                     </ul>
                 </div>
                 break;
-            case EActionType.DIDCommMessage:
+            case EActionType.DidCommMessage:
                 <div class="text-sm text-yellow-600">
                     DIDComm Message configuration will be implemented soon.
                     <div class="mt-2">Expected configuration options:</div>
@@ -121,7 +121,7 @@
                     </ul>
                 </div>
                 break;
-            case EActionType.HTTPPost:
+            case EActionType.HttpPost:
                 <div class="text-sm text-yellow-600">
                     HTTP Post configuration will be implemented soon.
                     <div class="mt-2">Expected configuration options:</div>
@@ -150,11 +150,11 @@
     else if (Item is WorkflowOutcome outcome)
     {
         <div class="text-sm text-yellow-600">
-            ActionWorkflowOutcome configuration will be implemented soon.
+            Outcome configuration will be implemented soon.
             <div class="mt-2">Expected configuration options:</div>
             <ul class="list-disc ml-6 mt-1">
                 <li>Success/Failure status</li>
-                <li>ActionWorkflowOutcome message</li>
+                <li>Outcome message</li>
                 <li>Additional metadata</li>
             </ul>
         </div>
@@ -166,5 +166,4 @@
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
-    
 }

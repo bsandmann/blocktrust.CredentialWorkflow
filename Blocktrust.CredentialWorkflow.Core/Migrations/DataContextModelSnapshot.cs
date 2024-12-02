@@ -106,7 +106,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Property<string>("ErrorJson")
                         .HasColumnType("text");
 
-                    b.Property<string>("OutcomeJson")
+                    b.Property<string>("OutputJson")
                         .HasColumnType("text");
 
                     b.Property<int>("OutcomeState")

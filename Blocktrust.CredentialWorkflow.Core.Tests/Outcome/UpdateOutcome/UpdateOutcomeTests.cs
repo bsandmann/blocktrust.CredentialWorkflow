@@ -51,7 +51,7 @@ public partial class TestSetup
         result.Value.OutcomeId.Should().Be(outcomeId);
         result.Value.WorkflowId.Should().Be(workflowId);
         result.Value.OutcomeState.Should().Be(EOutcomeState.Success);
-        result.Value.OutcomeJson.Should().Be("{\"result\": \"success\"}");
+        result.Value.OutputJson.Should().Be("{\"result\": \"success\"}");
         result.Value.ErrorJson.Should().BeNull();
         result.Value.EndedUtc.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
@@ -117,7 +117,7 @@ public partial class TestSetup
         result.Value.OutcomeId.Should().Be(outcomeId);
         result.Value.WorkflowId.Should().Be(workflowId);
         result.Value.OutcomeState.Should().Be(EOutcomeState.FailedWithErrors);
-        result.Value.OutcomeJson.Should().BeNull();
+        result.Value.OutputJson.Should().BeNull();
         result.Value.ErrorJson.Should().Be("{\"error\": \"Something went wrong\"}");
         result.Value.EndedUtc.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }

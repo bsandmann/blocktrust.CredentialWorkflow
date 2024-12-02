@@ -1,0 +1,80 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
+
+<div class="p-4 text-sm">
+    <div class="space-y-3">
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Wallet Action</label>
+            <select class="w-full rounded border px-2 py-1 text-xs"
+                    @bind="TriggerInput.WalletAction"
+                    @bind:after="OnValueChanged">
+                <option value="connect">Connect</option>
+                <option value="sign">Sign</option>
+                <option value="share">Share Credential</option>
+            </select>
+        </div>
+
+        <!-- Required Parameters Section -->
+        <div class="p-2 border rounded-md">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-medium text-gray-700">Required Parameters</label>
+                <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                        @onclick="AddParameter">
+                    Add Parameter
+                </button>
+            </div>
+            @foreach (var param in TriggerInput.RequiredParameters)
+            {
+                <div class="flex items-center space-x-2 mt-2">
+                    <input type="text" 
+                           class="flex-1 rounded border px-2 py-1 text-xs"
+                           value="@param.Key"
+                           @onchange="@(e => UpdateParameterKey(param.Key, e.Value?.ToString() ?? string.Empty))" />
+                    <button class="text-red-500 hover:text-red-700"
+                            @onclick="() => RemoveParameter(param.Key)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public TriggerInputWalletInteraction TriggerInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task AddParameter()
+    {
+        var paramName = $"param{TriggerInput.RequiredParameters.Count + 1}";
+        TriggerInput.RequiredParameters[paramName] = new ParameterDefinition
+        {
+            Type = ParameterType.String,
+            Required = true
+        };
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task UpdateParameterKey(string oldKey, string newKey)
+    {
+        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        {
+            var value = TriggerInput.RequiredParameters[oldKey];
+            TriggerInput.RequiredParameters.Remove(oldKey);
+            TriggerInput.RequiredParameters[newKey] = value;
+            await OnChange.InvokeAsync();
+        }
+    }
+
+    private async Task RemoveParameter(string key)
+    {
+        TriggerInput.RequiredParameters.Remove(key);
+        await OnChange.InvokeAsync();
+    }
+}

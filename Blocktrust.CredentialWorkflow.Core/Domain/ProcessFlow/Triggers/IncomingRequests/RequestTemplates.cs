@@ -1,21 +1,4 @@
-using System.Text.Json.Serialization;
-
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
-
-public class TriggerInputIncomingRequest : TriggerInput
-{
-    [JsonPropertyName("endpoint")]
-    public string Endpoint { get; set; } = string.Empty;
-
-    [JsonPropertyName("method")]
-    public string Method { get; set; } = "POST";
-
-    [JsonPropertyName("template")] 
-    public string Template { get; set; } = "credential-issuance"; 
-
-    [JsonPropertyName("parameters")]
-    public Dictionary<string, ParameterDefinition> Parameters { get; set; } = new();
-}
+﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests;
 
 public static class RequestTemplates
 {
@@ -58,32 +41,4 @@ public static class RequestTemplates
             }
         }
     };
-}
-public class RequestTemplate
-{
-    public string Endpoint { get; set; } = string.Empty;
-    public string Method { get; set; } = "POST";
-    public Dictionary<string, ParameterDefinition> Parameters { get; set; } = new();
-}
-
-public class ParameterDefinition
-{
-    [JsonPropertyName("type")]
-    public ParameterType Type { get; set; }
-
-    [JsonPropertyName("required")]
-    public bool Required { get; set; }
-
-    [JsonPropertyName("description")]
-    public string Description { get; set; } = "";
-
-    [JsonPropertyName("allowedValues")]
-    public string[]? AllowedValues { get; set; }
-}
-
-public enum ParameterType
-{
-    String,
-    Number,
-    Boolean
 }

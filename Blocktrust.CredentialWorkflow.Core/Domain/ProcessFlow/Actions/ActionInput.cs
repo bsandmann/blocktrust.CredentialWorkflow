@@ -6,10 +6,6 @@ using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-// [JsonDerivedType(typeof(ActionInputCredentialVerification), typeDiscriminator: "credentialVerification")]
-// [JsonDerivedType(typeof(ActionInputOutgoingRequest), typeDiscriminator: "outgoingRequest")]
-// [JsonDerivedType(typeof(ActionInputDIDCommTrustPing), typeDiscriminator: "didcommTrustPing")]
-// [JsonDerivedType(typeof(ActionInputDIDCommMessage), typeDiscriminator: "didcommMessage")]
 
 [JsonDerivedType(typeof(IssueW3cCredential), typeDiscriminator: "issueW3cCredential")]
 [JsonDerivedType(typeof(IssueW3CSdCredential), typeDiscriminator: "w3cSdCredential")]
