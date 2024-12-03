@@ -23,7 +23,7 @@
             case ETriggerType.CredentialIssuanceTrigger:
                 @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
                 {
-                    <CredentialIssuanceTrigger 
+                    <IssueCredentialTriggerComponent 
                         TriggerInput="incomingRequest" 
                         OnChange="OnChange"/>
                 }

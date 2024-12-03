@@ -6,17 +6,19 @@ public class ParameterDefinition
 {
     [JsonPropertyName("type")]
     public ParameterType Type { get; set; }
-
+    
     [JsonPropertyName("required")]
     public bool Required { get; set; }
-
+    
     [JsonPropertyName("description")]
     public string Description { get; set; } = "";
-
+    
     [JsonPropertyName("allowedValues")]
     public string[]? AllowedValues { get; set; }
-}
 
+    [JsonPropertyName("defaultValue")]
+    public string? DefaultValue { get; set; }
+}
 public enum ParameterType
 {
     String,
