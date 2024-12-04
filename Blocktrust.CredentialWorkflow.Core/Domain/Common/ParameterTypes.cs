@@ -30,11 +30,11 @@ public class ParameterReference
     private string? ResolveTriggerInput(WorkflowContext context)
     {
         var triggerResult = context.GetTriggerResult();
-        if (triggerResult?.OutputJson == null) return null;
+        if (triggerResult?.OutcomeJson == null) return null;
 
         try
         {
-            var triggerOutput = JsonSerializer.Deserialize<JsonElement>(triggerResult.OutputJson);
+            var triggerOutput = JsonSerializer.Deserialize<JsonElement>(triggerResult.OutcomeJson);
             if (triggerOutput.TryGetProperty(Path, out var value))
             {
                 return value.GetString();
