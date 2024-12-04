@@ -159,19 +159,19 @@
                         OnChange="OnChange"/>
                 }
                 break;
+            case EActionType.LogOutcome:
+            case EActionType.PostOutcome:
+                @if (action.Input is OutcomeAction outcomeAction)
+                {
+                    <OutcomeActionComponent
+                        ActionInput="outcomeAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"
+                        DisplayType="action.Type == EActionType.LogOutcome ? EOutcomeActionType.Log : EOutcomeActionType.Post"/>
+                }
+                break;
+    
         }
-    }
-    else if (Item is WorkflowOutcome outcome)
-    {
-        <div class="text-sm text-yellow-600">
-            Outcome configuration will be implemented soon.
-            <div class="mt-2">Expected configuration options:</div>
-            <ul class="list-disc ml-6 mt-1">
-                <li>Success/Failure status</li>
-                <li>Outcome message</li>
-                <li>Additional metadata</li>
-            </ul>
-        </div>
     }
 </div>
 

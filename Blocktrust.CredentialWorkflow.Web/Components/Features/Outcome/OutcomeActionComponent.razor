@@ -1,0 +1,148 @@
+﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+
+<div class="p-4 text-sm">
+    <div class="space-y-3">
+        <h3 class="font-medium text-gray-700 mb-4">
+            @(ActionInput.Type == EOutcomeActionType.Log ? "Log Outcome Configuration" : "Post Outcome Configuration")
+        </h3>
+
+        @if (ActionInput.Type == EOutcomeActionType.Post)
+        {
+            <div class="p-2 border rounded-md">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Destination Endpoint</label>
+                <div class="flex space-x-2">
+                    <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Destination.Source">
+                        <option value="@ParameterSource.Static">Static Value</option>
+                        <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                        <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                    </select>
+
+                    @if (ActionInput.Destination.Source == ParameterSource.Static)
+                    {
+                        <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                               @bind="ActionInput.Destination.Path"
+                               @bind:after="OnValueChanged"
+                               placeholder="Enter endpoint URL" />
+                    }
+                    else
+                    {
+                        <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                                @bind="ActionInput.Destination.Path"
+                                @bind:after="OnValueChanged">
+                            @if (ActionInput.Destination.Source == ParameterSource.TriggerInput)
+                            {
+                                @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                                {
+                                    <option value="@param">@param</option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="">Select source</option>
+                            }
+                        </select>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="p-2 border rounded-md">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-medium text-gray-700">Output Content</label>
+                <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                        @onclick="AddContentField">
+                    Add Field
+                </button>
+            </div>
+
+            @foreach (var field in ActionInput.Content)
+            {
+                <div class="flex items-center space-x-2 mt-2">
+                    <input type="text" class="w-1/4 rounded border px-2 py-1 text-xs"
+                           value="@field.Key"
+                           @onchange="@(e => UpdateFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))"
+                           placeholder="Field name" />
+
+                    <select class="w-1/4 rounded border px-2 py-1 text-xs"
+                            @bind="field.Value.Source">
+                        <option value="@ParameterSource.Static">Static</option>
+                        <option value="@ParameterSource.TriggerInput">Trigger Input</option>
+                        <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
+                    </select>
+
+                    @if (field.Value.Source == ParameterSource.Static)
+                    {
+                        <input type="text" class="w-1/2 rounded border px-2 py-1 text-xs"
+                               @bind="field.Value.Path"
+                               @bind:after="OnValueChanged"
+                               placeholder="Value" />
+                    }
+                    else
+                    {
+                        <select class="w-1/2 rounded border px-2 py-1 text-xs"
+                                @bind="field.Value.Path"
+                                @bind:after="OnValueChanged">
+                            @if (field.Value.Source == ParameterSource.TriggerInput)
+                            {
+                                @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                                {
+                                    <option value="@param">@param</option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="">Select source</option>
+                            }
+                        </select>
+                    }
+
+                    <button class="text-red-500 hover:text-red-700"
+                            @onclick="() => RemoveField(field.Key)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public OutcomeAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task AddContentField()
+    {
+        var fieldName = $"field{ActionInput.Content.Count + 1}";
+        ActionInput.Content[fieldName] = new ParameterReference
+        {
+            Source = ParameterSource.Static
+        };
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task UpdateFieldKey(string oldKey, string newKey)
+    {
+        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        {
+            var value = ActionInput.Content[oldKey];
+            ActionInput.Content.Remove(oldKey);
+            ActionInput.Content[newKey] = value;
+            await OnChange.InvokeAsync();
+        }
+    }
+
+    private async Task RemoveField(string key)
+    {
+        ActionInput.Content.Remove(key);
+        await OnChange.InvokeAsync();
+    }
+}

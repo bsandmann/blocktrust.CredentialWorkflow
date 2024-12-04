@@ -108,16 +108,19 @@
         </div>
 
         <!-- Outcome Section -->
-        <div class="mb-6 @(!HasActions ? "opacity-50" : "")">
+        <div class="mb-6">
             <div class="flex items-center mb-3">
-                <span class="material-symbols-outlined text-gray-600 mr-2">flag</span>
-                <h4 class="text-sm font-medium text-gray-700">Outcome</h4>
+                <span class="material-symbols-outlined text-gray-600 mr-2">output</span>
+                <h4 class="text-sm font-medium text-gray-700">Outcomes</h4>
             </div>
 
             <div class="space-y-2 ml-8">
-                <MenuButton Icon="flag" Label="Add Outcome" 
-                           OnClick="@(action => HandleItemClick("outcome", action))" 
-                           ShowAddButton="true" />
+                @* <MenuButton Icon="note_add" Label="Log Outcome"  *@
+                @*             OnClick="@(action => HandleItemClick(EActionType.LogOutcome, action))" *@
+                @*             ShowAddButton="true" /> *@
+                @* <MenuButton Icon="cloud_upload" Label="Post Outcome"  *@
+                @*             OnClick="@(action => HandleItemClick(EActionType.PostOutcome, action))" *@
+                @*             ShowAddButton="true" /> *@
             </div>
         </div>
     }
@@ -187,25 +190,72 @@
                 break;
         }
     }
-
     private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action)
+{
+    if (!HasActions && itemType is string outcomeType && (outcomeType == "logOutcome" || outcomeType == "postOutcome"))
     {
-        if (!HasActions && itemType is string && (string)itemType == "outcome")
-        {
-            await HandleError("Cannot add outcome before adding actions. Please add actions first.");
-            return;
-        }
+        await HandleError("Cannot add outcome before adding actions. Please add actions first.");
+        return;
+    }
 
-        var newItem = CreateNewItem(itemType);
-        if (newItem != null)
+    var newItem = CreateNewItem(itemType);
+    if (newItem != null)
+    {
+        await OnItemCreated.InvokeAsync(newItem);
+        if (action == MenuButton.MenuButtonAction.Configure)
         {
-            await OnItemCreated.InvokeAsync(newItem);
-            if (action == MenuButton.MenuButtonAction.Configure)
-            {
-                await SelectItem(newItem);
-            }
+            await SelectItem(newItem);
         }
     }
+}
+
+private object CreateNewItem(object itemType)
+{
+    try
+    {
+        if (itemType is string outcomeType)
+        {
+            return outcomeType switch
+            {
+                "logOutcome" => new WorkflowAction
+                {
+                    Type = EActionType.LogOutcome,
+                    Input = new OutcomeAction
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = EOutcomeActionType.Log,
+                        Content = new Dictionary<string, ParameterReference>()
+                    },
+                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+                },
+                "postOutcome" => new WorkflowAction
+                {
+                    Type = EActionType.PostOutcome,
+                    Input = new OutcomeAction
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = EOutcomeActionType.Post,
+                        Content = new Dictionary<string, ParameterReference>()
+                    },
+                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+                },
+                _ => throw new ArgumentException("Invalid outcome type")
+            };
+        }
+
+        return itemType switch
+        {
+            ETriggerType triggerType => CreateNewTrigger(triggerType),
+            EActionType actionType => CreateNewAction(actionType),
+            _ => throw new ArgumentException("Invalid item type")
+        };
+    }
+    catch (Exception ex)
+    {
+        HandleError(ex.Message);
+        throw;
+    }
+}
 
     private async Task SelectItem(object? item)
     {
@@ -235,24 +285,6 @@
         _errorMessage = null;
         _showError = false;
         StateHasChanged();
-    }
-
-    private object CreateNewItem(object itemType)
-    {
-        try
-        {
-            return itemType switch
-            {
-                ETriggerType triggerType => CreateNewTrigger(triggerType),
-                EActionType actionType => CreateNewAction(actionType),
-                _ => throw new ArgumentException("Invalid item type")
-            };
-        }
-        catch (Exception ex)
-        {
-            HandleError(ex.Message);
-            throw;
-        }
     }
 
     private Trigger CreateNewTrigger(ETriggerType triggerType)
