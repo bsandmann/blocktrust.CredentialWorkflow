@@ -1,0 +1,144 @@
+﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+
+<div class="p-4 text-sm">
+    <div class="space-y-3">
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">DIDComm Type</label>
+            <select class="w-full rounded border px-2 py-1 text-xs"
+                    @bind="ActionInput.Type"
+                    @bind:after="OnValueChanged">
+                @foreach (var type in Enum.GetValues(typeof(EDIDCommType)))
+                {
+                    <option value="@type">@GetFriendlyName((EDIDCommType)type)</option>
+                }
+            </select>
+        </div>
+
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Peer DID</label>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.PeerDid.Source"
+                        @bind:after="OnValueChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+                
+                @if (ActionInput.PeerDid.Source == ParameterSource.Static)
+                {
+                    <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                           @bind="ActionInput.PeerDid.Path"
+                           @bind:after="OnValueChanged"
+                           placeholder="Enter peer DID" />
+                }
+                else
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.PeerDid.Path"
+                            @bind:after="OnValueChanged">
+                        @if (ActionInput.PeerDid.Source == ParameterSource.TriggerInput)
+                        {
+                            @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                        else
+                        {
+                            // TODO: Add previous action outcomes
+                            <option value="">Select output</option>
+                        }
+                    </select>
+                }
+            </div>
+        </div>
+
+        @if (ActionInput.Type == EDIDCommType.Message)
+        {
+            <div class="p-2 border rounded-md">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-medium text-gray-700">Message Content</label>
+                    <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                            @onclick="AddMessageField">
+                        Add Field
+                    </button>
+                </div>
+                
+                @foreach (var field in ActionInput.MessageContent)
+                {
+                    <div class="flex items-center space-x-2 mt-2">
+                        <input type="text" class="w-1/3 rounded border px-2 py-1 text-xs"
+                               value="@field.Key"
+                               @onchange="@(e => UpdateMessageFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))" />
+                               
+                        <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                                @bind="field.Value.Source">
+                            <option value="@ParameterSource.Static">Static</option>
+                            <option value="@ParameterSource.TriggerInput">Trigger Input</option>
+                            <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
+                        </select>
+
+                        <input type="text" class="w-1/3 rounded border px-2 py-1 text-xs"
+                               @bind="field.Value.Value"
+                               placeholder="Value" />
+
+                        <button class="text-red-500 hover:text-red-700"
+                                @onclick="() => RemoveMessageField(field.Key)">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public DIDCommAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+
+    private string GetFriendlyName(EDIDCommType type) => type switch
+    {
+        EDIDCommType.TrustPing => "Trust Ping",
+        EDIDCommType.Message => "Message",
+        _ => type.ToString()
+    };
+
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task AddMessageField()
+    {
+        var fieldName = $"field{ActionInput.MessageContent.Count + 1}";
+        ActionInput.MessageContent[fieldName] = new MessageFieldValue
+        {
+            Source = ParameterSource.Static,
+            Value = string.Empty
+        };
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task UpdateMessageFieldKey(string oldKey, string newKey)
+    {
+        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        {
+            var value = ActionInput.MessageContent[oldKey];
+            ActionInput.MessageContent.Remove(oldKey);
+            ActionInput.MessageContent[newKey] = value;
+            await OnChange.InvokeAsync();
+        }
+    }
+
+    private async Task RemoveMessageField(string key)
+    {
+        ActionInput.MessageContent.Remove(key);
+        await OnChange.InvokeAsync();
+    }
+}
