@@ -5,7 +5,7 @@
 namespace Blocktrust.CredentialWorkflow.Core.Migrations
 {
     /// <inheritdoc />
-    public partial class DbUpdates : Migration
+    public partial class UpdatedContext : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

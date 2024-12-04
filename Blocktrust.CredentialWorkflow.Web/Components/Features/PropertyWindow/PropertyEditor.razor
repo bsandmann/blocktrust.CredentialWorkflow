@@ -1,6 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
@@ -91,6 +92,47 @@
                         TriggerParameters="TriggerParameters"/>
                 }
                 break;
+
+            case EActionType.IssueW3CSdCredential:
+                @if (action.Input is IssueW3CSdCredential issueW3cSdCredential)
+                {
+                    <IssueW3CCredential 
+                        ActionInput="issueW3cSdCredential" 
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"/>
+                }
+                break;
+
+            case EActionType.DIDComm:
+                @if (action.Input is DIDCommAction didCommAction)
+                {
+                    <DIDCommActionComponent
+                        ActionInput="didCommAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"/>
+                }
+                break;
+
+            case EActionType.Http:
+                @if (action.Input is HttpAction httpAction)
+                {
+                    <HttpActionComponent
+                        ActionInput="httpAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"/>
+                }
+                break;
+
+            case EActionType.Email:
+                @if (action.Input is EmailAction emailAction)
+                {
+                    <EmailActionComponent
+                        ActionInput="emailAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"/>
+                }
+                break;
+
             case EActionType.VerifyW3CCredential:
                 @if (action.Input is VerifyW3cCredential verifyW3cCredential)
                 {
@@ -99,51 +141,23 @@
                         OnChange="OnChange"/>
                 }
                 break;
-            case EActionType.DidCommTrustPing:
-                <div class="text-sm text-yellow-600">
-                    DIDComm Trust Ping configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Target DID</li>
-                        <li>Response timeout</li>
-                        <li>Retry settings</li>
-                    </ul>
-                </div>
+
+            case EActionType.VerifyW3CSdCredential:
+                @if (action.Input is VerifyW3cSdCredential verifyW3cSdCredential)
+                {
+                    <VerifyW3cSdCredentialAction 
+                        ActionInput="verifyW3cSdCredential" 
+                        OnChange="OnChange"/>
+                }
                 break;
-            case EActionType.DidCommMessage:
-                <div class="text-sm text-yellow-600">
-                    DIDComm Message configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Message type</li>
-                        <li>Target DID</li>
-                        <li>Message content</li>
-                    </ul>
-                </div>
-                break;
-            case EActionType.HttpPost:
-                <div class="text-sm text-yellow-600">
-                    HTTP Post configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Endpoint URL</li>
-                        <li>Headers</li>
-                        <li>Request body</li>
-                        <li>Authentication</li>
-                    </ul>
-                </div>
-                break;
-            case EActionType.SendEmail:
-                <div class="text-sm text-yellow-600">
-                    Send Email configuration will be implemented soon.
-                    <div class="mt-2">Expected configuration options:</div>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>Recipient email</li>
-                        <li>Subject</li>
-                        <li>Message template</li>
-                        <li>Attachments</li>
-                    </ul>
-                </div>
+
+            case EActionType.VerifyAnoncredCredential:
+                @if (action.Input is VerifyAnoncredCredential verifyAnoncredCredential)
+                {
+                    <VerifyAnoncredCredentialAction 
+                        ActionInput="verifyAnoncredCredential" 
+                        OnChange="OnChange"/>
+                }
                 break;
         }
     }

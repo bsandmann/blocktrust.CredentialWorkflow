@@ -7,16 +7,20 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 
+// Issuance
 [JsonDerivedType(typeof(IssueW3cCredential), typeDiscriminator: "issueW3cCredential")]
 [JsonDerivedType(typeof(IssueW3CSdCredential), typeDiscriminator: "w3cSdCredential")]
 [JsonDerivedType(typeof(IssueAnoncredCredential), typeDiscriminator: "anoncredCredential")]
 
+// Verification
 [JsonDerivedType(typeof(VerifyW3cCredential), typeDiscriminator: "verifyW3cCredential")]
 [JsonDerivedType(typeof(VerifyW3cSdCredential), typeDiscriminator: "verifyW3cSdCredential")]
 [JsonDerivedType(typeof(VerifyAnoncredCredential), typeDiscriminator: "verifyAnoncredCredential")]
 
-
-[JsonDerivedType(typeof(OutgoingDIDComm), typeDiscriminator: "outgoingDIDCommMessage")]
+// Communication
+[JsonDerivedType(typeof(DIDCommAction), typeDiscriminator: "didComm")]
+[JsonDerivedType(typeof(HttpAction), typeDiscriminator: "http")]
+[JsonDerivedType(typeof(EmailAction), typeDiscriminator: "email")]
 
 public abstract class ActionInput
 {

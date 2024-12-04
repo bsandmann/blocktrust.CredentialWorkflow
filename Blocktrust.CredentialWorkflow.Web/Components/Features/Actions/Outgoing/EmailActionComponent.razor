@@ -1,0 +1,154 @@
+﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+
+<div class="p-4 text-sm">
+    <div class="space-y-3">
+        <!-- Email To -->
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">To Email</label>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.To.Source"
+                        @bind:after="OnValueChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.To.Source == ParameterSource.Static)
+                {
+                    <input type="email" class="w-2/3 rounded border px-2 py-1 text-xs"
+                           @bind="ActionInput.To.Path"
+                           @bind:after="OnValueChanged"
+                           placeholder="Enter email address" />
+                }
+                else
+                {
+                    <ParameterSourceSelect Source="ActionInput.To.Source"
+                                         Path="ActionInput.To.Path"
+                                         TriggerParameters="TriggerParameters"
+                                         OnChange="OnValueChanged"/>
+                }
+            </div>
+        </div>
+
+        <!-- Subject -->
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Subject</label>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Subject.Source"
+                        @bind:after="OnValueChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.Subject.Source == ParameterSource.Static)
+                {
+                    <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                           @bind="ActionInput.Subject.Path"
+                           @bind:after="OnValueChanged"
+                           placeholder="Enter email subject" />
+                }
+                else
+                {
+                    <ParameterSourceSelect Source="ActionInput.Subject.Source"
+                                         Path="ActionInput.Subject.Path"
+                                         TriggerParameters="TriggerParameters"
+                                         OnChange="OnValueChanged"/>
+                }
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Email Body</label>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Body.Source"
+                        @bind:after="OnValueChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.Body.Source == ParameterSource.Static)
+                {
+                    <textarea class="w-2/3 rounded border px-2 py-1 text-xs min-h-[100px]"
+                              @bind="ActionInput.Body.Path"
+                              @bind:after="OnValueChanged"
+                              placeholder="Enter email body"></textarea>
+                }
+                else
+                {
+                    <ParameterSourceSelect Source="ActionInput.Body.Source"
+                                         Path="ActionInput.Body.Path"
+                                         TriggerParameters="TriggerParameters"
+                                         OnChange="OnValueChanged"/>
+                }
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="p-2 border rounded-md">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-medium text-gray-700">Attachments</label>
+                <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                        @onclick="AddAttachment">
+                    Add Attachment
+                </button>
+            </div>
+
+            @foreach (var attachment in ActionInput.Attachments)
+            {
+                <div class="flex items-center space-x-2 mt-2">
+                    <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                            @bind="attachment.Source">
+                        <option value="@ParameterSource.Static">Static</option>
+                        <option value="@ParameterSource.TriggerInput">Trigger Input</option>
+                        <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
+                    </select>
+
+                    <ParameterSourceSelect Source="attachment.Source"
+                                         Path="attachment.Path"
+                                         TriggerParameters="TriggerParameters"
+                                         OnChange="OnValueChanged"
+                                         Class="w-1/2"/>
+
+                    <button class="text-red-500 hover:text-red-700"
+                            @onclick="() => RemoveAttachment(attachment)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EmailAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task AddAttachment()
+    {
+        ActionInput.Attachments.Add(new ParameterReference
+        {
+            Source = ParameterSource.Static
+        });
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task RemoveAttachment(ParameterReference attachment)
+    {
+        ActionInput.Attachments.Remove(attachment);
+        await OnChange.InvokeAsync();
+    }
+}

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blocktrust.CredentialWorkflow.Core.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20241128123646_DbUpdate")]
-    partial class DbUpdate
+    [Migration("20241204115409_ActionsUpdates")]
+    partial class ActionsUpdates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

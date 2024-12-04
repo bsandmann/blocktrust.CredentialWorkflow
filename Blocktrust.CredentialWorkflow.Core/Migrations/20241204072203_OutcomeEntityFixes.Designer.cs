@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blocktrust.CredentialWorkflow.Core.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240620111230_initial")]
-    partial class initial
+    [Migration("20241204072203_OutcomeEntityFixes")]
+    partial class OutcomeEntityFixes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -97,7 +97,38 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenants.TenantEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.OutcomeEntity", b =>
+                {
+                    b.Property<Guid>("OutcomeEntityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EndedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OutcomeJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("OutcomeState")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("StartedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("WorkflowEntityId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("OutcomeEntityId");
+
+                    b.HasIndex("WorkflowEntityId");
+
+                    b.ToTable("OutcomeEntities");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", b =>
                 {
                     b.Property<Guid>("TenantEntityId")
                         .ValueGeneratedOnAdd()
@@ -115,6 +146,41 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.HasKey("TenantEntityId");
 
                     b.ToTable("TenantEntities");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", b =>
+                {
+                    b.Property<Guid>("WorkflowEntityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProcessFlowJson")
+                        .IsUnicode(false)
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WorkflowState")
+                        .HasColumnType("integer");
+
+                    b.HasKey("WorkflowEntityId");
+
+                    b.HasIndex("TenantEntityId");
+
+                    b.ToTable("WorkflowEntities");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -251,10 +317,32 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Identity.ApplicationUser", b =>
                 {
-                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenants.TenantEntity", "TenantEntity")
+                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", "TenantEntity")
                         .WithMany("ApplicationUsers")
                         .HasForeignKey("TenantEntityId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("TenantEntity");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.OutcomeEntity", b =>
+                {
+                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", "WorkflowEntity")
+                        .WithMany("OutcomeEntities")
+                        .HasForeignKey("WorkflowEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkflowEntity");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", b =>
+                {
+                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", "TenantEntity")
+                        .WithMany("WorkflowEntities")
+                        .HasForeignKey("TenantEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("TenantEntity");
                 });
@@ -310,9 +398,16 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenants.TenantEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", b =>
                 {
                     b.Navigation("ApplicationUsers");
+
+                    b.Navigation("WorkflowEntities");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", b =>
+                {
+                    b.Navigation("OutcomeEntities");
                 });
 #pragma warning restore 612, 618
         }

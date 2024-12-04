@@ -4,6 +4,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
@@ -12,7 +13,7 @@
 <div class="bg-white p-4 rounded-lg shadow-md">
     @if (SelectedItem == null)
     {
-        <h3 class="text-lg font-medium text-gray-800 mb-6">Create new Actions/Triggers</h3>
+        <h3 class="text-lg font-medium text-gray-800 mb-6">Add Item</h3>
 
         <!-- Triggers Section -->
         <div class="mb-6">
@@ -77,7 +78,7 @@
                                OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))" 
                                ShowAddButton="true" />
                 </MenuGroup>
-          
+
                 <!-- Verify Credential Group -->
                 <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
                     <MenuButton Icon="verified" Label="Verify W3C VC" 
@@ -92,18 +93,15 @@
                 </MenuGroup>
 
                 <!-- Outgoing Request Group -->
-                <MenuGroup Label="Outgoing request" Icon="send" IsExpanded="@_isOutgoingRequestExpanded" OnToggle="@(() => ToggleGroup("outgoingRequest"))">
-                    <MenuButton Icon="swap_horiz" Label="DIDComm trust ping" 
-                               OnClick="@(action => HandleItemClick(EActionType.DidCommTrustPing, action))" 
+                <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded" OnToggle="@(() => ToggleGroup("outgoingRequest"))">
+                    <MenuButton Icon="message" Label="DIDComm" 
+                               OnClick="@(action => HandleItemClick(EActionType.DIDComm, action))" 
                                ShowAddButton="true" />
-                    <MenuButton Icon="message" Label="DIDComm message" 
-                               OnClick="@(action => HandleItemClick(EActionType.DidCommMessage, action))" 
+                    <MenuButton Icon="http" Label="HTTP Request" 
+                               OnClick="@(action => HandleItemClick(EActionType.Http, action))" 
                                ShowAddButton="true" />
-                    <MenuButton Icon="http" Label="HTTP Post" 
-                               OnClick="@(action => HandleItemClick(EActionType.HttpPost, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="mail" Label="Send email" 
-                               OnClick="@(action => HandleItemClick(EActionType.SendEmail, action))" 
+                    <MenuButton Icon="mail" Label="Email" 
+                               OnClick="@(action => HandleItemClick(EActionType.Email, action))" 
                                ShowAddButton="true" />
                 </MenuGroup>
             </div>
@@ -117,10 +115,7 @@
             </div>
 
             <div class="space-y-2 ml-8">
-                <MenuButton Icon="post_add" Label="Post outcome" 
-                           OnClick="@(action => HandleItemClick("outcome", action))" 
-                           ShowAddButton="true" />
-                <MenuButton Icon="note_add" Label="Log outcome" 
+                <MenuButton Icon="flag" Label="Add Outcome" 
                            OnClick="@(action => HandleItemClick("outcome", action))" 
                            ShowAddButton="true" />
             </div>
@@ -205,14 +200,13 @@
         if (newItem != null)
         {
             await OnItemCreated.InvokeAsync(newItem);
-            
             if (action == MenuButton.MenuButtonAction.Configure)
             {
                 await SelectItem(newItem);
             }
         }
     }
-    
+
     private async Task SelectItem(object? item)
     {
         SelectedItem = item;
@@ -260,7 +254,7 @@
             throw;
         }
     }
-    
+
     private Trigger CreateNewTrigger(ETriggerType triggerType)
     {
         return new Trigger
@@ -321,13 +315,32 @@
         };
     }
 
-   private WorkflowAction CreateNewAction(EActionType actionType)
+    private WorkflowAction CreateNewAction(EActionType actionType)
     {
         return new WorkflowAction
         {
             Type = actionType,
             Input = actionType switch
             {
+                EActionType.DIDComm => new DIDCommAction
+                {
+                    Id = Guid.NewGuid(),
+                    Type = EDIDCommType.Message,
+                    PeerDid = new ParameterReference { Source = ParameterSource.Static }
+                },
+                EActionType.Http => new HttpAction
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Endpoint = new ParameterReference { Source = ParameterSource.Static }
+                },
+              EActionType.Email => new EmailAction
+                {
+                    Id = Guid.NewGuid(),
+                    To = new ParameterReference { Source = ParameterSource.Static },
+                    Subject = new ParameterReference { Source = ParameterSource.Static },
+                    Body = new ParameterReference { Source = ParameterSource.Static }
+                },
                 EActionType.IssueW3CCredential => new IssueW3cCredential
                 {
                     Id = Guid.NewGuid(),
