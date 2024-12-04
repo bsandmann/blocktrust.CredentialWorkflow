@@ -22,6 +22,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 [JsonDerivedType(typeof(HttpAction), typeDiscriminator: "http")]
 [JsonDerivedType(typeof(EmailAction), typeDiscriminator: "email")]
 
+// Outcome
+[JsonDerivedType(typeof(OutcomeAction), typeDiscriminator: "outcome")]
+
 public abstract class ActionInput
 {
     [JsonPropertyName("id")] 
