@@ -349,8 +349,12 @@ private WorkflowAction CreateNewAction(EActionType actionType)
             {
                 Id = Guid.NewGuid(),
                 Type = EOutcomeActionType.Post,
-                Destination = new ParameterReference { Source = ParameterSource.Static },
-                Content = new Dictionary<string, ParameterReference>()
+                Content = new Dictionary<string, ParameterReference>(),
+                Destination = new ParameterReference 
+                { 
+                    Source = ParameterSource.Static,
+                    Path = "" 
+                }
             },
             _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
         },
