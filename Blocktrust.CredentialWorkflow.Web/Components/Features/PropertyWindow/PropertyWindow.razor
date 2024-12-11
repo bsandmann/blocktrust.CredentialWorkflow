@@ -115,12 +115,12 @@
             </div>
 
             <div class="space-y-2 ml-8">
-                @* <MenuButton Icon="note_add" Label="Log Outcome"  *@
-                @*             OnClick="@(action => HandleItemClick(EActionType.LogOutcome, action))" *@
-                @*             ShowAddButton="true" /> *@
-                @* <MenuButton Icon="cloud_upload" Label="Post Outcome"  *@
-                @*             OnClick="@(action => HandleItemClick(EActionType.PostOutcome, action))" *@
-                @*             ShowAddButton="true" /> *@
+                <MenuButton Icon="note_add" Label="Log Outcome"
+                            OnClick="@(action => HandleItemClick(EActionType.LogOutcome, action))"
+                            ShowAddButton="true" />
+                <MenuButton Icon="cloud_upload" Label="Post Outcome"
+                            OnClick="@(action => HandleItemClick(EActionType.PostOutcome, action))"
+                            ShowAddButton="true" />
             </div>
         </div>
     }
@@ -190,24 +190,6 @@
                 break;
         }
     }
-    private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action)
-{
-    if (!HasActions && itemType is string outcomeType && (outcomeType == "logOutcome" || outcomeType == "postOutcome"))
-    {
-        await HandleError("Cannot add outcome before adding actions. Please add actions first.");
-        return;
-    }
-
-    var newItem = CreateNewItem(itemType);
-    if (newItem != null)
-    {
-        await OnItemCreated.InvokeAsync(newItem);
-        if (action == MenuButton.MenuButtonAction.Configure)
-        {
-            await SelectItem(newItem);
-        }
-    }
-}
 
 private object CreateNewItem(object itemType)
 {
@@ -235,7 +217,8 @@ private object CreateNewItem(object itemType)
                     {
                         Id = Guid.NewGuid(),
                         Type = EOutcomeActionType.Post,
-                        Content = new Dictionary<string, ParameterReference>()
+                        Content = new Dictionary<string, ParameterReference>(),
+                        Destination = new ParameterReference { Source = ParameterSource.Static }
                     },
                     RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
                 },
@@ -257,6 +240,143 @@ private object CreateNewItem(object itemType)
     }
 }
 
+private WorkflowAction CreateNewAction(EActionType actionType)
+{
+    return new WorkflowAction
+    {
+        Type = actionType,
+        Input = actionType switch
+        {
+            EActionType.DIDComm => new DIDCommAction
+            {
+                Id = Guid.NewGuid(),
+                Type = EDIDCommType.Message,
+                PeerDid = new ParameterReference { Source = ParameterSource.Static }
+            },
+            EActionType.Http => new HttpAction
+            {
+                Id = Guid.NewGuid(),
+                Method = "POST",
+                Endpoint = new ParameterReference { Source = ParameterSource.Static }
+            },
+            EActionType.Email => new EmailAction
+            {
+                Id = Guid.NewGuid(),
+                To = new ParameterReference { Source = ParameterSource.Static },
+                Subject = new ParameterReference { Source = ParameterSource.Static },
+                Body = new ParameterReference { Source = ParameterSource.Static }
+            },
+            EActionType.IssueW3CCredential => new IssueW3cCredential
+            {
+                Id = Guid.NewGuid(),
+                SubjectDid = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = "subjectDid"
+                },
+                IssuerDid = new ParameterReference
+                {
+                    Source = ParameterSource.AppSettings,
+                    Path = "DefaultIssuerDid"
+                },
+                Claims = new Dictionary<string, ClaimValue>()
+            },
+            EActionType.IssueW3CSdCredential => new IssueW3CSdCredential
+            {
+                Id = Guid.NewGuid(),
+                SubjectDid = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = "subjectDid"
+                },
+                IssuerDid = new ParameterReference
+                {
+                    Source = ParameterSource.AppSettings,
+                    Path = "DefaultIssuerDid"
+                },
+                Claims = new Dictionary<string, ClaimValue>()
+            },
+            EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
+            {
+                Id = Guid.NewGuid(),
+                SubjectDid = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = "subjectDid"
+                },
+                IssuerDid = new ParameterReference
+                {
+                    Source = ParameterSource.AppSettings,
+                    Path = "DefaultIssuerDid"
+                },
+                CredentialDefinitionId = "",
+                Attributes = new Dictionary<string, ClaimValue>()
+            },
+            EActionType.VerifyW3CCredential => new VerifyW3cCredential
+            {
+                Id = Guid.NewGuid(),
+                CheckSignature = true,
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
+            },
+            EActionType.VerifyW3CSdCredential => new VerifyW3cSdCredential
+            {
+                Id = Guid.NewGuid(),
+                CheckSignature = true,
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
+            },
+            EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
+            {
+                Id = Guid.NewGuid(),
+                CheckSignature = true,
+                CheckStatus = true,
+                CheckSchema = true,
+                CheckExpiry = true,
+                CheckTrustRegistry = false
+            },
+            EActionType.LogOutcome => new OutcomeAction
+            {
+                Id = Guid.NewGuid(),
+                Type = EOutcomeActionType.Log,
+                Content = new Dictionary<string, ParameterReference>()
+            },
+            EActionType.PostOutcome => new OutcomeAction
+            {
+                Id = Guid.NewGuid(),
+                Type = EOutcomeActionType.Post,
+                Destination = new ParameterReference { Source = ParameterSource.Static },
+                Content = new Dictionary<string, ParameterReference>()
+            },
+            _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
+        },
+        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+    };
+}
+
+private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action)
+{
+    if (!HasActions && itemType is EActionType actionType && 
+        (actionType == EActionType.LogOutcome || actionType == EActionType.PostOutcome))
+    {
+        await HandleError("Cannot add outcome before adding actions. Please add actions first.");
+        return;
+    }
+
+    var newItem = CreateNewItem(itemType);
+    if (newItem != null)
+    {
+        await OnItemCreated.InvokeAsync(newItem);
+        if (action == MenuButton.MenuButtonAction.Configure)
+        {
+            await SelectItem(newItem);
+        }
+    }
+}
     private async Task SelectItem(object? item)
     {
         SelectedItem = item;
@@ -347,108 +467,4 @@ private object CreateNewItem(object itemType)
         };
     }
 
-    private WorkflowAction CreateNewAction(EActionType actionType)
-    {
-        return new WorkflowAction
-        {
-            Type = actionType,
-            Input = actionType switch
-            {
-                EActionType.DIDComm => new DIDCommAction
-                {
-                    Id = Guid.NewGuid(),
-                    Type = EDIDCommType.Message,
-                    PeerDid = new ParameterReference { Source = ParameterSource.Static }
-                },
-                EActionType.Http => new HttpAction
-                {
-                    Id = Guid.NewGuid(),
-                    Method = "POST",
-                    Endpoint = new ParameterReference { Source = ParameterSource.Static }
-                },
-              EActionType.Email => new EmailAction
-                {
-                    Id = Guid.NewGuid(),
-                    To = new ParameterReference { Source = ParameterSource.Static },
-                    Subject = new ParameterReference { Source = ParameterSource.Static },
-                    Body = new ParameterReference { Source = ParameterSource.Static }
-                },
-                EActionType.IssueW3CCredential => new IssueW3cCredential
-                {
-                    Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
-                    {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid"
-                    },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid"
-                    },
-                    Claims = new Dictionary<string, ClaimValue>()
-                },
-                EActionType.IssueW3CSdCredential => new IssueW3CSdCredential
-                {
-                    Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
-                    {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid"
-                    },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid"
-                    },
-                    Claims = new Dictionary<string, ClaimValue>()
-                },
-                EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
-                {
-                    Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
-                    {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid"
-                    },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid"
-                    },
-                    CredentialDefinitionId = "",
-                    Attributes = new Dictionary<string, ClaimValue>()
-                },
-                EActionType.VerifyW3CCredential => new VerifyW3cCredential
-                {
-                    Id = Guid.NewGuid(),
-                    CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
-                    CheckExpiry = true,
-                    CheckTrustRegistry = false
-                },
-                EActionType.VerifyW3CSdCredential => new VerifyW3cSdCredential
-                {
-                    Id = Guid.NewGuid(),
-                    CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
-                    CheckExpiry = true,
-                    CheckTrustRegistry = false
-                },
-                EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
-                {
-                    Id = Guid.NewGuid(),
-                    CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
-                    CheckExpiry = true,
-                    CheckTrustRegistry = false
-                },
-                _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
-            },
-            RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-        };
-    }
 }

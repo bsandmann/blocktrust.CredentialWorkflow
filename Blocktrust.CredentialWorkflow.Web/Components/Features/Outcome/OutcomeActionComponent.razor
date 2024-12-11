@@ -19,7 +19,6 @@
                         <option value="@ParameterSource.TriggerInput">From Trigger</option>
                         <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
                     </select>
-
                     @if (ActionInput.Destination.Source == ParameterSource.Static)
                     {
                         <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
@@ -57,7 +56,6 @@
                     Add Field
                 </button>
             </div>
-
             @foreach (var field in ActionInput.Content)
             {
                 <div class="flex items-center space-x-2 mt-2">
@@ -65,14 +63,12 @@
                            value="@field.Key"
                            @onchange="@(e => UpdateFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))"
                            placeholder="Field name" />
-
                     <select class="w-1/4 rounded border px-2 py-1 text-xs"
                             @bind="field.Value.Source">
                         <option value="@ParameterSource.Static">Static</option>
                         <option value="@ParameterSource.TriggerInput">Trigger Input</option>
                         <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
                     </select>
-
                     @if (field.Value.Source == ParameterSource.Static)
                     {
                         <input type="text" class="w-1/2 rounded border px-2 py-1 text-xs"
@@ -98,7 +94,6 @@
                             }
                         </select>
                     }
-
                     <button class="text-red-500 hover:text-red-700"
                             @onclick="() => RemoveField(field.Key)">
                         <span class="material-symbols-outlined text-sm">delete</span>
