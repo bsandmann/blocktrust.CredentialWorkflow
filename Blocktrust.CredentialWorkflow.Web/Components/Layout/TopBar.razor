@@ -1,8 +1,10 @@
 ﻿@using Blocktrust.CredentialWorkflow.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
 @inject NavigationManager NavigationManager
 @inject AppStateService AppStateService
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [AllowAnonymous]
 
 <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-slate-700 min-h-[4rem] px-4 lg:px-6 py-3 lg:py-0">
     <!-- Logo and Company Name Section -->
@@ -19,30 +21,26 @@
 
     <!-- Navigation Links - Mobile Responsive -->
     <div class="@(showMobileMenu ? "flex" : "hidden") lg:flex flex-col lg:flex-row mt-4 lg:mt-0 lg:items-center space-y-4 lg:space-y-0 lg:space-x-8">
-        <!-- Regular Nav Links -->
-        <div class="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-8">
-            <NavLink href="/workflows" 
-                    class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
-                Workflows
-            </NavLink>
-            <NavLink href="/logs" 
-                    class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
-                Logs
-            </NavLink>
-        </div>
-
         <AuthorizeView>
             <Authorized>
+                <!-- Navigation for authenticated users -->
+                <div class="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-8">
+                    <NavLink href="/workflows" 
+                            class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
+                        Workflows
+                    </NavLink>
+                    <NavLink href="/logs" 
+                            class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
+                        Logs
+                    </NavLink>
+                </div>
                 <!-- Tenant Dropdown -->
                 <div class="relative">
                     <button @onclick="ToggleDropdown"
                             class="w-full lg:w-auto px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-500 transition-colors flex items-center justify-between">
                         <span>Tenant</span>
-                        <span class="transform transition-transform duration-200 @(showDropdown ? "rotate-180" : "")">
-                            ▼
-                        </span>
+                        <span class="transform transition-transform duration-200 @(showDropdown ? "rotate-180" : "")">▼</span>
                     </button>
-
                     @if (showDropdown)
                     {
                         <div class="absolute right-0 left-0 lg:left-auto mt-2 w-full lg:w-48 bg-white rounded-md shadow-lg py-1 z-50">
@@ -63,6 +61,7 @@
                 </div>
             </Authorized>
             <NotAuthorized>
+                <!-- Navigation for non-authenticated users -->
                 <div class="flex flex-col lg:flex-row space-y-2 lg:space-y-0 lg:space-x-3">
                     <NavLink href="Account/Register" 
                             class="text-white no-underline font-light border rounded border-gray-700 hover:bg-slate-500 bg-slate-600 px-4 py-2 transition-colors text-center">
@@ -81,7 +80,7 @@
 @code {
     private bool showDropdown;
     private bool showMobileMenu;
-    
+
     private void ToggleDropdown()
     {
         showDropdown = !showDropdown;
@@ -95,7 +94,7 @@
             showDropdown = false;
         }
     }
-    
+
     protected override void OnInitialized()
     {
         AppStateService.OnChange += StateHasChanged;
