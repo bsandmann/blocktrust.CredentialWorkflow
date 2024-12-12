@@ -1,22 +1,35 @@
 ﻿@page "/"
 @layout MainLayout
-
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 
 <PageTitle>Home</PageTitle>
 <div class="container mx-auto px-4">
-    <div class="flex flex-row bg-gray-100">
-        <img class="w-1/2 p-10" src="images/workflow_bg.jpg" alt="Blocktrust Credential Workflow Platform logo"/>
-        <div class="flex flex-col">
-            <div class="font-museo text-3xl font-normal mt-24">blocktrust</div>
-            <div class="text-8xl font-museo">credential workflow platform</div>
-            <div class="text-xl font-light mt-10">A simple way to integrate Hyperledger Identus (formerly Atala PRISM) into your (d)Apps</div>
+    <div class="flex flex-col lg:flex-row bg-gray-100">
+        <div class="w-full lg:w-1/2 order-2 lg:order-1">
+            <img class="w-full object-cover p-4 lg:p-10" 
+                 src="images/workflow_bg.jpg" 
+                 alt="Blocktrust Credential Workflow Platform logo"/>
+        </div>
+        <div class="flex flex-col w-full lg:w-1/2 p-6 lg:p-10 order-1 lg:order-2">
+            <div class="font-museo text-2xl lg:text-3xl font-normal mt-4 lg:mt-24">blocktrust</div>
+            <div class="text-4xl lg:text-8xl font-museo">credential workflow platform</div>
+            <div class="text-lg lg:text-xl font-light mt-6 lg:mt-10">
+                A simple way to integrate Hyperledger Identus (formerly Atala PRISM) into your (d)Apps
+            </div>
         </div>
     </div>
-    <div class="flex flex-col">
-        <div class="font-museo text-3xl font-normal mt-24">Under development</div>
-        <NavLink href="Account/Register">Click here to register</NavLink>
-        <NavLink href="Account/Login">Click here to login</NavLink>
+    
+    <div class="flex flex-col mt-12 lg:mt-24 pb-8">
+        <div class="font-museo text-2xl lg:text-3xl font-normal mb-6">Under development</div>
+        <div class="flex flex-col space-y-4">
+            <NavLink href="Account/Register" 
+                     class="inline-block bg-slate-700 text-white px-6 py-3 rounded-md hover:bg-slate-600 transition-colors text-center">
+                Register Now
+            </NavLink>
+            <NavLink href="Account/Login" 
+                     class="inline-block bg-slate-600 text-white px-6 py-3 rounded-md hover:bg-slate-500 transition-colors text-center">
+                Login
+            </NavLink>
+        </div>
     </div>
-
 </div>
