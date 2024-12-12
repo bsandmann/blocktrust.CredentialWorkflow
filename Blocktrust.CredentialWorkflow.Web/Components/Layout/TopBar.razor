@@ -1,45 +1,49 @@
 ﻿@using Blocktrust.CredentialWorkflow.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
 @inject NavigationManager NavigationManager
 @inject AppStateService AppStateService
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [AllowAnonymous]
 
-<div class="flex items-center justify-between bg-slate-700 h-16 px-6">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between bg-slate-700 min-h-[4rem] px-4 lg:px-6 py-3 lg:py-0">
     <!-- Logo and Company Name Section -->
-    <div class="flex items-center space-x-4">
+    <div class="flex items-center justify-between">
         <NavLink href="/" class="flex items-center space-x-4">
             <Logo/>
         </NavLink>
+        <!-- Mobile Menu Button -->
+        <button @onclick="ToggleMobileMenu" 
+                class="lg:hidden text-white hover:text-gray-300">
+            <span class="material-symbols-outlined">@(showMobileMenu ? "close" : "menu")</span>
+        </button>
     </div>
 
-    <!-- Navigation Links -->
-    <div class="flex items-center space-x-8">
-        <!-- Regular Nav Links -->
-        <div class="flex items-center space-x-8">
-            <NavLink href="/workflows" class="text-white hover:text-gray-300 transition-colors">
-                Workflows
-            </NavLink>
-            <NavLink href="/logs" class="text-white hover:text-gray-300 transition-colors">
-                Logs
-            </NavLink>
-        </div>
-
+    <!-- Navigation Links - Mobile Responsive -->
+    <div class="@(showMobileMenu ? "flex" : "hidden") lg:flex flex-col lg:flex-row mt-4 lg:mt-0 lg:items-center space-y-4 lg:space-y-0 lg:space-x-8">
         <AuthorizeView>
             <Authorized>
-                <!-- Tenant Dropdown for Authorized Users -->
+                <!-- Navigation for authenticated users -->
+                <div class="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-8">
+                    <NavLink href="/workflows" 
+                            class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
+                        Workflows
+                    </NavLink>
+                    <NavLink href="/logs" 
+                            class="text-white hover:text-gray-300 transition-colors py-2 lg:py-0">
+                        Logs
+                    </NavLink>
+                </div>
+                <!-- Tenant Dropdown -->
                 <div class="relative">
                     <button @onclick="ToggleDropdown"
-                            class="px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-500 transition-colors flex items-center space-x-2">
-                        @* <span>@context.User.Identity?.Name</span> *@
+                            class="w-full lg:w-auto px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-500 transition-colors flex items-center justify-between">
                         <span>Tenant</span>
-                        <span class="transform transition-transform duration-200 @(showDropdown ? "rotate-180" : "")">
-                            ▼
-                        </span>
+                        <span class="transform transition-transform duration-200 @(showDropdown ? "rotate-180" : "")">▼</span>
                     </button>
-
                     @if (showDropdown)
                     {
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        <div class="absolute right-0 left-0 lg:left-auto mt-2 w-full lg:w-48 bg-white rounded-md shadow-lg py-1 z-50">
                             <NavLink href="/Account/Manage"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 Profile
@@ -57,13 +61,14 @@
                 </div>
             </Authorized>
             <NotAuthorized>
-                <div class="flex items-center space-x-3">
+                <!-- Navigation for non-authenticated users -->
+                <div class="flex flex-col lg:flex-row space-y-2 lg:space-y-0 lg:space-x-3">
                     <NavLink href="Account/Register" 
-                            class="text-white no-underline font-light border rounded border-gray-700 hover:bg-slate-500 bg-slate-600 px-4 py-2 transition-colors">
+                            class="text-white no-underline font-light border rounded border-gray-700 hover:bg-slate-500 bg-slate-600 px-4 py-2 transition-colors text-center">
                         Register
                     </NavLink>
                     <NavLink href="Account/Login" 
-                            class="text-white no-underline font-light border rounded border-gray-700 hover:bg-slate-500 bg-slate-600 px-4 py-2 transition-colors">
+                            class="text-white no-underline font-light border rounded border-gray-700 hover:bg-slate-500 bg-slate-600 px-4 py-2 transition-colors text-center">
                         Login
                     </NavLink>
                 </div>
@@ -74,12 +79,22 @@
 
 @code {
     private bool showDropdown;
-    
+    private bool showMobileMenu;
+
     private void ToggleDropdown()
     {
         showDropdown = !showDropdown;
     }
-    
+
+    private void ToggleMobileMenu()
+    {
+        showMobileMenu = !showMobileMenu;
+        if (showMobileMenu)
+        {
+            showDropdown = false;
+        }
+    }
+
     protected override void OnInitialized()
     {
         AppStateService.OnChange += StateHasChanged;
