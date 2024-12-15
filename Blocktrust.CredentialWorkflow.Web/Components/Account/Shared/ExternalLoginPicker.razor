@@ -3,8 +3,6 @@
 @using Blocktrust.CredentialWorkflow.Core.Entities.Identity
 
 @inject SignInManager<ApplicationUser> SignInManager
-@inject IdentityRedirectManager RedirectManager
-
 @if (externalLogins.Length == 0)
 {
     <div>

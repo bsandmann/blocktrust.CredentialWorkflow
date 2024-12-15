@@ -2,8 +2,9 @@ namespace Blocktrust.CredentialWorkflow.Web.Components.Account
 {
     using System.Diagnostics.CodeAnalysis;
     using Microsoft.AspNetCore.Components;
+    using Microsoft.AspNetCore.Http;
 
-    internal sealed class IdentityRedirectManager(NavigationManager navigationManager)
+    public sealed class IdentityRedirectManager(NavigationManager navigationManager)
     {
         public const string StatusCookieName = "Identity.StatusMessage";
 
