@@ -10,6 +10,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -31,7 +32,29 @@
         <div class="bg-gray-100 p-4 flex items-center justify-end flex-row border-b-2 border-slate-200">
             @if (currentWorkflow is not null)
             {
-                <div class="flex-1 text-xl" >@currentWorkflow.Name</div>
+                <div class="flex-1 text-xl flex items-center">
+                    @if (!isEditingName)
+                    {
+                        <div class="flex items-center space-x-2">
+                            <span>@currentWorkflow.Name</span>
+                            <button class="text-gray-600" @onclick="EditName">
+                                <span class="material-symbols-outlined">edit</span>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <input class="border rounded px-2 py-1"
+                               @bind="tempName"
+                               @bind:event="oninput"
+                               @onkeypress="HandleKeyPress"/>
+                        <button
+                            class="bg-slate-700 hover:bg-slate-600  text-white px-4 py-2 rounded-md transition duration-300 ease-in-out flex items-center text-base ml-3"
+                            @onclick="SaveName">Save
+                        </button>
+                    }
+                </div>
+
                 <div class="flex space-x-4">
                     <button
                         class="@(hasUnsavedChanges ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-500 cursor-not-allowed")
@@ -77,7 +100,6 @@
 
         <!-- Main content area -->
         <div class="flex-grow flex flex-row">
-            @* <LeftNavMenu/> *@
             <div class="flex-grow bg-white p-4">
                 @if (showToast)
                 {
@@ -119,6 +141,10 @@ else
     private List<object> flowItems = new();
     private string? toastMessage;
     private bool showToast;
+
+    // Fields for editing the workflow name
+    private bool isEditingName;
+    private string? tempName;
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,6 +188,9 @@ else
         {
             currentWorkflow.ProcessFlow = new ProcessFlow();
         }
+
+        // Initialize tempName for editing
+        tempName = currentWorkflow.Name;
 
         UpdateFlowItems();
         StateHasChanged();
@@ -275,6 +304,32 @@ else
         if (objRef != null)
         {
             objRef.Dispose();
+        }
+    }
+
+    private void EditName()
+    {
+        tempName = currentWorkflow?.Name;
+        isEditingName = true;
+    }
+
+    private async Task SaveName()
+    {
+        isEditingName = false;
+        if (currentWorkflow != null && !string.IsNullOrWhiteSpace(tempName) && tempName != currentWorkflow.Name)
+        {
+            currentWorkflow.Name = tempName;
+            await SaveWorkflow();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SaveName();
         }
     }
 
