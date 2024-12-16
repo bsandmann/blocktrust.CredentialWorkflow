@@ -2,8 +2,11 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
 @inject IMediator Mediator
-@layout DesignerLayout
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize()]
+@layout AppLayout
 
 <div class="p-6">
     <div class="mb-6">

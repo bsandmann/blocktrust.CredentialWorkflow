@@ -112,7 +112,7 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            await InvokeAsync(() => NavigationManager.NavigateTo("/", forceLoad: true));
         }
         else if (result.RequiresTwoFactor)
         {

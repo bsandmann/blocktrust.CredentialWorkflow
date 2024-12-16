@@ -24,12 +24,7 @@
                     <input type="text" value="@username" class="w-56" placeholder="Please choose your username." disabled/>
                     <label for="username" class="pl-6 font-light">Username</label>
                 </div>
-                @* <div class=""> *@
-                @*     <InputText @bind-Value="Input.PhoneNumber" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Please enter your phone number."/> *@
-                @*     <label for="phone-number" class="pl-6 font-light">Phone number</label> *@
-                @*     <ValidationMessage For="() => Input.PhoneNumber" class="font-light text-red-500"/> *@
-                @* </div> *@
-                <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Save</button>
+                <button disabled="disabled" type="submit" class="mt-4 bg-slate-400 rounded-md pl-4 py-1 pr-4 text-white font-light">Save</button>
             </EditForm>
         </div>
     </div>
@@ -38,7 +33,6 @@
 @code {
     private ApplicationUser user = default!;
     private string? username;
-    private string? phoneNumber;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
@@ -48,31 +42,16 @@
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
-
-        Input.PhoneNumber ??= phoneNumber;
     }
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.PhoneNumber != phoneNumber)
-        {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
-            {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-            }
-        }
-
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
     private sealed class InputModel
     {
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string? PhoneNumber { get; set; }
     }
 
 }

@@ -6,15 +6,18 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Microsoft.AspNetCore.Authorization
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
 @inject ILogger<ActionOutcome> Logger
-@inject NavigationManager NavigationManager
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize()]
 @layout AppLayout
+
+
 
 <PageTitle>Blocktrust Credential Workflow Platform - Logs</PageTitle>
 

@@ -12,6 +12,7 @@
 @using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Services
+@using Microsoft.AspNetCore.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
@@ -21,18 +22,23 @@
 @inject ILogger<Workflow> Logger
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize()]
 @layout AppLayout
+
 <PageTitle>Blocktrust Credential Workflow Platform - Workflows</PageTitle>
 
 <div class="container mx-auto p-6">
+
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Workflows</h1>
         <div class="flex space-x-4">
-            <button @onclick="CreateNewWorkflow" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
+            <button @onclick="CreateNewWorkflow"
+                    class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
                 <span class="material-symbols-outlined mr-2">add</span>
                 Create New
             </button>
-            <button @onclick="OpenJsonImportModal" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
+            <button @onclick="OpenJsonImportModal"
+                    class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded flex items-center transition duration-300 ease-in-out">
                 <span class="material-symbols-outlined mr-2">upload_file</span>
                 Import
             </button>
@@ -54,25 +60,29 @@
             <div class="bg-white shadow-md rounded-lg overflow-hidden">
                 <table class="min-w-full">
                     <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colspan="6">
-                                <div class="grid grid-cols-6 gap-4">
-                                    <div>Name</div>
-                                    <div>Last Updated</div>
-                                    <div>State</div>
-                                    <div>Last Run ActionOutcomes</div>
-                                    <div>Last Run Started</div>
-                                    <div>Last Run Ended</div>
-                                </div>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actionss</th>
-                        </tr>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            colspan="6">
+                            <div class="grid grid-cols-6 gap-4">
+                                <div>Name</div>
+                                <div>Last Updated</div>
+                                <div>State</div>
+                                <div>Last Run ActionOutcomes</div>
+                                <div>Last Run Started</div>
+                                <div>Last Run Ended</div>
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actionss
+                        </th>
+                    </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                     @foreach (var workflow in workflows)
                     {
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)" colspan="6">
+                            <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)"
+                                colspan="6">
                                 <div class="grid grid-cols-6 gap-4">
                                     <div class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">@workflow.Name</div>
@@ -81,14 +91,16 @@
                                         <div class="text-sm text-gray-500">@workflow.UpdatedUtc.ToString("g")</div>
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetWorkflowStateColor(workflow.WorkflowState)">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetWorkflowStateColor(workflow.WorkflowState)">
                                             @workflow.WorkflowState
                                         </span>
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
                                         @if (workflow.LastOutcome != null)
                                         {
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
                                                 @workflow.LastOutcome.OutcomeState
                                             </span>
                                         }
@@ -98,19 +110,23 @@
                                         }
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">@(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
+                                        <div
+                                            class="text-sm text-gray-500">@(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">@(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
+                                        <div
+                                            class="text-sm text-gray-500">@(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)" @onclick:stopPropagation="true"
+                                <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)"
+                                        @onclick:stopPropagation="true"
                                         class="text-red-600 hover:text-red-900 mr-2">
                                     <span class="material-symbols-outlined">delete</span>
                                 </button>
-                                <button @onclick="() => ExportWorkflow(workflow.WorkflowId)" @onclick:stopPropagation="true"
+                                <button @onclick="() => ExportWorkflow(workflow.WorkflowId)"
+                                        @onclick:stopPropagation="true"
                                         class="text-blue-600 hover:text-blue-900">
                                     <span class="material-symbols-outlined">file_download</span>
                                 </button>
@@ -125,7 +141,8 @@
         {
             <div class="bg-white shadow-md rounded-lg p-6 text-center">
                 <p class="text-gray-600 mb-4">No workflows found.</p>
-                <button @onclick="CreateNewWorkflow" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                <button @onclick="CreateNewWorkflow"
+                        class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
                     Create Your First Workflow
                 </button>
             </div>
@@ -146,18 +163,21 @@
             <div class="mt-3 text-center">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Import Workflow from JSON</h3>
                 <div class="mt-2 px-7 py-3">
-                    <textarea @bind="jsonInput" class="w-full h-40 border rounded p-2" placeholder="Paste your JSON here..."></textarea>
+                    <textarea @bind="jsonInput" class="w-full h-40 border rounded p-2"
+                              placeholder="Paste your JSON here..."></textarea>
                 </div>
                 <div class="mt-2 px-7 py-3">
-                    <InputFile OnChange="OnFileSelected" class="w-full" />
+                    <InputFile OnChange="OnFileSelected" class="w-full"/>
                 </div>
                 <div class="items-center px-4 py-3">
-                    <button @onclick="ImportFromJson" class="px-4 py-2 bg-slate-700 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-300">
+                    <button @onclick="ImportFromJson"
+                            class="px-4 py-2 bg-slate-700 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-300">
                         Import
                     </button>
                 </div>
                 <div class="items-center px-4 py-3">
-                    <button @onclick="CloseJsonImportModal" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <button @onclick="CloseJsonImportModal"
+                            class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
                         Cancel
                     </button>
                 </div>
@@ -256,9 +276,16 @@
         NavigationManager.NavigateTo($"designer/{workflowWorkflowId}");
     }
 
-    private void CreateNewWorkflow()
+    private async Task CreateNewWorkflow()
     {
-        NavigationManager.NavigateTo("designer/new");
+        var workflowResult = await Mediator.Send(new CreateWorkflowRequest(AppStateService.Tenant.TenantId, "New Workflow", new ProcessFlow()));
+        if (workflowResult.IsFailed)
+        {
+            errorMessage = "Failed to create the workflow. Please try again.";
+            return;
+        }
+
+        NavigateToWorkflow(workflowResult.Value.WorkflowId);
     }
 
     private async Task DeleteWorkflow(Guid workflowId)
@@ -364,4 +391,5 @@
             errorMessage = "An unexpected error occurred while importing the workflow. Please try again later.";
         }
     }
+
 }
