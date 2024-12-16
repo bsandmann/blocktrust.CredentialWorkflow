@@ -1477,6 +1477,10 @@ video {
   text-transform: uppercase;
 }
 
+.lowercase {
+  text-transform: lowercase;
+}
+
 .leading-5 {
   line-height: 1.25rem;
 }
