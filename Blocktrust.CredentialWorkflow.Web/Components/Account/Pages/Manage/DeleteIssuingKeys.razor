@@ -1,0 +1,98 @@
+@page "/Account/Manage/DeleteIssuingKeys/{IssuingKeyId:guid}"
+
+@using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey
+@using MediatR
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<DeleteIssuingKeys> Logger
+
+<PageTitle>Delete Issuing Key</PageTitle>
+
+<div class="container mx-auto">
+    <div class="mx-auto w-3/4 bg-gray-100 p-4 rounded-xl mt-10">
+        <StatusMessage Message="@message" />
+
+        @if (IsLoading)
+        {
+            <p>Loading...</p>
+        }
+        else if (LoadError != null)
+        {
+            <div class="text-red-600">@LoadError</div>
+        }
+        else
+        {
+            <EditForm Model="@Input"  FormName="delete-issuing-key" OnValidSubmit="OnValidSubmitAsync" method="post">
+                <DataAnnotationsValidator />
+                <h2 class="font-museo text-2xl mb-4">Delete Issuing Key</h2>
+                <p>Are you sure you want to delete the issuing key <strong>@(KeyBeingDeleted?.Name)</strong>?</p>
+                <div class="mt-4">
+                    <button type="submit" class="bg-red-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">Delete</button>
+                    <a href="/Account/Manage/IssuingKeys" class="ml-4 inline-block bg-gray-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">Cancel</a>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid IssuingKeyId { get; set; }
+
+    private string? message;
+    private string? LoadError;
+    private bool IsLoading = true;
+
+    private IssuingKey? KeyBeingDeleted;
+    private Guid TenantId;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    // A dummy model just to satisfy the EditForm requirement.
+    private DeleteKeyModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        TenantId = user.TenantEntityId.Value;
+
+        var result = await Mediator.Send(new GetIssuingKeyByIdRequest(IssuingKeyId));
+        IsLoading = false;
+        if (result.IsFailed)
+        {
+            LoadError = $"Error loading issuing key: {string.Join(", ", result.Errors)}";
+        }
+        else
+        {
+            KeyBeingDeleted = result.Value;
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (KeyBeingDeleted == null)
+        {
+            message = "No issuing key to delete.";
+            return;
+        }
+
+        var deleteRequest = new DeleteIssuingKeyRequest(KeyBeingDeleted.IssuingKeyId);
+        var deleteResult = await Mediator.Send(deleteRequest);
+
+        if (deleteResult.IsSuccess)
+        {
+            message = "Issuing Key deleted successfully.";
+            RedirectManager.RedirectTo("Account/Manage/IssuingKeys");
+        }
+        else
+        {
+            message = $"Error deleting issuing key: {string.Join(", ", deleteResult.Errors)}";
+        }
+    }
+
+    private sealed class DeleteKeyModel
+    {
+        // No properties needed. This is just a placeholder.
+    }
+}

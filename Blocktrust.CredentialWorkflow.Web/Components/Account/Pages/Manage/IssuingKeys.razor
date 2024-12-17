@@ -39,35 +39,6 @@
                 <button type="submit" class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Add Issuing Key</button>
             </EditForm>
 
-            <!-- Edit Existing Issuing Key Form (shown only if EditingKey is set) -->
-            @if (EditingKey is not null)
-            {
-                <div class="mt-8 w-full bg-white rounded-lg shadow-md p-4 mb-4">
-                    <h3 class="font-semibold text-lg">Edit Issuing Key</h3>
-                    <EditForm Model="EditingKeyModel" OnValidSubmit="OnEditKeySubmitAsync">
-                        <DataAnnotationsValidator />
-                        <div class="mt-4">
-                            <InputText @bind-Value="EditingKeyModel.Name" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Key Name" />
-                            <ValidationMessage For="() => EditingKeyModel.Name" class="font-light text-red-500" />
-                        </div>
-                        <div class="mt-4">
-                            <InputText @bind-Value="EditingKeyModel.KeyType" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Key Type" />
-                            <ValidationMessage For="() => EditingKeyModel.KeyType" class="font-light text-red-500" />
-                        </div>
-                        <div class="mt-4">
-                            <InputText @bind-Value="EditingKeyModel.PublicKey" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Public Key" />
-                            <ValidationMessage For="() => EditingKeyModel.PublicKey" class="font-light text-red-500" />
-                        </div>
-                        <div class="mt-4">
-                            <InputText @bind-Value="EditingKeyModel.PrivateKey" class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="Private Key" />
-                            <ValidationMessage For="() => EditingKeyModel.PrivateKey" class="font-light text-red-500" />
-                        </div>
-                        <button type="submit" class="mt-4 bg-blue-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">Save Changes</button>
-                        <button type="button" @onclick="CancelEditing" class="mt-4 ml-4 bg-gray-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">Cancel</button>
-                    </EditForm>
-                </div>
-            }
-
             <div class="mt-8 w-full">
                 @foreach (var key in IssuingKeysList)
                 {
@@ -82,14 +53,9 @@
                             </div>
                             <div class="grow"></div>
                             <div class="flex flex-col items-end space-y-2">
-                                <button type="button" @onclick="() => StartEditingKey(key)"
-                                        class="bg-yellow-500 text-white rounded-md px-2 py-1 text-sm self-end">
-                                    <span class="material-symbols-outlined text-sm">edit</span>
-                                </button>
-                                <button type="button" @onclick="() => RemoveKeyAsync(key.IssuingKeyId)"
-                                        class="bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
+                                <a href="/Account/Manage/DeleteIssuingKeys/@key.IssuingKeyId" class="bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
                                     <span class="material-symbols-outlined text-sm">delete</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -161,30 +127,6 @@
             PublicKey = key.PublicKey,
             PrivateKey = key.PrivateKey
         };
-    }
-
-    private async Task OnEditKeySubmitAsync()
-    {
-        if (EditingKey == null) return;
-
-        var request = new UpdateIssuingKeyRequest(
-            EditingKey.IssuingKeyId,
-            name: EditingKeyModel.Name,
-            keyType: EditingKeyModel.KeyType,
-            publicKey: EditingKeyModel.PublicKey,
-            privateKey: EditingKeyModel.PrivateKey);
-
-        var result = await Mediator.Send(request);
-        if (result.IsSuccess)
-        {
-            message = "Issuing Key updated successfully.";
-            EditingKey = null;
-            await LoadIssuingKeys();
-        }
-        else
-        {
-            message = $"Error: {string.Join(", ", result.Errors)}";
-        }
     }
 
     private void CancelEditing()
