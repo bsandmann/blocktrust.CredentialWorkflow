@@ -27,16 +27,24 @@ public class UpdateIssuingKeyHandler : IRequestHandler<UpdateIssuingKeyRequest, 
 
         // Update fields if provided
         if (!string.IsNullOrWhiteSpace(request.Name))
+        {
             issuingKey.Name = request.Name;
+        }
 
         if (!string.IsNullOrWhiteSpace(request.KeyType))
+        {
             issuingKey.KeyType = request.KeyType;
+        }
 
         if (!string.IsNullOrWhiteSpace(request.PublicKey))
+        {
             issuingKey.PublicKey = request.PublicKey;
+        }
 
         if (!string.IsNullOrWhiteSpace(request.PrivateKey))
+        {
             issuingKey.PrivateKey = request.PrivateKey;
+        }
 
         _context.IssuingKeys.Update(issuingKey);
         await _context.SaveChangesAsync(cancellationToken);

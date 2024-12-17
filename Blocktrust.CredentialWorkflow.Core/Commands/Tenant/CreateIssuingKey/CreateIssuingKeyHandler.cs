@@ -37,8 +37,7 @@ public class CreateIssuingKeyHandler : IRequestHandler<CreateIssuingKeyRequest, 
             PrivateKey = request.PrivateKey
         };
 
-        // If you have a TenantEntityId foreign key in IssuingKey, set it here:
-        // issuingKey.TenantEntityId = tenant.TenantEntityId;
+        issuingKey.TenantEntityId = tenant.TenantEntityId;
 
         await _context.IssuingKeys.AddAsync(issuingKey, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
