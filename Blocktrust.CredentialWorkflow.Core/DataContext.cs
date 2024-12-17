@@ -18,7 +18,7 @@ public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
 
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),"../Blocktrust.CredentialWorkflow.Web"))
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Blocktrust.CredentialWorkflow.Web"))
             .AddJsonFile("appsettings.json")
             .Build();
 
@@ -40,13 +40,15 @@ public class DataContext : IdentityDbContext<ApplicationUser>
     /// </summary
     /// 
     public DataContext(DbContextOptions<DataContext> options)
-        : base(options){}
+        : base(options)
+    {
+    }
 
     public DbSet<TenantEntity> TenantEntities { get; set; }
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
     public DbSet<OutcomeEntity> OutcomeEntities { get; set; }
-    
-    // public DbSet<IdentusAgent> IdentusAgents { get; set; }
+
+    public DbSet<IssuingKeyEntity> IssuingKeys { get; set; }
 
     /// <summary>
     /// Setup
@@ -67,15 +69,17 @@ public class DataContext : IdentityDbContext<ApplicationUser>
             .WithMany(b => b.ApplicationUsers)
             .HasForeignKey(p => p.TenantEntityId)
             .OnDelete(DeleteBehavior.NoAction);
-        
-        // modelBuilder.Entity<IdentusAgent>().HasKey(p => p.IdentusAgentId);
-        // modelBuilder.Entity<IdentusAgent>().Property(p => p.IdentusAgentId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
-        
+
+        modelBuilder.Entity<IssuingKeyEntity>().HasKey(p => p.IssuingKeyId);
+        modelBuilder.Entity<IssuingKeyEntity>().Property(p => p.IssuingKeyId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+
         //////////////////////////////////////////////////////////////// Workflow
         modelBuilder.Entity<WorkflowEntity>().HasKey(p => p.WorkflowEntityId);
         modelBuilder.Entity<WorkflowEntity>().Property(p => p.WorkflowEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
-        
+
         modelBuilder.Entity<OutcomeEntity>().HasKey(p => p.OutcomeEntityId);
         modelBuilder.Entity<OutcomeEntity>().Property(p => p.OutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+
+
     }
 }

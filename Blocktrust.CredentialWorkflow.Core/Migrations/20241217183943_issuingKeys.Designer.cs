@@ -3,6 +3,7 @@ using System;
 using Blocktrust.CredentialWorkflow.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blocktrust.CredentialWorkflow.Core.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20241217183943_issuingKeys")]
+    partial class issuingKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,7 +128,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("OutcomeEntities");
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.IssuingKeyEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.IssuingKey", b =>
                 {
                     b.Property<Guid>("IssuingKeyId")
                         .ValueGeneratedOnAdd()
@@ -158,14 +161,14 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                         .IsUnicode(true)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("TenantEntityId")
+                    b.Property<Guid?>("TenantEntityId")
                         .HasColumnType("uuid");
 
                     b.HasKey("IssuingKeyId");
 
                     b.HasIndex("TenantEntityId");
 
-                    b.ToTable("IssuingKeys");
+                    b.ToTable("IssuingKey");
                 });
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", b =>
@@ -376,13 +379,11 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Navigation("WorkflowEntity");
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.IssuingKeyEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.IssuingKey", b =>
                 {
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", null)
                         .WithMany("IssuingKeys")
-                        .HasForeignKey("TenantEntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantEntityId");
                 });
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", b =>

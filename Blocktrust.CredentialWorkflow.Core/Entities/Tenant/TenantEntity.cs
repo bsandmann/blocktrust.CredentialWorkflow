@@ -23,20 +23,9 @@ public record TenantEntity
     /// A tenant can have many application users
     /// </summary>
     public IList<ApplicationUser> ApplicationUsers { get; init; }
-    
+
     /// <summary>
-    /// A tenant can have many identus agents
+    /// A tenant can have many issuing keys
     /// </summary>
-    // public IList<IdentusAgent> IdentusAgents { get; set; }
-    
-    
-    public Tenant Map()
-    {
-        return new Tenant()
-        {
-            Name = this.Name,
-            CreatedUtc = this.CreatedUtc,
-            TenantId = this.TenantEntityId,
-        };
-    }
+    public IList<IssuingKeyEntity> IssuingKeys { get; set; }
 }
