@@ -1,11 +1,9 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
-@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
@@ -21,61 +19,50 @@
     {
         @switch (trigger.Type)
         {
-            case ETriggerType.CredentialIssuanceTrigger:
-                @if (trigger.Input is TriggerInputIncomingRequest incomingRequest)
+            case ETriggerType.HttpRequest:
+                @if (trigger.Input is TriggerInputHttpRequest request)
                 {
-                    <IssueCredentialTriggerComponent 
-                        TriggerInput="incomingRequest" 
+                    <HttpRequestTrigger
+                        TriggerInput="request"
                         OnChange="OnChange"/>
                 }
-                break;
-            case ETriggerType.CredentialVerificationTrigger:
-                @if (trigger.Input is TriggerInputIncomingRequest verificationRequest)
-                {
-                    <CredentialVerificationTrigger 
-                        TriggerInput="verificationRequest" 
-                        OnChange="OnChange"/>
-                }
-                break;
-            case ETriggerType.CustomIncomingTrigger:
-                @if (trigger.Input is TriggerInputCustomIncoming customIncoming)
-                {
-                    <CustomIncomingTrigger 
-                        TriggerInput="customIncoming" 
-                        OnChange="OnChange"/>
-                }
+
                 break;
             case ETriggerType.RecurringTimer:
                 @if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
                 {
-                    <RecurringTimerTrigger 
-                        TriggerInput="recurringTimer" 
+                    <RecurringTimerTrigger
+                        TriggerInput="recurringTimer"
                         OnChange="OnChange"/>
                 }
+
                 break;
             case ETriggerType.PresetTimer:
                 @if (trigger.Input is TriggerInputPresetTimer presetTimer)
                 {
-                    <PresetTimerTrigger 
-                        TriggerInput="presetTimer" 
+                    <PresetTimerTrigger
+                        TriggerInput="presetTimer"
                         OnChange="OnChange"/>
                 }
+
                 break;
             case ETriggerType.WalletInteraction:
                 @if (trigger.Input is TriggerInputWalletInteraction walletInteraction)
                 {
-                    <WalletInteractionTrigger 
-                        TriggerInput="walletInteraction" 
+                    <WalletInteractionTrigger
+                        TriggerInput="walletInteraction"
                         OnChange="OnChange"/>
                 }
+
                 break;
             case ETriggerType.ManualTrigger:
                 @if (trigger.Input is TriggerInputManual manualTrigger)
                 {
-                    <ManualTrigger 
-                        TriggerInput="manualTrigger" 
+                    <ManualTrigger
+                        TriggerInput="manualTrigger"
                         OnChange="OnChange"/>
                 }
+
                 break;
         }
     }
@@ -86,21 +73,23 @@
             case EActionType.IssueW3CCredential:
                 @if (action.Input is IssueW3cCredential issueW3cCredential)
                 {
-                    <IssueW3CCredential 
-                        ActionInput="issueW3cCredential" 
+                    <IssueW3CCredential
+                        ActionInput="issueW3cCredential"
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
 
             case EActionType.IssueW3CSdCredential:
                 @if (action.Input is IssueW3CSdCredential issueW3cSdCredential)
                 {
-                    <IssueW3CCredential 
-                        ActionInput="issueW3cSdCredential" 
+                    <IssueW3CCredential
+                        ActionInput="issueW3cSdCredential"
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
 
             case EActionType.DIDComm:
@@ -111,6 +100,7 @@
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
 
             case EActionType.Http:
@@ -121,6 +111,7 @@
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
 
             case EActionType.Email:
@@ -131,33 +122,37 @@
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
 
             case EActionType.VerifyW3CCredential:
                 @if (action.Input is VerifyW3cCredential verifyW3cCredential)
                 {
-                    <VerifyW3cCredentialAction 
-                        ActionInput="verifyW3cCredential" 
+                    <VerifyW3cCredentialAction
+                        ActionInput="verifyW3cCredential"
                         OnChange="OnChange"/>
                 }
+
                 break;
 
             case EActionType.VerifyW3CSdCredential:
                 @if (action.Input is VerifyW3cSdCredential verifyW3cSdCredential)
                 {
-                    <VerifyW3cSdCredentialAction 
-                        ActionInput="verifyW3cSdCredential" 
+                    <VerifyW3cSdCredentialAction
+                        ActionInput="verifyW3cSdCredential"
                         OnChange="OnChange"/>
                 }
+
                 break;
 
             case EActionType.VerifyAnoncredCredential:
                 @if (action.Input is VerifyAnoncredCredential verifyAnoncredCredential)
                 {
-                    <VerifyAnoncredCredentialAction 
-                        ActionInput="verifyAnoncredCredential" 
+                    <VerifyAnoncredCredentialAction
+                        ActionInput="verifyAnoncredCredential"
                         OnChange="OnChange"/>
                 }
+
                 break;
             case EActionType.LogOutcome:
             case EActionType.PostOutcome:
@@ -166,16 +161,17 @@
                     <OutcomeActionComponent
                         ActionInput="outcomeAction"
                         OnChange="OnChange"
-                        TriggerParameters="TriggerParameters" />
+                        TriggerParameters="TriggerParameters"/>
                 }
+
                 break;
-    
         }
     }
 </div>
 
 @code {
     [Parameter] public object Item { get; set; } = null!;
+    [Parameter] public string? Template { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }

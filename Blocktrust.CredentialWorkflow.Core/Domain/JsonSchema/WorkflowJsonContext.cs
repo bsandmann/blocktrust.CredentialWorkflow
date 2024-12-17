@@ -1,20 +1,19 @@
 using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests;
 using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.JsonSchema;
 
+using Common;
 using ProcessFlow = ProcessFlow.ProcessFlow;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(ProcessFlow))]
 [JsonSerializable(typeof(Trigger))]
 [JsonSerializable(typeof(TriggerInput))]
-[JsonSerializable(typeof(TriggerInputIncomingRequest))]
+[JsonSerializable(typeof(TriggerInputHttpRequest))]
 [JsonSerializable(typeof(TriggerInputRecurringTimer))]
 [JsonSerializable(typeof(TriggerInputOnDemand))]
 [JsonSerializable(typeof(Action))]

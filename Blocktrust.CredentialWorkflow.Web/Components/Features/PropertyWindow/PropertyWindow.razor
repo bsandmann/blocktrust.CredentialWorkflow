@@ -2,12 +2,11 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Input
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.HttpRequestsTemplates
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 
 <div class="bg-white p-4 rounded-lg shadow-md">
@@ -24,36 +23,39 @@
 
             <div class="space-y-2 ml-8">
                 <!-- Incoming Requests Group -->
-                <MenuGroup Label="Incoming requests" Icon="http" IsExpanded="@_isIncomingRequestsExpanded" OnToggle="@(() => ToggleGroup("incomingRequests"))">
-                    <MenuButton Icon="description" Label="Credential Issuance" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.CredentialIssuanceTrigger, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="verified" Label="Credential Verification" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.CredentialVerificationTrigger, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="api" Label="Custom Incoming" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.CustomIncomingTrigger, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Incoming HTTP requests" Icon="http" IsExpanded="@_isIncomingRequestsExpanded"
+                           OnToggle="@(() => ToggleGroup("incomingRequests"))">
+                    <MenuButton Icon="description" Label="HTTP request for Credential Issuance"
+                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-issuance"))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="verified" Label="HTTP request for Credential Verification"
+                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-verification"))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="api" Label="Custom HTTP request"
+                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
 
                 <!-- Timer Triggers Group -->
-                <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@_isTimerTriggersExpanded" OnToggle="@(() => ToggleGroup("timerTriggers"))">
-                    <MenuButton Icon="update" Label="Recurring timer" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="alarm" Label="Preset timer" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.PresetTimer, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@_isTimerTriggersExpanded"
+                           OnToggle="@(() => ToggleGroup("timerTriggers"))">
+                    <MenuButton Icon="update" Label="Recurring timer"
+                                OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="alarm" Label="Preset timer"
+                                OnClick="@(action => HandleItemClick(ETriggerType.PresetTimer, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
 
                 <!-- Manual Triggers Group -->
-                <MenuGroup Label="Manual triggers" Icon="touch_app" IsExpanded="@_isManualTriggersExpanded" OnToggle="@(() => ToggleGroup("manualTriggers"))">
-                    <MenuButton Icon="account_balance_wallet" Label="Wallet Interaction" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.WalletInteraction, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="play_circle" Label="Manual triggering" 
-                               OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Manual triggers" Icon="touch_app" IsExpanded="@_isManualTriggersExpanded"
+                           OnToggle="@(() => ToggleGroup("manualTriggers"))">
+                    <MenuButton Icon="account_balance_wallet" Label="Wallet Interaction"
+                                OnClick="@(action => HandleItemClick(ETriggerType.WalletInteraction, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="play_circle" Label="Manual triggering"
+                                OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
             </div>
         </div>
@@ -67,42 +69,45 @@
 
             <div class="space-y-2 ml-8">
                 <!-- Issue Credential Group -->
-                <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@_isIssueCredentialExpanded" OnToggle="@(() => ToggleGroup("issueCredential"))">
-                    <MenuButton Icon="badge" Label="W3C VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.IssueW3CCredential, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="verified_user" Label="W3C SD-VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.IssueW3CSdCredential, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="fingerprint" Label="Anoncred" 
-                               OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@_isIssueCredentialExpanded"
+                           OnToggle="@(() => ToggleGroup("issueCredential"))">
+                    <MenuButton Icon="badge" Label="W3C VC"
+                                OnClick="@(action => HandleItemClick(EActionType.IssueW3CCredential, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="verified_user" Label="W3C SD-VC"
+                                OnClick="@(action => HandleItemClick(EActionType.IssueW3CSdCredential, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="fingerprint" Label="Anoncred"
+                                OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
 
                 <!-- Verify Credential Group -->
-                <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded" OnToggle="@(() => ToggleGroup("verifyCredential"))">
-                    <MenuButton Icon="verified" Label="Verify W3C VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.VerifyW3CCredential, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="verified_user" Label="Verify W3C SD-VC" 
-                               OnClick="@(action => HandleItemClick(EActionType.VerifyW3CSdCredential, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="fingerprint" Label="Verify Anoncred" 
-                               OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded"
+                           OnToggle="@(() => ToggleGroup("verifyCredential"))">
+                    <MenuButton Icon="verified" Label="Verify W3C VC"
+                                OnClick="@(action => HandleItemClick(EActionType.VerifyW3CCredential, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="verified_user" Label="Verify W3C SD-VC"
+                                OnClick="@(action => HandleItemClick(EActionType.VerifyW3CSdCredential, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="fingerprint" Label="Verify Anoncred"
+                                OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
 
                 <!-- Outgoing Request Group -->
-                <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded" OnToggle="@(() => ToggleGroup("outgoingRequest"))">
-                    <MenuButton Icon="message" Label="DIDComm" 
-                               OnClick="@(action => HandleItemClick(EActionType.DIDComm, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="http" Label="HTTP Request" 
-                               OnClick="@(action => HandleItemClick(EActionType.Http, action))" 
-                               ShowAddButton="true" />
-                    <MenuButton Icon="mail" Label="Email" 
-                               OnClick="@(action => HandleItemClick(EActionType.Email, action))" 
-                               ShowAddButton="true" />
+                <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded"
+                           OnToggle="@(() => ToggleGroup("outgoingRequest"))">
+                    <MenuButton Icon="message" Label="DIDComm"
+                                OnClick="@(action => HandleItemClick(EActionType.DIDComm, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="http" Label="HTTP Request"
+                                OnClick="@(action => HandleItemClick(EActionType.Http, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="mail" Label="Email"
+                                OnClick="@(action => HandleItemClick(EActionType.Email, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
             </div>
         </div>
@@ -117,20 +122,20 @@
             <div class="space-y-2 ml-8">
                 <MenuButton Icon="note_add" Label="Log Outcome"
                             OnClick="@(action => HandleItemClick(EActionType.LogOutcome, action))"
-                            ShowAddButton="true" />
+                            ShowAddButton="true"/>
                 <MenuButton Icon="cloud_upload" Label="Post Outcome"
                             OnClick="@(action => HandleItemClick(EActionType.PostOutcome, action))"
-                            ShowAddButton="true" />
+                            ShowAddButton="true"/>
             </div>
         </div>
     }
     else
     {
-        <PropertyEditor 
-            Item="@SelectedItem" 
+        <PropertyEditor
+            Item="@SelectedItem"
             OnBack="@(() => SelectItem(null))"
-            OnChange="@OnChange" 
-            TriggerParameters="@GetTriggerParameters()" />
+            OnChange="@OnChange"
+            TriggerParameters="@GetTriggerParameters()"/>
     }
 
     @if (_showError)
@@ -139,8 +144,9 @@
             <div class="bg-white rounded-lg p-6 max-w-md">
                 <h3 class="text-xl font-bold mb-4">Warning</h3>
                 <p class="text-gray-700 mb-6">@_errorMessage</p>
-                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
-                        @onclick="CloseError">
+                <button
+                    class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
+                    @onclick="CloseError">
                     OK
                 </button>
             </div>
@@ -153,7 +159,7 @@
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public List<object> FlowItems { get; set; } = new();
-    
+
     private string? _errorMessage;
     private bool _showError;
     private bool _isIncomingRequestsExpanded = true;
@@ -162,7 +168,7 @@
     private bool _isIssueCredentialExpanded;
     private bool _isVerifyCredentialExpanded;
     private bool _isOutgoingRequestExpanded;
-    
+
     private bool HasActions => FlowItems.Any(x => x is WorkflowAction);
     private bool HasOutcome => FlowItems.Any(x => x is WorkflowOutcome);
 
@@ -191,196 +197,197 @@
         }
     }
 
-private object CreateNewItem(object itemType)
-{
-    try
+    private object CreateNewItem(object itemType, string template)
     {
-        if (itemType is string outcomeType)
+        try
         {
-            return outcomeType switch
+            if (itemType is string outcomeType)
             {
-                "logOutcome" => new WorkflowAction
+                return outcomeType switch
                 {
-                    Type = EActionType.LogOutcome,
-                    Input = new OutcomeAction
+                    "logOutcome" => new WorkflowAction
                     {
-                        Id = Guid.NewGuid(),
-                        Type = EOutcomeActionType.Log,
-                        Content = new Dictionary<string, ParameterReference>()
+                        Type = EActionType.LogOutcome,
+                        Input = new OutcomeAction
+                        {
+                            Id = Guid.NewGuid(),
+                            Type = EOutcomeActionType.Log,
+                            Content = new Dictionary<string, ParameterReference>()
+                        },
+                        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
                     },
-                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                },
-                "postOutcome" => new WorkflowAction
-                {
-                    Type = EActionType.PostOutcome,
-                    Input = new OutcomeAction
+                    "postOutcome" => new WorkflowAction
                     {
-                        Id = Guid.NewGuid(),
-                        Type = EOutcomeActionType.Post,
-                        Content = new Dictionary<string, ParameterReference>(),
-                        Destination = new ParameterReference { Source = ParameterSource.Static }
+                        Type = EActionType.PostOutcome,
+                        Input = new OutcomeAction
+                        {
+                            Id = Guid.NewGuid(),
+                            Type = EOutcomeActionType.Post,
+                            Content = new Dictionary<string, ParameterReference>(),
+                            Destination = new ParameterReference { Source = ParameterSource.Static }
+                        },
+                        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
                     },
-                    RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                },
-                _ => throw new ArgumentException("Invalid outcome type")
+                    _ => throw new ArgumentException("Invalid outcome type")
+                };
+            }
+
+            return itemType switch
+            {
+                ETriggerType triggerType => CreateNewTrigger(triggerType, template),
+                EActionType actionType => CreateNewAction(actionType),
+                _ => throw new ArgumentException("Invalid item type")
             };
         }
-
-        return itemType switch
+        catch (Exception ex)
         {
-            ETriggerType triggerType => CreateNewTrigger(triggerType),
-            EActionType actionType => CreateNewAction(actionType),
-            _ => throw new ArgumentException("Invalid item type")
-        };
-    }
-    catch (Exception ex)
-    {
-        HandleError(ex.Message);
-        throw;
-    }
-}
-
-private WorkflowAction CreateNewAction(EActionType actionType)
-{
-    return new WorkflowAction
-    {
-        Type = actionType,
-        Input = actionType switch
-        {
-            EActionType.DIDComm => new DIDCommAction
-            {
-                Id = Guid.NewGuid(),
-                Type = EDIDCommType.Message,
-                PeerDid = new ParameterReference { Source = ParameterSource.Static }
-            },
-            EActionType.Http => new HttpAction
-            {
-                Id = Guid.NewGuid(),
-                Method = "POST",
-                Endpoint = new ParameterReference { Source = ParameterSource.Static }
-            },
-            EActionType.Email => new EmailAction
-            {
-                Id = Guid.NewGuid(),
-                To = new ParameterReference { Source = ParameterSource.Static },
-                Subject = new ParameterReference { Source = ParameterSource.Static },
-                Body = new ParameterReference { Source = ParameterSource.Static }
-            },
-            EActionType.IssueW3CCredential => new IssueW3cCredential
-            {
-                Id = Guid.NewGuid(),
-                SubjectDid = new ParameterReference
-                {
-                    Source = ParameterSource.TriggerInput,
-                    Path = "subjectDid"
-                },
-                IssuerDid = new ParameterReference
-                {
-                    Source = ParameterSource.AppSettings,
-                    Path = "DefaultIssuerDid"
-                },
-                Claims = new Dictionary<string, ClaimValue>()
-            },
-            EActionType.IssueW3CSdCredential => new IssueW3CSdCredential
-            {
-                Id = Guid.NewGuid(),
-                SubjectDid = new ParameterReference
-                {
-                    Source = ParameterSource.TriggerInput,
-                    Path = "subjectDid"
-                },
-                IssuerDid = new ParameterReference
-                {
-                    Source = ParameterSource.AppSettings,
-                    Path = "DefaultIssuerDid"
-                },
-                Claims = new Dictionary<string, ClaimValue>()
-            },
-            EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
-            {
-                Id = Guid.NewGuid(),
-                SubjectDid = new ParameterReference
-                {
-                    Source = ParameterSource.TriggerInput,
-                    Path = "subjectDid"
-                },
-                IssuerDid = new ParameterReference
-                {
-                    Source = ParameterSource.AppSettings,
-                    Path = "DefaultIssuerDid"
-                },
-                CredentialDefinitionId = "",
-                Attributes = new Dictionary<string, ClaimValue>()
-            },
-            EActionType.VerifyW3CCredential => new VerifyW3cCredential
-            {
-                Id = Guid.NewGuid(),
-                CheckSignature = true,
-                CheckStatus = true,
-                CheckSchema = true,
-                CheckExpiry = true,
-                CheckTrustRegistry = false
-            },
-            EActionType.VerifyW3CSdCredential => new VerifyW3cSdCredential
-            {
-                Id = Guid.NewGuid(),
-                CheckSignature = true,
-                CheckStatus = true,
-                CheckSchema = true,
-                CheckExpiry = true,
-                CheckTrustRegistry = false
-            },
-            EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
-            {
-                Id = Guid.NewGuid(),
-                CheckSignature = true,
-                CheckStatus = true,
-                CheckSchema = true,
-                CheckExpiry = true,
-                CheckTrustRegistry = false
-            },
-            EActionType.LogOutcome => new OutcomeAction
-            {
-                Id = Guid.NewGuid(),
-                Type = EOutcomeActionType.Log,
-                Content = new Dictionary<string, ParameterReference>()
-            },
-            EActionType.PostOutcome => new OutcomeAction
-            {
-                Id = Guid.NewGuid(),
-                Type = EOutcomeActionType.Post,
-                Content = new Dictionary<string, ParameterReference>(),
-                Destination = new ParameterReference 
-                { 
-                    Source = ParameterSource.Static,
-                    Path = "" 
-                }
-            },
-            _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
-        },
-        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-    };
-}
-
-private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action)
-{
-    if (!HasActions && itemType is EActionType actionType && 
-        (actionType == EActionType.LogOutcome || actionType == EActionType.PostOutcome))
-    {
-        await HandleError("Cannot add outcome before adding actions. Please add actions first.");
-        return;
-    }
-
-    var newItem = CreateNewItem(itemType);
-    if (newItem != null)
-    {
-        await OnItemCreated.InvokeAsync(newItem);
-        if (action == MenuButton.MenuButtonAction.Configure)
-        {
-            await SelectItem(newItem);
+            HandleError(ex.Message);
+            throw;
         }
     }
-}
+
+    private WorkflowAction CreateNewAction(EActionType actionType)
+    {
+        return new WorkflowAction
+        {
+            Type = actionType,
+            Input = actionType switch
+            {
+                EActionType.DIDComm => new DIDCommAction
+                {
+                    Id = Guid.NewGuid(),
+                    Type = EDIDCommType.Message,
+                    PeerDid = new ParameterReference { Source = ParameterSource.Static }
+                },
+                EActionType.Http => new HttpAction
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Endpoint = new ParameterReference { Source = ParameterSource.Static }
+                },
+                EActionType.Email => new EmailAction
+                {
+                    Id = Guid.NewGuid(),
+                    To = new ParameterReference { Source = ParameterSource.Static },
+                    Subject = new ParameterReference { Source = ParameterSource.Static },
+                    Body = new ParameterReference { Source = ParameterSource.Static }
+                },
+                EActionType.IssueW3CCredential => new IssueW3cCredential
+                {
+                    Id = Guid.NewGuid(),
+                    SubjectDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "subjectDid"
+                    },
+                    IssuerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultIssuerDid"
+                    },
+                    Claims = new Dictionary<string, ClaimValue>()
+                },
+                EActionType.IssueW3CSdCredential => new IssueW3CSdCredential
+                {
+                    Id = Guid.NewGuid(),
+                    SubjectDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "subjectDid"
+                    },
+                    IssuerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultIssuerDid"
+                    },
+                    Claims = new Dictionary<string, ClaimValue>()
+                },
+                EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
+                {
+                    Id = Guid.NewGuid(),
+                    SubjectDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "subjectDid"
+                    },
+                    IssuerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultIssuerDid"
+                    },
+                    CredentialDefinitionId = "",
+                    Attributes = new Dictionary<string, ClaimValue>()
+                },
+                EActionType.VerifyW3CCredential => new VerifyW3cCredential
+                {
+                    Id = Guid.NewGuid(),
+                    CheckSignature = true,
+                    CheckStatus = true,
+                    CheckSchema = true,
+                    CheckExpiry = true,
+                    CheckTrustRegistry = false
+                },
+                EActionType.VerifyW3CSdCredential => new VerifyW3cSdCredential
+                {
+                    Id = Guid.NewGuid(),
+                    CheckSignature = true,
+                    CheckStatus = true,
+                    CheckSchema = true,
+                    CheckExpiry = true,
+                    CheckTrustRegistry = false
+                },
+                EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
+                {
+                    Id = Guid.NewGuid(),
+                    CheckSignature = true,
+                    CheckStatus = true,
+                    CheckSchema = true,
+                    CheckExpiry = true,
+                    CheckTrustRegistry = false
+                },
+                EActionType.LogOutcome => new OutcomeAction
+                {
+                    Id = Guid.NewGuid(),
+                    Type = EOutcomeActionType.Log,
+                    Content = new Dictionary<string, ParameterReference>()
+                },
+                EActionType.PostOutcome => new OutcomeAction
+                {
+                    Id = Guid.NewGuid(),
+                    Type = EOutcomeActionType.Post,
+                    Content = new Dictionary<string, ParameterReference>(),
+                    Destination = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        Path = ""
+                    }
+                },
+                _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
+            },
+            RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+        };
+    }
+
+    private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action, string? template = null)
+    {
+        if (!HasActions && itemType is EActionType actionType &&
+            (actionType == EActionType.LogOutcome || actionType == EActionType.PostOutcome))
+        {
+            await HandleError("Cannot add outcome before adding actions. Please add actions first.");
+            return;
+        }
+
+        var newItem = CreateNewItem(itemType, template);
+        if (newItem != null)
+        {
+            await OnItemCreated.InvokeAsync(newItem);
+            if (action == MenuButton.MenuButtonAction.Configure)
+            {
+                await SelectItem(newItem);
+            }
+        }
+    }
+
     private async Task SelectItem(object? item)
     {
         SelectedItem = item;
@@ -390,10 +397,11 @@ private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction 
     private IEnumerable<string>? GetTriggerParameters()
     {
         var trigger = FlowItems.FirstOrDefault(x => x is Trigger) as Trigger;
-        if (trigger?.Input is TriggerInputIncomingRequest incomingRequest)
+        if (trigger?.Input is TriggerInputHttpRequest incomingRequest)
         {
             return incomingRequest.Parameters.Keys;
         }
+
         return null;
     }
 
@@ -411,63 +419,83 @@ private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction 
         StateHasChanged();
     }
 
-    private Trigger CreateNewTrigger(ETriggerType triggerType)
+    private Trigger CreateNewTrigger(ETriggerType triggerType, string? template = null)
     {
+        TriggerInput trigger;
+        if (triggerType == ETriggerType.HttpRequest)
+        {
+            if (template == "credential-issuance")
+            {
+                trigger = new TriggerInputHttpRequest()
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Parameters = HttpRequestTemplates.Templates["credential-issuance"].Parameters
+                };
+            }
+            else if (template == "credential-verification")
+            {
+                trigger = new TriggerInputHttpRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Parameters = HttpRequestTemplates.Templates["credential-verification"].Parameters
+                };
+            }
+            else
+            {
+                trigger = new TriggerInputHttpRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Method = "POST",
+                    Parameters = new Dictionary<string, ParameterDefinition>()
+                };
+            }
+        }
+        else if (triggerType == ETriggerType.RecurringTimer)
+        {
+            trigger = new TriggerInputRecurringTimer
+            {
+                Id = Guid.NewGuid(),
+                TimeSpan = TimeSpan.FromHours(1)
+            };
+        }
+        else if (triggerType == ETriggerType.PresetTimer)
+        {
+            trigger = new TriggerInputPresetTimer
+            {
+                Id = Guid.NewGuid(),
+                TriggerTime = DateTime.UtcNow.AddHours(24)
+            };
+        }
+        else if (triggerType == ETriggerType.WalletInteraction)
+        {
+            trigger = new TriggerInputWalletInteraction
+            {
+                Id = Guid.NewGuid(),
+                WalletAction = "connect",
+                RequiredParameters = new Dictionary<string, ParameterDefinition>()
+            };
+        }
+        else if (triggerType == ETriggerType.ManualTrigger)
+        {
+            trigger = new TriggerInputManual
+            {
+                Id = Guid.NewGuid(),
+                Description = "Manual trigger point",
+                RequiredParameters = new Dictionary<string, ParameterDefinition>()
+            };
+        }
+        else
+        {
+            throw new ArgumentException($"Trigger type {triggerType} is not implemented.");
+        }
+
+
         return new Trigger
         {
             Type = triggerType,
-            Input = triggerType switch
-            {
-                ETriggerType.CredentialIssuanceTrigger => new TriggerInputIncomingRequest
-                {
-                    Id = Guid.NewGuid(),
-                    Method = "POST",
-                    Endpoint = "/credentials/issue/{workflowId}",
-                    Template = "credential-issuance",
-                    Parameters = RequestTemplates.Templates["credential-issuance"].Parameters
-                },
-                ETriggerType.CredentialVerificationTrigger => new TriggerInputIncomingRequest
-                {
-                    Id = Guid.NewGuid(),
-                    Method = "POST",
-                    Endpoint = "/credentials/verify/{workflowId}",
-                    Template = "credential-verification",
-                    Parameters = RequestTemplates.Templates["credential-verification"].Parameters
-                },
-                ETriggerType.CustomIncomingTrigger => new TriggerInputCustomIncoming
-                {
-                    Id = Guid.NewGuid(),
-                    Method = "POST",
-                    Endpoint = "/api/custom/{workflowId}",
-                    Template = "custom-incoming",
-                    Parameters = new Dictionary<string, ParameterDefinition>(),
-                    EnableCustomValidation = false,
-                    ValidationRules = new Dictionary<string, string>()
-                },
-                ETriggerType.RecurringTimer => new TriggerInputRecurringTimer
-                {
-                    Id = Guid.NewGuid(),
-                    TimeSpan = TimeSpan.FromHours(1)
-                },
-                ETriggerType.PresetTimer => new TriggerInputPresetTimer
-                {
-                    Id = Guid.NewGuid(),
-                    TriggerTime = DateTime.UtcNow.AddHours(24)
-                },
-                ETriggerType.WalletInteraction => new TriggerInputWalletInteraction
-                {
-                    Id = Guid.NewGuid(),
-                    WalletAction = "connect",
-                    RequiredParameters = new Dictionary<string, ParameterDefinition>()
-                },
-                ETriggerType.ManualTrigger => new TriggerInputManual
-                {
-                    Id = Guid.NewGuid(),
-                    Description = "Manual trigger point",
-                    RequiredParameters = new Dictionary<string, ParameterDefinition>()
-                },
-                _ => throw new ArgumentException($"Trigger type {triggerType} is not implemented.")
-            }
+            Input = trigger
         };
     }
 

@@ -1,6 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.IncomingRequests;
+using System.Text.Json.Serialization;
 
 public class ParameterDefinition
 {

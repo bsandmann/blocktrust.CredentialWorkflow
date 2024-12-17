@@ -2,9 +2,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
 public enum ETriggerType
 {
-    CredentialIssuanceTrigger,
-    CredentialVerificationTrigger,
-    CustomIncomingTrigger,
+    HttpRequest,
     RecurringTimer,
     PresetTimer,
     WalletInteraction,

@@ -5,9 +5,9 @@ public static class WorkflowNaming
     public static Dictionary<string, string> FriendlyNames = new()
     {
         // Triggers
-        {"CredentialIssuanceTrigger", "Credential Issuance"},
-        {"CredentialVerificationTrigger", "Credential Verification"},
-        {"CustomIncomingTrigger", "Custom Incoming Request"},
+        {"CredentialIssuanceTrigger", "Http Request for Credential Issuance"},
+        {"CredentialVerificationTrigger", "Http Request for Credential Verification"},
+        {"CustomIncomingTrigger", "Custom Incoming Http Request"},
         {"RecurringTimer", "Recurring Timer"},
         {"PresetTimer", "Preset Timer"},
         {"WalletInteraction", "Wallet Interaction"},
