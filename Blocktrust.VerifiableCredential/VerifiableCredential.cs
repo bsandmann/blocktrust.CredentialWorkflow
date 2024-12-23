@@ -1,4 +1,6 @@
-﻿namespace Blocktrust.VerifiableCredential;
+﻿using Blocktrust.CredentialBadges.OpenBadges;
+
+namespace Blocktrust.VerifiableCredential;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
