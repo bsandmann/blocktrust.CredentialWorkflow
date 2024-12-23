@@ -1,8 +1,11 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Tests;
+﻿using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateTenant;
+using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.DeleteTenant;
+
+namespace Blocktrust.CredentialWorkflow.Core.Tests;
 
 using System;
-using Commands.Tenant.CreateTenant;
-using Commands.Tenant.DeleteTenant;
+// using Commands.Tenant.CreateTenant;
+// using Commands.Tenant.DeleteTenant;
 using MediatR;
 using Moq;
 using Xunit;
