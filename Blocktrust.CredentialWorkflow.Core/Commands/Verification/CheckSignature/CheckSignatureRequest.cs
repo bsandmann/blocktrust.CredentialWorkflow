@@ -1,6 +1,15 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
+using FluentResults;
+using MediatR;
 
-public class CheckSignatureRequest
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
+
+public class CheckSignatureRequest : IRequest<Result<bool>>
 {
-    
+    public CheckSignatureRequest(Credential credential)
+    {
+        Credential = credential;
+    }
+
+    public Credential Credential { get; }
 }
