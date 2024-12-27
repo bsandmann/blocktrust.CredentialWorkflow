@@ -2,7 +2,6 @@
 using Blocktrust.CredentialBadges.OpenBadges;
 using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
 using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
-using Blocktrust.CredentialWorkflow.Core.Services;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
 

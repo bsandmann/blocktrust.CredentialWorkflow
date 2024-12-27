@@ -4,7 +4,6 @@ using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
 using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckExpiry;
 using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
 using Blocktrust.CredentialWorkflow.Core.Domain.Verification;
-using Blocktrust.CredentialWorkflow.Core.Services;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.VerifyCredential;
 

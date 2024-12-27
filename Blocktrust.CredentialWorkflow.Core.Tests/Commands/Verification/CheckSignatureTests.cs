@@ -1,7 +1,6 @@
 ﻿using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
-using Blocktrust.CredentialWorkflow.Core.Services;
 using FluentAssertions;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
@@ -9,7 +8,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
 public class CheckSignatureTests
 {
     private readonly ExtractPrismPubKeyFromLongFormDid _extractor;
-    private readonly Core.Commands.Verification.CheckSignature.CheckSignatureHandler _handler;
+    private readonly CheckSignatureHandler _handler;
     private readonly CredentialParser _parser;
     private readonly IEcService _ecService;
 
@@ -21,7 +20,7 @@ public class CheckSignatureTests
         _extractor = new ExtractPrismPubKeyFromLongFormDid();
         _parser = new CredentialParser();
         _ecService = new EcServiceBouncyCastle();
-        _handler = new Core.Commands.Verification.CheckSignature.CheckSignatureHandler(_extractor, _ecService);
+        _handler = new CheckSignatureHandler(_extractor, _ecService);
     }
 
     [Fact]
