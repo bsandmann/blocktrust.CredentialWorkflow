@@ -1,17 +1,17 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Blocktrust.CredentialWorkflow.Core.Commands.Issuing.IssueCredential;
+using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Prism;
 using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
 using FluentAssertions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Issuing;
+namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.IssueCredentialsTests.IssueW3cCredentialTests;
 
-public class IssueCredentialTests
+public class IssueW3CCredentialTests
 {
     private readonly IEcService _ecService;
-    private readonly IssueCredentialHandler _handler;
+    private readonly IssueW3CCredentialHandler _handler;
     private readonly ExtractPrismPubKeyFromLongFormDid _extractor;
     private readonly CredentialParser _credentialParser;
 
@@ -26,10 +26,10 @@ public class IssueCredentialTests
         }
     }";
 
-    public IssueCredentialTests()
+    public IssueW3CCredentialTests()
     {
         _ecService = new EcServiceBouncyCastle();
-        _handler = new IssueCredentialHandler(_ecService);
+        _handler = new IssueW3CCredentialHandler(_ecService);
         _extractor = new ExtractPrismPubKeyFromLongFormDid();
         _credentialParser = new CredentialParser();
     }
@@ -45,7 +45,7 @@ public class IssueCredentialTests
         var issuerDid = "did:prism:test:issuer";
 
         // Act
-        var request = new IssueCredentialRequest(credential, privateKey, issuerDid);
+        var request = new IssueW3CCredentialRequest(credential, privateKey, issuerDid);
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
@@ -98,7 +98,7 @@ public class IssueCredentialTests
         var issuerDid = "did:prism:test:issuer";
 
         // Act
-        var request = new IssueCredentialRequest(credential, invalidPrivateKey, issuerDid);
+        var request = new IssueW3CCredentialRequest(credential, invalidPrivateKey, issuerDid);
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
@@ -124,7 +124,7 @@ public class IssueCredentialTests
         var issuerDid = "did:prism:test:issuer";
 
         // Act
-        var request = new IssueCredentialRequest(credential, privateKey, issuerDid);
+        var request = new IssueW3CCredentialRequest(credential, privateKey, issuerDid);
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert

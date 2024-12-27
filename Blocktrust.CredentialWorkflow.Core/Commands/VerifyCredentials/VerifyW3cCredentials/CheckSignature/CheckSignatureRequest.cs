@@ -2,7 +2,7 @@
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckSignature;
 
 public class CheckSignatureRequest : IRequest<Result<bool>>
 {

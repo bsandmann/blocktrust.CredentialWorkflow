@@ -1,9 +1,9 @@
-﻿using FluentAssertions;
-using Blocktrust.CredentialBadges.OpenBadges;
-using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
+﻿using Blocktrust.CredentialBadges.OpenBadges;
+using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckRevocation;
 using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
+using FluentAssertions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
+namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
 public class CheckRevocationTests
 {

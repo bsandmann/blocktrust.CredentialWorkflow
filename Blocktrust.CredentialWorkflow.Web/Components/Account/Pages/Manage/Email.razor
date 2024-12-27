@@ -109,7 +109,7 @@
 
         await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
 
-        message = "Verification email sent. Please check your email.";
+        message = "VerifyCredentials email sent. Please check your email.";
     }
 
     private sealed class InputModel

@@ -1,9 +1,9 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
+﻿using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckSignature;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
 using FluentAssertions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
+namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
 public class CheckSignatureTests
 {

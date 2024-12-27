@@ -3,7 +3,7 @@ using System.Text.Json;
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckRevocation;
 
 public class CheckRevocationHandler : IRequestHandler<CheckRevocationRequest, Result<bool>>
 {

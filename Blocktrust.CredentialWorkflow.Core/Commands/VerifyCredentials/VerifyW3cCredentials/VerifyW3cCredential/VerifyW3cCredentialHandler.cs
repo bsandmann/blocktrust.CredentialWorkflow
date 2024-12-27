@@ -1,24 +1,24 @@
-﻿using FluentResults;
-using MediatR;
-using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
-using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckExpiry;
-using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
+﻿using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckExpiry;
+using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckRevocation;
+using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckSignature;
 using Blocktrust.CredentialWorkflow.Core.Domain.Verification;
+using FluentResults;
+using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.VerifyCredential;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
 
-public class VerifyCredentialHandler : IRequestHandler<VerifyCredentialRequest, Result<CredentialVerificationResult>>
+public class VerifyW3CCredentialHandler : IRequestHandler<VerifyW3CCredentialRequest, Result<CredentialVerificationResult>>
 {
     private readonly IMediator _mediator;
     private readonly CredentialParser _credentialParser;
 
-    public VerifyCredentialHandler(IMediator mediator, CredentialParser credentialParser)
+    public VerifyW3CCredentialHandler(IMediator mediator, CredentialParser credentialParser)
     {
         _mediator = mediator;
         _credentialParser = credentialParser;
     }
 
-    public async Task<Result<CredentialVerificationResult>> Handle(VerifyCredentialRequest request, CancellationToken cancellationToken)
+    public async Task<Result<CredentialVerificationResult>> Handle(VerifyW3CCredentialRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -60,7 +60,7 @@ public class VerifyCredentialHandler : IRequestHandler<VerifyCredentialRequest, 
         }
         catch (Exception ex)
         {
-            return Result.Fail<CredentialVerificationResult>(new Error("Verification failed").CausedBy(ex));
+            return Result.Fail<CredentialVerificationResult>(new Error("VerifyCredentials failed").CausedBy(ex));
         }
     }
 }

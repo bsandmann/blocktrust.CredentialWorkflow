@@ -1,8 +1,8 @@
 ﻿using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
-using MediatR;
 using FluentResults;
+using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckRevocation;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckRevocation;
 
 public class CheckRevocationRequest : IRequest<Result<bool>>
 {

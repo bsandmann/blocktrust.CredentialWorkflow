@@ -2,11 +2,11 @@
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Issuing.IssueCredential;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 
-public class IssueCredentialRequest : IRequest<Result<string>>
+public class IssueW3CCredentialRequest : IRequest<Result<string>>
 {
-    public IssueCredentialRequest(Credential credential, byte[] privateKey, string issuerDid)
+    public IssueW3CCredentialRequest(Credential credential, byte[] privateKey, string issuerDid)
     {
         Credential = credential;
         PrivateKey = privateKey;
