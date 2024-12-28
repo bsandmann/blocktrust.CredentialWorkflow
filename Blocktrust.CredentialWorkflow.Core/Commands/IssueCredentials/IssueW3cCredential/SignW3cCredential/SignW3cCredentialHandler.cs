@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 
-public class IssueW3CCredentialHandler : IRequestHandler<IssueW3CCredentialRequest, Result<string>>
+public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest, Result<string>>
 {
     private readonly IEcService _ecService;
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -16,12 +16,12 @@ public class IssueW3CCredentialHandler : IRequestHandler<IssueW3CCredentialReque
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public IssueW3CCredentialHandler(IEcService ecService)
+    public SignW3cCredentialHandler(IEcService ecService)
     {
         _ecService = ecService;
     }
 
-    public async Task<Result<string>> Handle(IssueW3CCredentialRequest request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SignW3cCredentialRequest request, CancellationToken cancellationToken)
     {
         try
         {

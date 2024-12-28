@@ -4,9 +4,9 @@ using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 
-public class IssueW3CCredentialRequest : IRequest<Result<string>>
+public class SignW3cCredentialRequest : IRequest<Result<string>>
 {
-    public IssueW3CCredentialRequest(Credential credential, byte[] privateKey, string issuerDid)
+    public SignW3cCredentialRequest(Credential credential, byte[] privateKey, string issuerDid)
     {
         Credential = credential;
         PrivateKey = privateKey;
