@@ -12,7 +12,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 [JsonDerivedType(typeof(IssueW3CSdCredential), typeDiscriminator: "w3cSdCredential")]
 [JsonDerivedType(typeof(IssueAnoncredCredential), typeDiscriminator: "anoncredCredential")]
 
-// Verification
+// VerifyCredentials
 [JsonDerivedType(typeof(VerifyW3cCredential), typeDiscriminator: "verifyW3cCredential")]
 [JsonDerivedType(typeof(VerifyW3cSdCredential), typeDiscriminator: "verifyW3cSdCredential")]
 [JsonDerivedType(typeof(VerifyAnoncredCredential), typeDiscriminator: "verifyAnoncredCredential")]

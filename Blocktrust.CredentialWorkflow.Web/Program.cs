@@ -1,6 +1,8 @@
 using Blocktrust.CredentialWorkflow.Core;
+using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Blocktrust.CredentialWorkflow.Core.Services;
+using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
 using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
 using Blocktrust.CredentialWorkflow.Core.Settings;
 using Blocktrust.CredentialWorkflow.Web.Common;
@@ -35,6 +37,12 @@ builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 builder.Services.AddScoped<ICredentialService, CredentialService>();
 builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
 builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+
+builder.Services.AddScoped<CredentialParser>();
+builder.Services.AddScoped<ExtractPrismPubKeyFromLongFormDid>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IEcService, EcServiceBouncyCastle>();
+
 
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(

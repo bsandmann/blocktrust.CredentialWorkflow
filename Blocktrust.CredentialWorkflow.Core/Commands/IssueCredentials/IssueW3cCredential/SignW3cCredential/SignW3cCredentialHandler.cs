@@ -5,9 +5,9 @@ using Blocktrust.CredentialWorkflow.Core.Prism;
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Issuing.IssueCredential;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 
-public class IssueCredentialHandler : IRequestHandler<IssueCredentialRequest, Result<string>>
+public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest, Result<string>>
 {
     private readonly IEcService _ecService;
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -16,12 +16,12 @@ public class IssueCredentialHandler : IRequestHandler<IssueCredentialRequest, Re
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public IssueCredentialHandler(IEcService ecService)
+    public SignW3cCredentialHandler(IEcService ecService)
     {
         _ecService = ecService;
     }
 
-    public async Task<Result<string>> Handle(IssueCredentialRequest request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SignW3cCredentialRequest request, CancellationToken cancellationToken)
     {
         try
         {

@@ -1,10 +1,10 @@
-﻿using FluentResults;
-using MediatR;
-using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
-using Blocktrust.CredentialWorkflow.Core.Crypto;
+﻿using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Prism;
+using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
+using FluentResults;
+using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckSignature;
+namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckSignature;
 
 public class CheckSignatureHandler : IRequestHandler<CheckSignatureRequest, Result<bool>>
 {

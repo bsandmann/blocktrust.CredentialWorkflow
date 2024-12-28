@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-using Blocktrust.CredentialWorkflow.Core.Commands.Verification.CheckExpiry;
+﻿using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckExpiry;
 using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
+using FluentAssertions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Verification;
+namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
 public class CheckExpiryTests
 {

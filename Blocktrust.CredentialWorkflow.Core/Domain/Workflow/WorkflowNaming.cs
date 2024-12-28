@@ -6,7 +6,7 @@ public static class WorkflowNaming
     {
         // Triggers
         {"CredentialIssuanceTrigger", "Http Request for Credential Issuance"},
-        {"CredentialVerificationTrigger", "Http Request for Credential Verification"},
+        {"CredentialVerificationTrigger", "Http Request for Credential VerifyCredentials"},
         {"CustomIncomingTrigger", "Custom Incoming Http Request"},
         {"RecurringTimer", "Recurring Timer"},
         {"PresetTimer", "Preset Timer"},
