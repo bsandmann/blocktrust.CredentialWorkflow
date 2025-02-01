@@ -5,160 +5,137 @@
   "properties": {
     "triggers": {
       "type": "object",
+      "description": "Dictionary of triggers keyed by GUID",
       "patternProperties": {
         "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$": {
           "$ref": "#/definitions/Trigger"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "actions": {
       "type": "object",
+      "description": "Dictionary of actions keyed by GUID",
       "patternProperties": {
         "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$": {
           "$ref": "#/definitions/Action"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
+    },
+    "outcome": {
+      "$ref": "#/definitions/WorkflowOutcome"
     }
   },
   "required": ["triggers", "actions"],
-  "additionalProperties": false,
+  "additionalProperties": true,
   "definitions": {
     "Trigger": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["IncomingRequest", "RecurringTimer", "OnDemand"]
+          "enum": [
+            "HttpRequest",
+            "RecurringTimer",
+            "PresetTimer",
+            "WalletInteraction",
+            "ManualTrigger"
+          ]
         },
         "input": {
-          "oneOf": [
-            { "$ref": "#/definitions/TriggerInputIncomingRequest" },
-            { "$ref": "#/definitions/TriggerInputRecurringTimer" },
-            { "$ref": "#/definitions/TriggerInputOnDemand" }
-          ]
+          "type": "object",
+          "description": "Polymorphic trigger input. Must include a '$type' property to indicate subtype.",
+          "properties": {
+            "$type": {
+              "type": "string"
+            }
+          },
+          "required": ["$type"],
+          "additionalProperties": true
         }
       },
       "required": ["type", "input"],
-      "additionalProperties": false
-    },
-    "TriggerInputIncomingRequest": {
-      "type": "object",
-      "properties": {
-        "$type": { "const": "incomingRequest" },
-        "id": { "type": "string", "format": "uuid" },
-        "method": { "type": "string" },
-        "uri": { "type": "string" },
-        "body": { "type": ["object", "null"] },
-        "headers": {
-          "type": "object",
-          "additionalProperties": { "type": "string" }
-        }
-      },
-      "required": ["$type", "id", "method", "uri", "headers"],
-      "additionalProperties": false
-    },
-    "TriggerInputRecurringTimer": {
-      "type": "object",
-      "properties": {
-        "$type": { "const": "recurringTimer" },
-        "id": { "type": "string", "format": "uuid" },
-        "timeSpan": { "type": "string", "format": "duration" }
-      },
-      "required": ["$type", "id", "timeSpan"],
-      "additionalProperties": false
-    },
-    "TriggerInputOnDemand": {
-      "type": "object",
-      "properties": {
-        "$type": { "const": "onDemand" },
-        "id": { "type": "string", "format": "uuid" }
-      },
-      "required": ["$type", "id"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "Action": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["OutgoingRequest", "CredentialVerification", "CredentialIssuance"]
+          "enum": [
+            "IssueW3CCredential",
+            "IssueW3CSdCredential",
+            "IssueAnoncredCredential",
+            "VerifyW3CCredential",
+            "VerifyW3CSdCredential",
+            "VerifyAnoncredCredential",
+            "DIDComm",
+            "Http",
+            "Email",
+            "LogOutcome",
+            "PostOutcome"
+          ]
         },
         "input": {
-          "oneOf": [
-            { "$ref": "#/definitions/ActionInputOutgoingRequest" },
-            { "$ref": "#/definitions/ActionInputCredentialVerification" },
-            { "$ref": "#/definitions/ActionInputCredentialIssuance" }
-          ]
+          "type": "object",
+          "description": "Polymorphic action input. Must include a '$type' property.",
+          "properties": {
+            "$type": {
+              "type": "string"
+            }
+          },
+          "required": ["$type"],
+          "additionalProperties": true
         },
         "runAfter": {
           "type": "object",
-          "patternProperties": {
-            "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": ["failed", "succeeded"]
-              }
+          "description": "Mapping of preceding trigger or action IDs to an array of statuses.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["succeeded", "failed"]
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       "required": ["type", "input", "runAfter"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
-    "ActionInputOutgoingRequest": {
+    "WorkflowOutcome": {
       "type": "object",
       "properties": {
-        "$type": { "const": "outgoingRequest" },
-        "id": { "type": "string", "format": "uuid" },
-        "method": { "type": "string" },
-        "uri": { "type": "string" },
-        "body": { "type": "string" },
-        "headers": {
-          "type": "object",
-          "additionalProperties": { "type": "string" }
+        "workflowId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "failure"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        },
+        "updatedUtc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "workflowState": {
+          "type": "string"
+        },
+        "lastOutcome": {
+          "type": "object"
         }
       },
-      "required": ["$type", "id", "method", "uri", "body", "headers"],
-      "additionalProperties": false
-    },
-    "ActionInputCredentialVerification": {
-      "type": "object",
-      "properties": {
-        "$type": { "const": "credentialVerification" },
-        "id": { "type": "string", "format": "uuid" },
-        "checkExpiration": { "type": "boolean" },
-        "checkSignature": { "type": "boolean" },
-        "checkIssuer": { "type": "boolean" },
-        "requiredIssuer": { "type": ["string", "null"] },
-        "checkSchema": { "type": "boolean" },
-        "requiredSchema": { "type": ["string", "null"], "format": "uri" },
-        "checkClaims": { "type": "boolean" },
-        "requiredClaims": {
-          "type": ["object", "null"],
-          "additionalProperties": { "type": "string" }
-        }
-      },
-      "required": ["$type", "id", "checkExpiration", "checkSignature", "checkIssuer", "checkSchema", "checkClaims"],
-      "additionalProperties": false
-    },
-    "ActionInputCredentialIssuance": {
-      "type": "object",
-      "properties": {
-        "$type": { "const": "credentialIssuance" },
-        "id": { "type": "string", "format": "uuid" },
-        "subject": { "type": "string" },
-        "issuer": { "type": "string" },
-        "claims": {
-          "type": ["object", "null"],
-          "additionalProperties": { "type": "string" }
-        }
-      },
-      "required": ["$type", "id", "subject", "issuer"],
-      "additionalProperties": false
+      "required": ["workflowId", "name", "outcome", "updatedUtc", "workflowState"],
+      "additionalProperties": true
     }
   }
 }
