@@ -31,7 +31,7 @@ public record VerifiableCredential
     /// </summary>
     [JsonPropertyName("@context")]
     [JsonConverter(typeof(ContextConverter))]
-    public required CredentialOrPresentationContext CredentialContext { get; init; }
+    public required CredentialOrPresentationContext? CredentialContext { get; init; }
 
     /// <summary>
     /// Optional
@@ -60,7 +60,7 @@ public record VerifiableCredential
     /// </summary>
     [JsonPropertyName("type")]
     [JsonConverter(typeof(TypeConverter))]
-    public required CredentialOrPresentationType Type { get; init; }
+    public required CredentialOrPresentationType? Type { get; init; }
 
     /// <summary>
     /// Issuer
@@ -104,7 +104,7 @@ public record VerifiableCredential
     /// </summary>
     [JsonPropertyName("credentialSubject")]
     [JsonConverter(typeof(VcCredentialSubjectConverter))]
-    public required List<CredentialSubject> CredentialSubjects { get; init; }
+    public required List<CredentialSubject>? CredentialSubjects { get; init; }
 
     /// <summary>
     /// https://www.w3.org/TR/vc-data-model/#proofs-signatures

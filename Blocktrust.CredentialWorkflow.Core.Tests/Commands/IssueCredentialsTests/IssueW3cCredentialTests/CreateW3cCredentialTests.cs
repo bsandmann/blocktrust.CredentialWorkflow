@@ -29,19 +29,19 @@ public class CreateW3cCredentialTests
         var credential = result.Value;
         
         // Verify Context
-        credential.CredentialContext.Contexts.Should().ContainSingle()
+        credential.CredentialContext!.Contexts.Should().ContainSingle()
             .Which.Should().Be("https://www.w3.org/2018/credentials/v1");
         
         // Verify Type
-        credential.Type.Type.Should().BeEquivalentTo(new HashSet<string> { "VerifiableCredential" });
+        credential.Type!.Type.Should().BeEquivalentTo(new HashSet<string> { "VerifiableCredential" });
         
         // Verify Issuer
-        credential.CredentialIssuer.IssuerId.ToString().Should().Be(IssuerDid);
+        credential.CredentialIssuer!.IssuerId.ToString().Should().Be(IssuerDid);
         
         // Verify Subject
         credential.CredentialSubjects.Should().ContainSingle();
-        var subject = credential.CredentialSubjects.Single();
-        subject.Id.ToString().Should().Be(SubjectDid);
+        var subject = credential.CredentialSubjects!.Single();
+        subject.Id!.ToString().Should().Be(SubjectDid);
         subject.AdditionalData.Should().NotBeNull().And.BeEmpty();
     }
 

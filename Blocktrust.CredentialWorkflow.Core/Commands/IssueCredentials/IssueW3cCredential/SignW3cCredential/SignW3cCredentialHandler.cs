@@ -4,16 +4,20 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Prism;
+using Domain.Credential;
 using FluentResults;
 using MediatR;
+using VerifiableCredential.Common.Converters;
 
 public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest, Result<string>>
 {
     private readonly IEcService _ecService;
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        // Converters = { new TypeConverter() }
     };
 
     public SignW3cCredentialHandler(IEcService ecService)
@@ -30,27 +34,31 @@ public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest
                 { "alg", "ES256K" },
                 { "typ", "JWT" }
             };
-            
+
             var headerJson = JsonSerializer.Serialize(header, SerializerOptions);
             var headerBase64 = PrismEncoding.ByteArrayToBase64(PrismEncoding.Utf8StringToByteArray(headerJson));
 
-            // Clean credential for payload
-            var cleanCredential = new 
+            Credential cleanCredential = new Credential()
             {
-                request.Credential.CredentialContext,
-                request.Credential.Type,
-                Issuer = request.IssuerDid,
-                request.Credential.IssuanceDate,
-                request.Credential.ExpirationDate,
-                request.Credential.ValidFrom,
-                request.Credential.ValidUntil,
-                CredentialSubject = request.Credential.CredentialSubjects?.FirstOrDefault(),
-                request.Credential.Proofs,
-                request.Credential.CredentialStatus,
-                request.Credential.CredentialSchemas,
-                request.Credential.RefreshServices,
-                request.Credential.TermsOfUses,
-                request.Credential.Evidences
+                CredentialContext = request.Credential.CredentialContext,
+                Type = request.Credential.Type,
+                CredentialSubjects = request.Credential.CredentialSubjects,
+                CredentialIssuer = request.Credential.CredentialIssuer,
+                Id = request.Credential.Id,
+                IssuanceDate = request.Credential.IssuanceDate,
+                ExpirationDate = request.Credential.ExpirationDate,
+                ValidFrom = request.Credential.ValidFrom,
+                ValidUntil = request.Credential.ValidUntil,
+                Proofs = request.Credential.Proofs,
+                CredentialStatus = request.Credential.CredentialStatus,
+                CredentialSchemas = request.Credential.CredentialSchemas,
+                RefreshServices = request.Credential.RefreshServices,
+                TermsOfUses = request.Credential.TermsOfUses,
+                Evidences = request.Credential.Evidences,
+                AdditionalData = request.Credential.AdditionalData,
+                JwtParsingArtefact = request.Credential.JwtParsingArtefact,
+                SerializationOption = request.Credential.SerializationOption,
+                DataModelType = request.Credential.DataModelType
             };
 
             var payload = new Dictionary<string, object>
