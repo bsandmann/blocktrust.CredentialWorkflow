@@ -6,10 +6,13 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 public class CreateOutcomeRequest : IRequest<Result<Guid>>
 {
-    public CreateOutcomeRequest(Guid workflowId)
+    public CreateOutcomeRequest(Guid workflowId, string? executionContext)
     {
         WorkflowId = workflowId;
+        ExecutionContext = executionContext;
     }
 
     public Guid WorkflowId { get; }
+
+    public string? ExecutionContext { get; set; }
 }

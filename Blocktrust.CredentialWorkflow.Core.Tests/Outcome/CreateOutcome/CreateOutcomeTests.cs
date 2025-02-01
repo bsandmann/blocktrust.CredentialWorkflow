@@ -28,7 +28,7 @@ public partial class TestSetup
 
         // 3. Prepare CreateOutcome request
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
-        var createOutcomeRequest = new CreateOutcomeRequest(workflowId);
+        var createOutcomeRequest = new CreateOutcomeRequest(workflowId, null);
 
         // Act
         var result = await createOutcomeHandler.Handle(createOutcomeRequest, CancellationToken.None);
@@ -51,7 +51,7 @@ public partial class TestSetup
         // Arrange
         var nonExistentWorkflowId = Guid.NewGuid();
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
-        var createOutcomeRequest = new CreateOutcomeRequest(nonExistentWorkflowId);
+        var createOutcomeRequest = new CreateOutcomeRequest(nonExistentWorkflowId, null);
 
         // Act
         var result = await createOutcomeHandler.Handle(createOutcomeRequest, CancellationToken.None);
@@ -79,7 +79,7 @@ public partial class TestSetup
 
         // 3. Prepare CreateOutcome handler
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
-        var createOutcomeRequest = new CreateOutcomeRequest(workflowId);
+        var createOutcomeRequest = new CreateOutcomeRequest(workflowId, null);
 
         // Act
         var result1 = await createOutcomeHandler.Handle(createOutcomeRequest, CancellationToken.None);
@@ -93,7 +93,7 @@ public partial class TestSetup
         // Verify both outcomes were actually created in the database
         var createdOutcomes = await _context.OutcomeEntities.Where(o => o.WorkflowEntityId == workflowId).ToListAsync();
         createdOutcomes.Should().HaveCount(2);
-        createdOutcomes.Should().AllSatisfy(o => 
+        createdOutcomes.Should().AllSatisfy(o =>
         {
             o.WorkflowEntityId.Should().Be(workflowId);
             o.OutcomeState.Should().Be(EOutcomeState.NotStarted);

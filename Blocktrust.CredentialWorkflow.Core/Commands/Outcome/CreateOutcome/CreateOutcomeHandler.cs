@@ -32,6 +32,7 @@ public class CreateOutcomeHandler : IRequestHandler<CreateOutcomeRequest, Result
             OutcomeState = EOutcomeState.NotStarted,
             WorkflowEntityId = workflow.WorkflowEntityId,
             StartedUtc = DateTime.UtcNow,
+            ExecutionContext = request.ExecutionContext
         };
 
         await _context.OutcomeEntities.AddAsync(outcomeEntity, cancellationToken);

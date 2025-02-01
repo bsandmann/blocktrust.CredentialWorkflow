@@ -77,7 +77,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                                     workflow.WorkflowEntityId, nextOccurrence);
 
                                 // Call the CreateOutcome command.
-                                var outcomeResult = await mediator.Send(new CreateOutcomeRequest(workflow.WorkflowEntityId), stoppingToken);
+                                var outcomeResult = await mediator.Send(new CreateOutcomeRequest(workflow.WorkflowEntityId, null), stoppingToken);
                                 if (outcomeResult.IsSuccess)
                                 {
                                     _logger.LogInformation("Successfully created outcome for workflow {WorkflowId} with OutcomeId: {OutcomeId}",

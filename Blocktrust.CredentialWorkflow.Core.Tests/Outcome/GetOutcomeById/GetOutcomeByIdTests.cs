@@ -29,7 +29,7 @@ public partial class TestSetup
 
         // 3. Create an WorkflowOutcome
         var createOutcomeHandler = new CreateOutcomeHandler(_context);
-        var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId), CancellationToken.None);
+        var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId, null), CancellationToken.None);
         createOutcomeResult.Should().BeSuccess();
         var outcomeId = createOutcomeResult.Value;
 
@@ -86,7 +86,7 @@ public partial class TestSetup
         var outcomeIds = new List<Guid>();
         for (int i = 0; i < 3; i++)
         {
-            var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId), CancellationToken.None);
+            var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId,null), CancellationToken.None);
             createOutcomeResult.Should().BeSuccess();
             outcomeIds.Add(createOutcomeResult.Value);
         }

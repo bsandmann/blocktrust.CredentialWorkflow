@@ -10,6 +10,9 @@ public class ActionOutcome
     public DateTime? EndedUtc { get; set; }
     public string? ErrorJson { get; set; }
     public string? OutcomeJson { get; set; }
+
+    public string? ExecutionContext { get; set; }
     public Workflow.Workflow Workflow { get; set; }
     public Guid WorkflowId { get; set; }
+
 }

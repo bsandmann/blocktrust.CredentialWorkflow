@@ -32,7 +32,7 @@ public partial class TestSetup
         var expectedOutcomeIds = new List<Guid>();
         for (int i = 0; i < 3; i++)
         {
-            var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId), CancellationToken.None);
+            var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId,null), CancellationToken.None);
             createOutcomeResult.Should().BeSuccess();
             expectedOutcomeIds.Add(createOutcomeResult.Value);
         }
@@ -130,7 +130,7 @@ public partial class TestSetup
         {
             for (int i = 0; i < 2; i++)
             {
-                var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId), CancellationToken.None);
+                var createOutcomeResult = await createOutcomeHandler.Handle(new CreateOutcomeRequest(workflowId,null), CancellationToken.None);
                 createOutcomeResult.Should().BeSuccess();
                 if (workflowId == workflowIds[0])
                 {

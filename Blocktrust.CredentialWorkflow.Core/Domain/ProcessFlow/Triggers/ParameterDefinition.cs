@@ -19,9 +19,3 @@ public class ParameterDefinition
     [JsonPropertyName("defaultValue")]
     public string? DefaultValue { get; set; }
 }
-public enum ParameterType
-{
-    String,
-    Number,
-    Boolean
-}

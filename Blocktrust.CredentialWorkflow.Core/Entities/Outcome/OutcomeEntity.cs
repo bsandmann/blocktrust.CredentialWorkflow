@@ -13,6 +13,11 @@ public class OutcomeEntity
     public string? ErrorJson { get; set; }
     public string? OutcomeJson { get; set; }
 
+    /// <summary>
+    /// The context e.g. the paramters passed into the trigger as HTTP POST/GET
+    /// </summary>
+    public string? ExecutionContext { get; set; }
+
     // FK
     public WorkflowEntity WorkflowEntity { get; set; }
     public Guid WorkflowEntityId { get; set; }
@@ -27,7 +32,8 @@ public class OutcomeEntity
             EndedUtc = EndedUtc,
             ErrorJson = ErrorJson,
             OutcomeJson = OutcomeJson,
-            WorkflowId = WorkflowEntityId
+            WorkflowId = WorkflowEntityId,
+            ExecutionContext = ExecutionContext
         };
     }
 }

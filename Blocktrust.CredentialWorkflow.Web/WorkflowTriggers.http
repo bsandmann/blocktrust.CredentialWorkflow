@@ -1,0 +1,19 @@
+### GET request to WorkflowController with query parameters
+GET https://localhost:7209/api/6615a96c-1860-4e7c-89ba-08dd19ee74db/workflow/22222222-2222-2222-2222-222222222222
+    ?subjectDid=did:example:123
+    &exampleClaim=ClaimValueXYZ
+    &peerDid=did:example:456
+    &email=testuser@example.com
+    &testClaim1=RandomStringABC
+
+### POST request to WorkflowController with JSON body
+POST https://localhost:7209/api/6615a96c-1860-4e7c-89ba-08dd19ee74db/workflow/a99499b4-83e0-46ed-24ee-08dd42cdf840
+Content-Type: application/json
+
+{
+  "subjectDid": "did:example:123",
+  "exampleClaim": "ClaimValueXYZ",
+  "peerDid": "did:example:456",
+  "email": "testuser@example.com",
+  "testClaim1": "RandomStringABC"
+}
