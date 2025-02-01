@@ -1,9 +1,10 @@
-using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey;
 using Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateIssuingKey;
 
 public class CreateIssuingKeyHandler : IRequestHandler<CreateIssuingKeyRequest, Result<IssuingKey>>
 {

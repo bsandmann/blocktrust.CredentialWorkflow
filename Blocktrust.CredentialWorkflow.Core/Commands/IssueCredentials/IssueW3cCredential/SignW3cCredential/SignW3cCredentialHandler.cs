@@ -1,11 +1,11 @@
-﻿using System.Text.Json;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
+
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Prism;
 using FluentResults;
 using MediatR;
-
-namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential;
 
 public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest, Result<string>>
 {

@@ -30,8 +30,6 @@ public class DeleteTenantHandler : IRequestHandler<DeleteTenantRequest, Result>
             return Result.Fail("Tenant not found");
         }
 
-        // First delete all the pools associated with the tenant
-
         _context.TenantEntities.Remove(new TenantEntity
         {
             TenantEntityId = tenant.TenantEntityId,

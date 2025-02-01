@@ -8,6 +8,8 @@ using FluentAssertions;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.IssueCredentialsTests.IssueW3cCredentialTests;
 
+using Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
+
 public class SignW3CCredentialTests
 {
     private readonly IEcService _ecService;

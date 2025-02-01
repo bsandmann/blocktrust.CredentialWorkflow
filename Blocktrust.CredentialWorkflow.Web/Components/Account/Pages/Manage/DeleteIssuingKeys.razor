@@ -1,5 +1,7 @@
 @page "/Account/Manage/DeleteIssuingKeys/{IssuingKeyId:guid}"
 
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.DeleteIssuingKey
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssungKeyById
 @using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey
 @using MediatR
 @inject IMediator Mediator

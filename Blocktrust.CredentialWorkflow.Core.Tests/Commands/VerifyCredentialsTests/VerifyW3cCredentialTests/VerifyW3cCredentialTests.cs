@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
+using Services;
+
 public class VerifyW3CCredentialTests
 {
     private readonly IMediator _mediator;

@@ -7,6 +7,10 @@ using Blocktrust.VerifiableCredential;
 using Blocktrust.VerifiableCredential.Common;
 using FluentResults;
 
+namespace Blocktrust.CredentialWorkflow.Core.Services;
+
+using VerifiableCredential = VerifiableCredential.VerifiableCredential;
+
 public class CredentialParser
 {
     public Result<Credential> ParseCredential(string credentialString)

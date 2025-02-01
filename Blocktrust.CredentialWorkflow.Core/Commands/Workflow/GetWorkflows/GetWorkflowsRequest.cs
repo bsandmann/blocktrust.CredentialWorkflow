@@ -11,6 +11,5 @@ public class GetWorkflowsRequest : IRequest<Result<List<WorkflowOutcome>>>
         TenantEntityId = tenantEntityId;
     }
 
-    public Guid WorkflowId { get; }
     public Guid TenantEntityId { get; }
 }

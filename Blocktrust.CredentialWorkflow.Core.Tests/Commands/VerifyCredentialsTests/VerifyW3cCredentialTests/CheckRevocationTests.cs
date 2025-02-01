@@ -5,6 +5,8 @@ using FluentAssertions;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
+using Services;
+
 public class CheckRevocationTests
 {
     private readonly HttpClient _httpClient;

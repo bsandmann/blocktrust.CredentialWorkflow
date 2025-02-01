@@ -1,7 +1,8 @@
-using Blocktrust.CredentialWorkflow.Core;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.DeleteIssuingKey;
 
 public class DeleteIssuingKeyHandler : IRequestHandler<DeleteIssuingKeyRequest, Result>
 {

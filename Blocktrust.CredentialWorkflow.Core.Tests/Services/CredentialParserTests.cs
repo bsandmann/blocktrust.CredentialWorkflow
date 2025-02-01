@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
 using Blocktrust.CredentialWorkflow.Core.Prism;
+using Blocktrust.CredentialWorkflow.Core.Services;
 using FluentAssertions;
 
 public class CredentialParserTests

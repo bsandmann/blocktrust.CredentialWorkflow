@@ -2,6 +2,8 @@ using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey;
 using FluentResults;
 using MediatR;
 
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateIssuingKey;
+
 public class CreateIssuingKeyRequest : IRequest<Result<IssuingKey>>
 {
     public CreateIssuingKeyRequest(Guid tenantId, string name, string keyType, string publicKey, string privateKey)

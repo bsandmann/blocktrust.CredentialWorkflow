@@ -7,6 +7,8 @@ using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
 
+using Services;
+
 public class VerifyW3CCredentialHandler : IRequestHandler<VerifyW3CCredentialRequest, Result<CredentialVerificationResult>>
 {
     private readonly IMediator _mediator;
