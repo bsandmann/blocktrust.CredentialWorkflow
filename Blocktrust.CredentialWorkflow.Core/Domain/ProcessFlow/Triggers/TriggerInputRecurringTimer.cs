@@ -4,5 +4,5 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 
 public class TriggerInputRecurringTimer : TriggerInput
 {
-    [JsonPropertyName("timespan")] public TimeSpan TimeSpan { get; set; }
+    [JsonPropertyName("cronExpression")] public string CronExpression { get; set; }
 }

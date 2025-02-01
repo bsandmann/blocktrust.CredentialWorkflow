@@ -76,9 +76,11 @@ public class DataContext : IdentityDbContext<ApplicationUser>
         //////////////////////////////////////////////////////////////// Workflow
         modelBuilder.Entity<WorkflowEntity>().HasKey(p => p.WorkflowEntityId);
         modelBuilder.Entity<WorkflowEntity>().Property(p => p.WorkflowEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        modelBuilder.Entity<WorkflowEntity>().Property(b => b.WorkflowState).HasConversion<string>();
 
         modelBuilder.Entity<OutcomeEntity>().HasKey(p => p.OutcomeEntityId);
         modelBuilder.Entity<OutcomeEntity>().Property(p => p.OutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        modelBuilder.Entity<OutcomeEntity>().Property(b => b.OutcomeState).HasConversion<string>();
 
 
     }

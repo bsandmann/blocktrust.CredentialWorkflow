@@ -42,7 +42,7 @@
                                 else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
                                 {
                                     <p class="text-xs text-gray-600 mt-1">
-                                        Every @recurringTimer.TimeSpan.ToString()
+                                        Every @recurringTimer.CronExpression
                                     </p>
                                 }
                             }
@@ -121,7 +121,7 @@
                                 else if (triggerItem.Input is TriggerInputRecurringTimer recurringTimer)
                                 {
                                     <p class="text-xs text-gray-600">
-                                        <span class="font-medium text-gray-700">Interval:</span> @recurringTimer.TimeSpan.ToString()
+                                        <span class="font-medium text-gray-700">Interval:</span> @recurringTimer.CronExpression
                                     </p>
                                 }
                             }

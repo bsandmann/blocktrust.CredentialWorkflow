@@ -457,7 +457,7 @@
             trigger = new TriggerInputRecurringTimer
             {
                 Id = Guid.NewGuid(),
-                TimeSpan = TimeSpan.FromHours(1)
+                CronExpression = "*/15 * * * *"
             };
         }
         else if (triggerType == ETriggerType.PresetTimer)
