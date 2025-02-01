@@ -9,6 +9,9 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ChangeWorkflowState
+@using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Microsoft.AspNetCore.Authorization
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -47,8 +50,9 @@
                                @bind="tempName"
                                @bind:event="oninput"
                                @onkeypress="HandleKeyPress"/>
-                        <button class="bg-slate-700 hover:bg-slate-600  text-white px-4 py-2 rounded-md transition duration-300 ease-in-out flex items-center ml-4 text-base"
-                                @onclick="SaveName">Save
+                        <button
+                            class="bg-slate-700 hover:bg-slate-600  text-white px-4 py-2 rounded-md transition duration-300 ease-in-out flex items-center ml-4 text-base"
+                            @onclick="SaveName">Save
                         </button>
                     }
                 </div>
@@ -72,8 +76,16 @@
                                 text-white px-4 py-2 rounded-md transition duration-300 ease-in-out flex items-center"
                             @onclick="RunWorkflow"
                             disabled="@hasUnsavedChanges">
-                            <span class="material-symbols-outlined mr-2">play_arrow</span>
-                            Run
+                            @if (currentWorkflow.WorkflowState == EWorkflowState.Inactive)
+                            {
+                                <span class="material-symbols-outlined mr-2">play_arrow</span>
+                                <span>Run</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined mr-2">stop</span>
+                                <span>Stop</span>
+                            }
                         </button>
                     }
                     else
@@ -229,7 +241,16 @@ else
                     ChangeTracker.ResetChanges();
                     hasUnsavedChanges = false;
                     errorMessage = "";
-                    await ShowToast("Workflow saved successfully");
+
+                    await ShowToast("Workflow saved (Re)start the workflow to apply changes.");
+
+                    var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, EWorkflowState.Inactive));
+                    if (changeStateResult.IsFailed)
+                    {
+                        errorMessage = "Failed to change the workflow state. Please try again.";
+                        await ShowToast(errorMessage);
+                        return;
+                    }
                 }
                 else
                 {
@@ -250,15 +271,51 @@ else
     {
         if (currentWorkflow is not null)
         {
-            var createResult = await Mediator.Send(new CreateOutcomeRequest(currentWorkflow.WorkflowId));
-            if (createResult.IsFailed)
+            if (currentWorkflow.ProcessFlow is not null && currentWorkflow.ProcessFlow.Triggers.Any())
             {
-                errorMessage = "Failed to run the workflow. Please try again.";
-            }
-            else
-            {
-                await ShowToast("Workflow executed successfully");
-                errorMessage = "";
+                if (currentWorkflow.WorkflowState == EWorkflowState.Inactive)
+                {
+                    var triggerType = currentWorkflow.ProcessFlow.Triggers.First().Value.Type;
+                    EWorkflowState state = EWorkflowState.ActiveWithExternalTrigger;
+                    if (triggerType == ETriggerType.HttpRequest)
+                    {
+                        state = EWorkflowState.ActiveWithExternalTrigger;
+                    }
+                    else if (triggerType == ETriggerType.RecurringTimer)
+                    {
+                        state = EWorkflowState.ActiveWithRecurrentTrigger;
+                    }
+                    else
+                    {
+                        errorMessage = "Failed to run the workflow. Unsupported trigger type.";
+                        await ShowToast(errorMessage);
+                        return;
+                    }
+
+                    var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, state));
+                    if (changeStateResult.IsFailed)
+                    {
+                        errorMessage = "Failed to run the workflow. Please try again.";
+                        await ShowToast(errorMessage);
+                        return;
+                    }
+
+                    currentWorkflow.WorkflowState = state;
+                }
+                else
+                {
+                    var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, EWorkflowState.Inactive));
+                    if (changeStateResult.IsFailed)
+                    {
+                        errorMessage = "Failed to run the workflow. Please try again.";
+                        await ShowToast(errorMessage);
+                        return;
+                    }
+
+                    currentWorkflow.WorkflowState = EWorkflowState.Inactive;
+                }
+
+                StateHasChanged();
             }
         }
     }

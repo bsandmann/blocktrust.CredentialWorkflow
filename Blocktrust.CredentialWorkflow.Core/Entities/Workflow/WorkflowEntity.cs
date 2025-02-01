@@ -21,6 +21,8 @@ public record WorkflowEntity
 
     [Unicode(false)] public string? ProcessFlowJson { get; set; }
 
+    public bool IsRunable { get; set; }
+
     // FK
     public TenantEntity TenantEntity { get; init; }
     public Guid TenantEntityId { get; init; }

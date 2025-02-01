@@ -23,7 +23,8 @@ public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<L
                 WorkflowId = p.WorkflowEntityId,
                 p.UpdatedUtc,
                 p.WorkflowState,
-                LastOutcome = p.OutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault()
+                LastOutcome = p.OutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault(),
+                IsRunable = p.IsRunable
             }).ToListAsync(cancellationToken: cancellationToken);
 
         if (workflow is null)
@@ -37,7 +38,8 @@ public class GetWorkflowsHandler : IRequestHandler<GetWorkflowsRequest, Result<L
             WorkflowId = p.WorkflowId,
             UpdatedUtc = p.UpdatedUtc,
             WorkflowState = p.WorkflowState,
-            LastOutcome = p.LastOutcome?.Map()
+            LastOutcome = p.LastOutcome?.Map(),
+            IsRunable = p.IsRunable
         }).ToList();
         
         return Result.Ok(result);

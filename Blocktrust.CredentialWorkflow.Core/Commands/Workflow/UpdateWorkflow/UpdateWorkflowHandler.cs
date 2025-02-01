@@ -31,7 +31,12 @@ public class UpdateWorkflowHandler : IRequestHandler<UpdateWorkflowRequest, Resu
         workflow.WorkflowState = request.WorkflowState;
         if (request.ProcessFlow is not null)
         {
+            workflow.IsRunable = request.ProcessFlow.Triggers.Any();
             workflow.ProcessFlowJson = request.ProcessFlow.SerializeToJson();
+        }
+        else
+        {
+            workflow.IsRunable = false;
         }
 
         _context.WorkflowEntities.Update(workflow);

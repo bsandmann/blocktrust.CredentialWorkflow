@@ -10,7 +10,9 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.CreateWorkflow
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using System.Text.Json
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ChangeWorkflowState
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -120,17 +122,48 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <!-- Run/Stop button -->
+                                @if (workflow.IsRunable == true)
+                                {
+                                    <button @onclick="() => ToggleWorkflowState(workflow)"
+                                            @onclick:stopPropagation="true"
+                                            class="inline-flex items-center text-green-600 hover:text-green-900 mr-2">
+                                        @if (workflow.WorkflowState == EWorkflowState.Inactive)
+                                        {
+                                            <span class="material-symbols-outlined mr-1">play_arrow</span>
+                                            <span>Run</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-symbols-outlined mr-1">stop</span>
+                                            <span>Stop</span>
+                                        }
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button disabled
+                                            class="inline-flex items-center text-gray-400 cursor-not-allowed mr-2">
+                                        <span class="material-symbols-outlined mr-1">play_arrow</span>
+                                        Run
+                                    </button>
+                                }
+
+                                <!-- Existing Delete button -->
                                 <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)"
                                         @onclick:stopPropagation="true"
                                         class="text-red-600 hover:text-red-900 mr-2">
                                     <span class="material-symbols-outlined">delete</span>
                                 </button>
+
+                                <!-- Existing Export button -->
                                 <button @onclick="() => ExportWorkflow(workflow.WorkflowId)"
                                         @onclick:stopPropagation="true"
                                         class="text-blue-600 hover:text-blue-900">
                                     <span class="material-symbols-outlined">file_download</span>
                                 </button>
                             </td>
+
                         </tr>
                     }
                     </tbody>
@@ -390,6 +423,75 @@
         {
             errorMessage = "An unexpected error occurred while importing the workflow. Please try again later.";
         }
+    }
+
+    private async Task ToggleWorkflowState(WorkflowOutcome workflow)
+    {
+        try
+        {
+            if (workflow.WorkflowState == EWorkflowState.Inactive)
+            {
+                var completeWorkflow = await Mediator.Send(new GetWorkflowByIdRequest(workflow.WorkflowId, AppStateService.Tenant.TenantId));
+                if (completeWorkflow.IsFailed)
+                {
+                    errorMessage = "Failed to run the workflow. Please try again.";
+                    return;
+                }
+
+                if (completeWorkflow.Value.ProcessFlow is null || !completeWorkflow.Value.ProcessFlow.Triggers.Any())
+                {
+                    errorMessage = "Workflow has no triggers. Please add a trigger before running.";
+                    return;
+                }
+
+                var firstTriggerType = completeWorkflow.Value.ProcessFlow.Triggers.First().Value.Type;
+                EWorkflowState newState;
+                switch (firstTriggerType)
+                {
+                    case ETriggerType.HttpRequest:
+                        newState = EWorkflowState.ActiveWithExternalTrigger;
+                        break;
+                    case ETriggerType.RecurringTimer:
+                        newState = EWorkflowState.ActiveWithRecurrentTrigger;
+                        break;
+                    default:
+                        errorMessage = "Failed to run the workflow. Unsupported trigger type.";
+                        StateHasChanged();
+                        return;
+                }
+
+                var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, newState));
+                if (result.IsFailed)
+                {
+                    errorMessage = "Failed to run the workflow. Please try again.";
+                }
+                else
+                {
+                    // Update the local state so the table refreshes correctly
+                    workflow.WorkflowState = newState;
+                }
+            }
+            else
+            {
+                // "Stop" the workflow
+                var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, EWorkflowState.Inactive));
+                if (result.IsFailed)
+                {
+                    errorMessage = "Failed to stop the workflow. Please try again.";
+                }
+                else
+                {
+                    workflow.WorkflowState = EWorkflowState.Inactive;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+
+        // Re-render to show new state or error
+        StateHasChanged();
     }
 
 }

@@ -33,6 +33,8 @@ public class WorkflowOutcome
     [JsonPropertyName("lastOutcome")]
 
     public ActionOutcome? LastOutcome { get; set; }
+
+    public bool IsRunable { get; set; }
     
 }
 
