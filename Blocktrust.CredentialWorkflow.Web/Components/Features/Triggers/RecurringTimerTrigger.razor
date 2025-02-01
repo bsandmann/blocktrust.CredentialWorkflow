@@ -1,0 +1,116 @@
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using NCrontab
+@using CronExpressionDescriptor
+@using System.Linq
+
+<div class="p-4 text-sm">
+    <!-- CRON Expression Input -->
+    <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-700">Cron Expression</label>
+        <input type="text"
+               class="w-full rounded-md border px-2 py-1"
+               @bind="TriggerInput.CronExpression"
+               @bind:after="OnCronExpressionChanged" />
+        @if (!string.IsNullOrEmpty(cronError))
+        {
+            <p class="text-red-500 text-xs mt-1">@cronError</p>
+        }
+    </div>
+
+    @if (isCronValid)
+    {
+        <!-- Plain English Description -->
+        <div class="mb-4">
+            <label class="block text-xs font-medium text-gray-700">Description</label>
+            <p class="text-gray-700">@cronDescription</p>
+        </div>
+
+        <!-- Next 5 Occurrences -->
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Next 5 Occurrences</label>
+            <ul class="list-disc ml-5">
+                @foreach (var occurrence in nextOccurrences)
+                {
+                    <li>@occurrence.ToString("g")</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public TriggerInputRecurringTimer TriggerInput { get; set; } = default!;
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    private string cronError = "";
+    private bool isCronValid = false;
+    private string cronDescription = "";
+    private List<DateTime> nextOccurrences = new();
+
+    /// <summary>
+    /// This method is called each time the user changes the CRON expression.
+    /// It validates the expression, computes its description and upcoming occurrences,
+    /// and notifies any parent component of the change.
+    /// </summary>
+    private async Task OnCronExpressionChanged()
+    {
+        ValidateCronExpression();
+        await OnChange.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Validates the CRON expression. If valid, computes a human‑readable description
+    /// (using CronExpressionDescriptor) and the next five occurrences (using NCrontab).
+    /// Otherwise, an error message is set.
+    /// </summary>
+    private void ValidateCronExpression()
+    {
+        // Reset any previous validation results
+        cronError = "";
+        isCronValid = false;
+        cronDescription = "";
+        nextOccurrences.Clear();
+
+        if (string.IsNullOrWhiteSpace(TriggerInput.CronExpression))
+        {
+            cronError = "Cron expression cannot be empty.";
+            return;
+        }
+
+        try
+        {
+            // Parse the expression using NCrontab; an exception is thrown if invalid.
+            var schedule = CrontabSchedule.Parse(TriggerInput.CronExpression);
+            isCronValid = true;
+
+            // Try to get a plain-English description using CronExpressionDescriptor.
+            // (If you do not wish to add this dependency, you can remove this try/catch block
+            //  and simply display a generic success message.)
+            try
+            {
+                cronDescription = ExpressionDescriptor.GetDescription(TriggerInput.CronExpression);
+            }
+            catch
+            {
+                cronDescription = "Cron expression is valid.";
+            }
+
+            // Calculate the next five occurrences starting from now.
+            DateTime now = DateTime.Now;
+            nextOccurrences = schedule.GetNextOccurrences(now, now.AddYears(1))
+                                        .Take(5)
+                                        .ToList();
+        }
+        catch (Exception)
+        {
+            cronError = "Invalid cron expression.";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Validate the CRON expression on initialization so that the UI is in sync.
+        ValidateCronExpression();
+    }
+}
