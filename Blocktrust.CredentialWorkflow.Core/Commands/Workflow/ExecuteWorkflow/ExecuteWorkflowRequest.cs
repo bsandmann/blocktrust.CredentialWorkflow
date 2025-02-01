@@ -1,6 +1,9 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
-public class ExecuteWorkflowRequest
+using FluentResults;
+using MediatR;
+
+public class ExecuteWorkflowRequest : IRequest<Result<bool>>
 {
-    
+    public Guid WorkflowEntity { get; set; }
 }
