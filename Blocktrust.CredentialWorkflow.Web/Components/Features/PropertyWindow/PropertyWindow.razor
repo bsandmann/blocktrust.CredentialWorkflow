@@ -42,9 +42,6 @@
                     <MenuButton Icon="update" Label="Recurring timer"
                                 OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))"
                                 ShowAddButton="true"/>
-                    <MenuButton Icon="alarm" Label="Preset timer"
-                                OnClick="@(action => HandleItemClick(ETriggerType.PresetTimer, action))"
-                                ShowAddButton="true"/>
                 </MenuGroup>
 
                 <!-- Manual Triggers Group -->
@@ -458,14 +455,6 @@
             {
                 Id = Guid.NewGuid(),
                 CronExpression = "*/15 * * * *"
-            };
-        }
-        else if (triggerType == ETriggerType.PresetTimer)
-        {
-            trigger = new TriggerInputPresetTimer
-            {
-                Id = Guid.NewGuid(),
-                TriggerTime = DateTime.UtcNow.AddHours(24)
             };
         }
         else if (triggerType == ETriggerType.WalletInteraction)

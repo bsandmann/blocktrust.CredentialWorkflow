@@ -37,15 +37,6 @@
                 }
 
                 break;
-            case ETriggerType.PresetTimer:
-                @if (trigger.Input is TriggerInputPresetTimer presetTimer)
-                {
-                    <PresetTimerTrigger
-                        TriggerInput="presetTimer"
-                        OnChange="OnChange"/>
-                }
-
-                break;
             case ETriggerType.WalletInteraction:
                 @if (trigger.Input is TriggerInputWalletInteraction walletInteraction)
                 {
