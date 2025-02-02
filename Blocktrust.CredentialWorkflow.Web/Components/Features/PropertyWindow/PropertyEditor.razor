@@ -7,6 +7,9 @@
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Verification
 
 <div class="bg-white p-4 rounded-lg shadow-md">
     <div class="flex items-start mb-4">
@@ -142,17 +145,6 @@
                     <VerifyAnoncredCredentialAction
                         ActionInput="verifyAnoncredCredential"
                         OnChange="OnChange"/>
-                }
-
-                break;
-            case EActionType.LogOutcome:
-            case EActionType.PostOutcome:
-                @if (action.Input is OutcomeAction outcomeAction)
-                {
-                    <OutcomeActionComponent
-                        ActionInput="outcomeAction"
-                        OnChange="OnChange"
-                        TriggerParameters="TriggerParameters"/>
                 }
 
                 break;

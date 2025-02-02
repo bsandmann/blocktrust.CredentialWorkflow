@@ -4,10 +4,10 @@ GET https://localhost:7209/api/6615a96c-1860-4e7c-89ba-08dd19ee74db/workflow/222
     &exampleClaim=ClaimValueXYZ
     &peerDid=did:example:456
     &email=testuser@example.com
-    &testClaim1=RandomStringABC
+    &testClaim=RandomStringABC
 
 ### POST request to WorkflowController with JSON body
-POST https://localhost:7209/api/6615a96c-1860-4e7c-89ba-08dd19ee74db/workflow/a99499b4-83e0-46ed-24ee-08dd42cdf840
+POST https://localhost:7209/api/6615a96c-1860-4e7c-89ba-08dd19ee74db/workflow/89f04791-1335-44c2-af6e-08dd439a5221
 Content-Type: application/json
 
 {
@@ -15,5 +15,5 @@ Content-Type: application/json
   "exampleClaim": "ClaimValueXYZ",
   "peerDid": "did:example:456",
   "email": "testuser@example.com",
-  "testClaim1": "RandomStringABC"
+  "age": "123"
 }

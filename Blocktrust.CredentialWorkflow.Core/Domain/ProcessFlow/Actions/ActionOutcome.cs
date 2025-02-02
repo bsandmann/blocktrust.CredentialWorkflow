@@ -1,6 +1,6 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
-namespace Blocktrust.CredentialWorkflow.Core.Domain.Common;
+using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 public class ActionOutcome
 {

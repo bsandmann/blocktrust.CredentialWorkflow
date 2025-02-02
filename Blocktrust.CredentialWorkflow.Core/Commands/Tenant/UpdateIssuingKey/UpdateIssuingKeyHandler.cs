@@ -32,6 +32,11 @@ public class UpdateIssuingKeyHandler : IRequestHandler<UpdateIssuingKeyRequest, 
             issuingKey.Name = request.Name;
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Did))
+        {
+            issuingKey.Did = request.Did;
+        }
+
         if (!string.IsNullOrWhiteSpace(request.KeyType))
         {
             issuingKey.KeyType = request.KeyType;

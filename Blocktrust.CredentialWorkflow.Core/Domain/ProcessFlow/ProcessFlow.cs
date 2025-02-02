@@ -66,20 +66,6 @@ public class ProcessFlow
         Actions.Remove(lastActionId);
     }
 
-    public void SetOutcome(WorkflowOutcome workflowOutcome)
-    {
-        if (!Actions.Any())
-        {
-            throw new InvalidOperationException("Cannot add outcome before adding at least one action.");
-        }
-        Outcome = workflowOutcome;
-    }
-
-    public void RemoveOutcome()
-    {
-        Outcome = null;
-    }
-
     private static JsonSerializerOptions GetJsonSerializerOptions()
     {
         return new JsonSerializerOptions

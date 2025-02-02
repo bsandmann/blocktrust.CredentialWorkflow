@@ -11,6 +11,8 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
     using Microsoft.AspNetCore.Mvc;
     using System;
     using System.Linq;
+    using System.Text.Json;
+    using Core.Commands.Outcome.CreateOutcome;
     using Microsoft.AspNetCore.Authorization;
 
     [ApiController]
@@ -20,11 +22,13 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
     {
         private readonly IMediator _mediator;
         private readonly ITriggerValidationService _triggerValidationService;
+        private readonly IWorkflowQueue _workflowQueue;
 
-        public WorkflowController(IMediator mediator, ITriggerValidationService triggerValidationService)
+        public WorkflowController(IMediator mediator, ITriggerValidationService triggerValidationService,  IWorkflowQueue workflowQueue)
         {
             _mediator = mediator;
             _triggerValidationService = triggerValidationService;
+            _workflowQueue = workflowQueue;
         }
 
         [HttpGet]
@@ -90,7 +94,17 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
                 return BadRequest(validationResult.Errors.First().Message);
             }
 
-            return Ok("Workflow retrieved successfully (details omitted).");
+            var executionContext = simplifiedHttpContext.ToJson();
+
+            var outcomeResult = await _mediator.Send(new CreateOutcomeRequest(getWorkflowResult.Value.WorkflowId, executionContext));
+            if (outcomeResult.IsFailed)
+            {
+                return BadRequest($"Failed to create outcome for workflow {getWorkflowResult.Value.WorkflowId}");
+            }
+
+            await _workflowQueue.EnqueueAsync(outcomeResult.Value);
+
+            return Ok("Workflow retrieved successfully");
         }
     }
 }

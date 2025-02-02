@@ -6,6 +6,7 @@ using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Domain.Enums;
+using Domain.ProcessFlow.Actions;
 
 public class UpdateOutcomeHandler : IRequestHandler<UpdateOutcomeRequest, Result<ActionOutcome>>
 {

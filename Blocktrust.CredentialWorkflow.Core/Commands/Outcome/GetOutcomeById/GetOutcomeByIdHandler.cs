@@ -2,6 +2,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeById;
 
+using Domain.ProcessFlow.Actions;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public class GetOutcomeByIdHandler : IRequestHandler<GetOutcomeByIdRequest, Resu
     public async Task<Result<ActionOutcome>> Handle(GetOutcomeByIdRequest request, CancellationToken cancellationToken)
     {
         var outcomeEntity = await _context.OutcomeEntities
+            .Include(p => p.WorkflowEntity)
             .FirstOrDefaultAsync(o => o.OutcomeEntityId == request.OutcomeId, cancellationToken);
 
         if (outcomeEntity is null)

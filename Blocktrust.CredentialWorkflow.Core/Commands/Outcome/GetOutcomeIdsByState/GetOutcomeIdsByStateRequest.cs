@@ -4,7 +4,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeIdsByState
 {
-    public class GetOutcomeIdsByStateRequest : IRequest<Result<List<Guid>>>
+    public class GetOutcomeIdsByStateRequest : IRequest<Result<List<GetOutcomeIdsByStateResponse>>>
     {
         public GetOutcomeIdsByStateRequest(IEnumerable<EOutcomeState> outcomeStates)
         {

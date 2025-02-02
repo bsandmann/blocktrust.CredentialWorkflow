@@ -4,6 +4,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey
     {
         public Guid IssuingKeyId { get; set; }
         public string Name { get; set; }
+        public string Did { get; set; }
         public DateTime CreatedUtc { get; set; }
         public string KeyType { get; set; }
         public string PublicKey { get; set; }

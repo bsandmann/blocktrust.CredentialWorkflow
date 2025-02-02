@@ -4,6 +4,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
 using Enums;
 using ProcessFlow;
+using ProcessFlow.Actions;
 using Tenant;
 
 public record Workflow

@@ -4,6 +4,8 @@ using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 
 namespace Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
 
+using Domain.ProcessFlow.Actions;
+
 public class OutcomeEntity
 {
     public Guid OutcomeEntityId { get; set; }
@@ -19,7 +21,7 @@ public class OutcomeEntity
     public string? ExecutionContext { get; set; }
 
     // FK
-    public WorkflowEntity WorkflowEntity { get; set; }
+    public WorkflowEntity? WorkflowEntity { get; set; }
     public Guid WorkflowEntityId { get; set; }
 
     public ActionOutcome Map()
@@ -33,6 +35,7 @@ public class OutcomeEntity
             ErrorJson = ErrorJson,
             OutcomeJson = OutcomeJson,
             WorkflowId = WorkflowEntityId,
+            Workflow = WorkflowEntity?.Map(),
             ExecutionContext = ExecutionContext
         };
     }

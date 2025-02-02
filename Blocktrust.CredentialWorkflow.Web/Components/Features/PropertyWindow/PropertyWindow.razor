@@ -198,37 +198,6 @@
     {
         try
         {
-            if (itemType is string outcomeType)
-            {
-                return outcomeType switch
-                {
-                    "logOutcome" => new WorkflowAction
-                    {
-                        Type = EActionType.LogOutcome,
-                        Input = new OutcomeAction
-                        {
-                            Id = Guid.NewGuid(),
-                            Type = EOutcomeActionType.Log,
-                            Content = new Dictionary<string, ParameterReference>()
-                        },
-                        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                    },
-                    "postOutcome" => new WorkflowAction
-                    {
-                        Type = EActionType.PostOutcome,
-                        Input = new OutcomeAction
-                        {
-                            Id = Guid.NewGuid(),
-                            Type = EOutcomeActionType.Post,
-                            Content = new Dictionary<string, ParameterReference>(),
-                            Destination = new ParameterReference { Source = ParameterSource.Static }
-                        },
-                        RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
-                    },
-                    _ => throw new ArgumentException("Invalid outcome type")
-                };
-            }
-
             return itemType switch
             {
                 ETriggerType triggerType => CreateNewTrigger(triggerType, template),
@@ -341,23 +310,6 @@
                     CheckSchema = true,
                     CheckExpiry = true,
                     CheckTrustRegistry = false
-                },
-                EActionType.LogOutcome => new OutcomeAction
-                {
-                    Id = Guid.NewGuid(),
-                    Type = EOutcomeActionType.Log,
-                    Content = new Dictionary<string, ParameterReference>()
-                },
-                EActionType.PostOutcome => new OutcomeAction
-                {
-                    Id = Guid.NewGuid(),
-                    Type = EOutcomeActionType.Post,
-                    Content = new Dictionary<string, ParameterReference>(),
-                    Destination = new ParameterReference
-                    {
-                        Source = ParameterSource.Static,
-                        Path = ""
-                    }
                 },
                 _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
             },

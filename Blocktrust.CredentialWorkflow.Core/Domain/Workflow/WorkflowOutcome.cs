@@ -4,6 +4,8 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
+using ProcessFlow.Actions;
+
 public class WorkflowOutcome
 {
     [JsonPropertyName("workflowId")]

@@ -2,6 +2,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes;
 
+using Domain.ProcessFlow.Actions;
 using FluentResults;
 using MediatR;
 

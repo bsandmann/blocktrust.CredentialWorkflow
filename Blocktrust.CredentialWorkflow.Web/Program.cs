@@ -42,7 +42,12 @@ builder.Services.AddScoped<CredentialParser>();
 builder.Services.AddScoped<ExtractPrismPubKeyFromLongFormDid>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IEcService, EcServiceBouncyCastle>();
+
+builder.Services.AddSingleton<IWorkflowQueue, WorkflowQueue>();
+builder.Services.AddHostedService<WorkflowProcessingService>();
+
 builder.Services.AddHostedService<RecurringWorkflowBackgroundService>();
+
 builder.Services.AddSingleton<ITriggerValidationService, HttpTriggerValidationService>();
 
 // Configure strongly typed settings

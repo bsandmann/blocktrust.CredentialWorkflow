@@ -32,6 +32,7 @@ public class CreateIssuingKeyHandler : IRequestHandler<CreateIssuingKeyRequest, 
         {
             IssuingKeyId = Guid.NewGuid(),
             Name = request.Name,
+            Did = request.Did,
             CreatedUtc = DateTime.UtcNow,
             KeyType = request.KeyType,
             PublicKey = request.PublicKey,

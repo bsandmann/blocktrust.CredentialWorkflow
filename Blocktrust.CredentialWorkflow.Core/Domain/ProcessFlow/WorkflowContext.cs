@@ -2,6 +2,8 @@
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 
+using Actions;
+
 public class WorkflowContext
 {
     private readonly Dictionary<string, object> _variables = new();

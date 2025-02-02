@@ -16,13 +16,17 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<RecurringWorkflowBackgroundService> _logger;
         private const int CheckIntervalSeconds = 30;
+        private readonly IWorkflowQueue _workflowQueue;
+
 
         public RecurringWorkflowBackgroundService(
             IServiceProvider serviceProvider,
-            ILogger<RecurringWorkflowBackgroundService> logger)
+            ILogger<RecurringWorkflowBackgroundService> logger,
+            IWorkflowQueue workflowQueue)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _workflowQueue = workflowQueue;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -78,15 +82,11 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
 
                                 // Call the CreateOutcome command.
                                 var outcomeResult = await mediator.Send(new CreateOutcomeRequest(workflow.WorkflowEntityId, null), stoppingToken);
-                                if (outcomeResult.IsSuccess)
-                                {
-                                    _logger.LogInformation("Successfully created outcome for workflow {WorkflowId} with OutcomeId: {OutcomeId}",
-                                        workflow.WorkflowEntityId, outcomeResult.Value);
-                                }
-                                else
+                                if (outcomeResult.IsFailed)
                                 {
                                     _logger.LogError("Failed to create outcome for workflow {WorkflowId}.", workflow.WorkflowEntityId);
                                 }
+                                await _workflowQueue.EnqueueAsync(outcomeResult.Value, stoppingToken);
                             }
                             else
                             {

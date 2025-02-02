@@ -9,6 +9,7 @@ public class IssuingKeyEntity
     public Guid IssuingKeyId { get; init; }
 
     [Unicode(true)] [MaxLength(100)] public required string Name { get; set; }
+    [Unicode(true)] [MaxLength(1000)] public required string Did { get; set; }
 
     public DateTime CreatedUtc { get; init; }
 
@@ -24,6 +25,7 @@ public class IssuingKeyEntity
         {
             IssuingKeyId = issuingKeyEntity.IssuingKeyId,
             Name = issuingKeyEntity.Name,
+            Did = issuingKeyEntity.Did,
             CreatedUtc = issuingKeyEntity.CreatedUtc,
             KeyType = issuingKeyEntity.KeyType,
             PublicKey = issuingKeyEntity.PublicKey,
