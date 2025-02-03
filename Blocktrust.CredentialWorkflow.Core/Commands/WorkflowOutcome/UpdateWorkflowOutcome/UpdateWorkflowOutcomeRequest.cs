@@ -7,7 +7,7 @@ using MediatR;
 
 public class UpdateWorkflowOutcomeRequest : IRequest<Result<WorkflowOutcome>>
 {
-    public UpdateWorkflowOutcomeRequest(Guid workflowOutcomeId, EWorkflowOutcomeState workflowOutcomeState, string? outcomeJson, string? errorJson)
+    public UpdateWorkflowOutcomeRequest(Guid workflowOutcomeId, EWorkflowOutcomeState workflowOutcomeState, string? outcomeJson, string? errorMessage)
     {
         WorkflowOutcomeId = workflowOutcomeId;
         WorkflowOutcomeState = workflowOutcomeState;
@@ -18,7 +18,7 @@ public class UpdateWorkflowOutcomeRequest : IRequest<Result<WorkflowOutcome>>
         else if (WorkflowOutcomeState == EWorkflowOutcomeState.FailedWithErrors)
         {
             OutcomeJson = outcomeJson;
-            ErrorJson = errorJson;
+            ErrorMessage = errorMessage;
         }
         else if (WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
         {
@@ -28,6 +28,6 @@ public class UpdateWorkflowOutcomeRequest : IRequest<Result<WorkflowOutcome>>
 
     public Guid WorkflowOutcomeId { get; }
     public EWorkflowOutcomeState WorkflowOutcomeState { get; set; }
-    public string? ErrorJson { get; set; }
+    public string? ErrorMessage { get; set; }
     public string? OutcomeJson { get; set; }
 }

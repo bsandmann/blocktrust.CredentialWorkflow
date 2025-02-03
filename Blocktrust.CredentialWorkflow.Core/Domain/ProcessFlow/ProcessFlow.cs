@@ -10,9 +10,8 @@ public class ProcessFlow
 {
     [JsonPropertyName("triggers")] public Dictionary<Guid, Triggers.Trigger> Triggers { get; set; } = new();
 
-    [JsonPropertyName("actions")] public Dictionary<Guid, Actions.Action> Actions { get; set; } = new();
+    [JsonPropertyName("actions")] public Dictionary<Guid, Action> Actions { get; set; } = new();
 
-    [JsonPropertyName("actionOutcomes")] public Dictionary<Guid, ActionOutcome> ActionOutcomes { get; set; }
 
     public void AddTrigger(Triggers.Trigger trigger)
     {
@@ -50,21 +49,6 @@ public class ProcessFlow
         }
 
         Actions.Add(actionId, action);
-    }
-
-    public void AddActionOutcome(ActionOutcome actionOutcome)
-    {
-        // check if action exists
-        if (!Actions.ContainsKey(actionOutcome.ActionId))
-        {
-            throw new InvalidOperationException("Action does not exist.");
-        }
-
-        // Then generate a new outcome id and add the action outcome
-        var outcomeId = Guid.NewGuid();
-        actionOutcome.OutcomeId = outcomeId;
-        ActionOutcomes ??= new();
-        ActionOutcomes.Add(outcomeId, actionOutcome);
     }
 
     public void RemoveLastAction()

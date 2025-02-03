@@ -4,6 +4,8 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
+using ProcessFlow.Actions;
+
 /// <summary>
 /// Each workflow usually runs multiple times. Each of those runs is a Workflow-Outcome
 /// </summary>
@@ -21,10 +23,10 @@ public class WorkflowOutcome
 
     [JsonPropertyName("errorJson")] public string? ErrorJson { get; set; } = string.Empty;
 
-    [JsonPropertyName("outcomeJson")] public string? OutcomeJson { get; set; } = string.Empty;
+    [JsonPropertyName("actionOutcomeJson")]
+    public string? ActionOutcomesJson { get; set; } = string.Empty;
+
+    public List<ActionOutcome> InMemoryActionOutcomes { get; set; } = new();
 
     public string? ExecutionContext { get; set; }
-
-
-
 }

@@ -1,7 +1,9 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
+using System.Text.Json;
 using Domain.Common;
 using Domain.Credential;
+using Domain.Enums;
 using Domain.ProcessFlow.Actions;
 using Domain.ProcessFlow.Actions.Issuance;
 using Domain.ProcessFlow.Triggers;
@@ -17,8 +19,9 @@ using Org.BouncyCastle.Bcpg.Sig;
 using Tenant.GetIssuingKeys;
 using Tenant.GetIssungKeyById;
 using Tenant.GetPrivateIssuingKeyByDid;
+using WorkflowOutcome.UpdateWorkflowOutcome;
 
-public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<Guid>>
+public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result>
 {
     private readonly IMediator _mediator;
 
@@ -27,11 +30,12 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         _mediator = mediator;
     }
 
-    public async Task<Result<Guid>> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
     {
         var workflowId = request.WorkflowOutcome.WorkflowId;
+        var workflowOutcomeId = request.WorkflowOutcome.WorkflowOutcomeId;
         var executionContextString = request.WorkflowOutcome.ExecutionContext;
-        var workflow = await _mediator.Send(new GetWorkflowByIdRequest(workflowId));
+        var workflow = await _mediator.Send(new GetWorkflowByIdRequest(workflowId), cancellationToken);
         if (workflow.IsFailed)
         {
             return Result.Fail("Unable to laod Workflow");
@@ -45,11 +49,13 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         }
 
         // TODO ensure the correct order of actions
+        var actionOutcomes = new List<ActionOutcome>();
         foreach (var action in workflow.Value.ProcessFlow!.Actions)
         {
             var actionId = action.Key;
             var actionType = action.Value.Type;
             var actionInput = action.Value.Input;
+            var actionOutcome = new ActionOutcome(actionId);
 
             if (actionType == EActionType.IssueW3CCredential)
             {
@@ -57,15 +63,16 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 var subjectDid = await GetParameterFromExecutionContext(input.SubjectDid, executionContext);
                 if (subjectDid == null)
                 {
-                    return Result.Fail("The subject DID is not provided.");
+                    var errorMessage = "The subject DID is not provided in the execution context parameters.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
                 var issuerDid = await GetParameterFromExecutionContext(input.IssuerDid, executionContext);
                 if (issuerDid == null)
                 {
-                    return Result.Fail("The issuer DID is not provided.");
+                    var errorMessage = "The issuer DID is not provided.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
-
 
                 var createW3CCredentialRequest = new CreateW3cCredentialRequest(
                     issuerDid: issuerDid,
@@ -77,19 +84,22 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 var createW3CCredentialResult = await _mediator.Send(createW3CCredentialRequest, cancellationToken);
                 if (createW3CCredentialResult.IsFailed)
                 {
-                    return Result.Fail("The W3C credential could not be created.");
+                    var errorMessage = "he W3C credential could not be created.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
                 var issuignKeyResult = await _mediator.Send(new GetPrivateIssuingKeyByDidRequest(issuerDid), cancellationToken);
                 if (issuignKeyResult.IsFailed)
                 {
-                    return Result.Fail("The private key for the issuer DID could not be found.");
+                    var errorMessage = "The private key for the issuer DID could not be found.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
                 var privatekeyResult = HexStringToByteArray(issuignKeyResult.Value);
                 if (privatekeyResult.IsFailed)
                 {
-                    return privatekeyResult.ToResult();
+                    var errorMessage = privatekeyResult.Errors.FirstOrDefault()?.Message ?? "The private key for the issuer DID could not be parsed.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
                 var signedCredentialRequest = new SignW3cCredentialRequest(
@@ -99,10 +109,13 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 var signedCredentialResult = await _mediator.Send(signedCredentialRequest, cancellationToken);
                 if (signedCredentialResult.IsFailed)
                 {
-                    return signedCredentialResult.ToResult();
+                    var errorMessage = privatekeyResult.Errors.FirstOrDefault()?.Message ?? "The credential could not be signed.";
+                    return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
-                // TODO save the signed credential in the output
+                var successString = signedCredentialResult.Value;
+                actionOutcome.FinishOutcomeWithSuccess(successString);
+                actionOutcomes.Add(actionOutcome);
             }
             else
             {
@@ -110,7 +123,38 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             }
         }
 
-        return Result.Ok(request.WorkflowOutcome.WorkflowOutcomeId);
+        return await FinishActionsWithSuccess(workflowOutcomeId, actionOutcomes, cancellationToken);
+    }
+
+    private async Task<Result> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
+    {
+        var workflowUpdateResult = await _mediator.Send(
+            new UpdateWorkflowOutcomeRequest(
+                workflowOutcomeId,
+                EWorkflowOutcomeState.Success, JsonSerializer.Serialize(actionOutcomes), null), cancellationToken);
+        if (workflowUpdateResult.IsFailed)
+        {
+            return Result.Fail("The workflow outcome could not be updated.");
+        }
+
+        return Result.Ok();
+    }
+
+
+    private async Task<Result> FinishActionsWithFailure(Guid worflowOutcomeId, ActionOutcome actionOutcome, string errorMessage, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
+    {
+        actionOutcome.FinishOutcomeWithFailure(errorMessage);
+        actionOutcomes.Add(actionOutcome);
+        var workflowUpdateResult = await _mediator.Send(
+            new UpdateWorkflowOutcomeRequest(
+                worflowOutcomeId,
+                EWorkflowOutcomeState.FailedWithErrors, JsonSerializer.Serialize(actionOutcomes), errorMessage), cancellationToken);
+        if (workflowUpdateResult.IsFailed)
+        {
+            return Result.Fail("The workflow outcome could not be updated.");
+        }
+
+        return Result.Ok();
     }
 
 
@@ -164,6 +208,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 {
                     return null;
                 }
+
                 if (issuingKey.IssuingKeyId.Equals(keyId)) ;
                 {
                     return issuingKey.Did;

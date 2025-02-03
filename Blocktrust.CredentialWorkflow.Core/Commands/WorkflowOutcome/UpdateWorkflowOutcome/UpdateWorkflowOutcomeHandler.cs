@@ -34,8 +34,8 @@ public class UpdateWorkflowOutcomeHandler : IRequestHandler<UpdateWorkflowOutcom
             outcomeEntity.EndedUtc = DateTime.UtcNow;
         }
         
-        outcomeEntity.ErrorJson = request.ErrorJson;
-        outcomeEntity.OutcomeJson = request.OutcomeJson;
+        outcomeEntity.ErrorMessage = request.ErrorMessage;
+        outcomeEntity.ActionOutcomesJson = request.OutcomeJson;
         
         _context.WorkflowOutcomeEntities.Update(outcomeEntity);
         await _context.SaveChangesAsync(cancellationToken);

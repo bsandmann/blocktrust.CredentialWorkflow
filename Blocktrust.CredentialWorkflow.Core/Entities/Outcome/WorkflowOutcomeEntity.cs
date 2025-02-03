@@ -13,8 +13,8 @@ public class WorkflowOutcomeEntity
     public EWorkflowOutcomeState WorkflowOutcomeState { get; set; }
     public DateTime? StartedUtc { get; set; }
     public DateTime? EndedUtc { get; set; }
-    public string? ErrorJson { get; set; }
-    public string? OutcomeJson { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string? ActionOutcomesJson { get; set; }
 
     /// <summary>
     /// The context e.g. the paramters passed into the trigger as HTTP POST/GET
@@ -34,8 +34,8 @@ public class WorkflowOutcomeEntity
             WorkflowOutcomeState = WorkflowOutcomeState,
             StartedUtc = StartedUtc,
             EndedUtc = EndedUtc,
-            ErrorJson = ErrorJson,
-            OutcomeJson = OutcomeJson,
+            ErrorJson = ErrorMessage,
+            ActionOutcomesJson = ActionOutcomesJson,
             ExecutionContext = ExecutionContext
         };
     }
