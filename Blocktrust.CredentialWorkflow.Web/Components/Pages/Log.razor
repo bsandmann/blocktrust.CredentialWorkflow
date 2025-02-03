@@ -51,7 +51,7 @@
                     <tbody>
                     @foreach (var workflowOutcome in workflowOutcomes)
                     {
-                        <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowId)"
+                        <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
                             class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
                             <td class="border-t px-4 py-2">
                                 <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState)">
@@ -72,6 +72,10 @@
                                                 <strong>ActionWorkflowOutcome
                                                     JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson) ? "N/A" : workflowOutcome.ActionOutcomesJson)
                                             </p>
+                                            <p>
+                                                <strong>Execution Context
+                                                </strong> @(string.IsNullOrEmpty(workflowOutcome.ExecutionContext) ? "N/A" : workflowOutcome.ExecutionContext)
+                                            </p>
                                         }
                                         else if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
                                         {
@@ -86,6 +90,10 @@
                                             <p>
                                                 <strong>Error
                                                     JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ErrorJson) ? "N/A" : workflowOutcome.ErrorJson)
+                                            </p>
+                                            <p>
+                                                <strong>Execution Context
+                                                </strong> @(string.IsNullOrEmpty(workflowOutcome.ExecutionContext) ? "N/A" : workflowOutcome.ExecutionContext)
                                             </p>
                                         }
                                     </div>

@@ -21,7 +21,7 @@ using Tenant.GetIssungKeyById;
 using Tenant.GetPrivateIssuingKeyByDid;
 using WorkflowOutcome.UpdateWorkflowOutcome;
 
-public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result>
+public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
 {
     private readonly IMediator _mediator;
 
@@ -30,7 +30,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         _mediator = mediator;
     }
 
-    public async Task<Result> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
     {
         var workflowId = request.WorkflowOutcome.WorkflowId;
         var workflowOutcomeId = request.WorkflowOutcome.WorkflowOutcomeId;
@@ -126,7 +126,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return await FinishActionsWithSuccess(workflowOutcomeId, actionOutcomes, cancellationToken);
     }
 
-    private async Task<Result> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
+    private async Task<Result<bool>> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
     {
         var workflowUpdateResult = await _mediator.Send(
             new UpdateWorkflowOutcomeRequest(
@@ -137,11 +137,11 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             return Result.Fail("The workflow outcome could not be updated.");
         }
 
-        return Result.Ok();
+        return Result.Ok(true);
     }
 
 
-    private async Task<Result> FinishActionsWithFailure(Guid worflowOutcomeId, ActionOutcome actionOutcome, string errorMessage, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
+    private async Task<Result<bool>> FinishActionsWithFailure(Guid worflowOutcomeId, ActionOutcome actionOutcome, string errorMessage, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
     {
         actionOutcome.FinishOutcomeWithFailure(errorMessage);
         actionOutcomes.Add(actionOutcome);
@@ -154,7 +154,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             return Result.Fail("The workflow outcome could not be updated.");
         }
 
-        return Result.Ok();
+        return Result.Ok(false);
     }
 
 

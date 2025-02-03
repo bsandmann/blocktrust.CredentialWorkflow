@@ -7,7 +7,7 @@ using Entities.Outcome;
 using FluentResults;
 using MediatR;
 
-public class ExecuteWorkflowRequest : IRequest<Result>
+public class ExecuteWorkflowRequest : IRequest<Result<bool>>
 {
     public ExecuteWorkflowRequest(WorkflowOutcome workflowOutcome)
     {

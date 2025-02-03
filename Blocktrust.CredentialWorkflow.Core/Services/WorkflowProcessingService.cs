@@ -127,18 +127,11 @@ public class WorkflowProcessingService : BackgroundService
                     stoppingToken
                 );
 
-                // Update the outcome state
-                if (executeResult.IsSuccess)
+                if (executeResult.IsFailed)
                 {
+                    // This is a critial error
                     await mediator.Send(
-                        new UpdateWorkflowOutcomeRequest(outcomeId, EWorkflowOutcomeState.Success, outcomeJson: null, null),
-                        stoppingToken
-                    );
-                }
-                else
-                {
-                    await mediator.Send(
-                        new UpdateWorkflowOutcomeRequest(outcomeId, EWorkflowOutcomeState.FailedWithErrors, outcomeJson: null, executeResult.Errors.FirstOrDefault()?.Message),
+                        new UpdateWorkflowOutcomeRequest(outcomeId, EWorkflowOutcomeState.FailedWithErrors, outcomeJson: null, $"Fatal processing error: {executeResult.Errors.FirstOrDefault()?.Message}"),
                         stoppingToken
                     );
                 }
