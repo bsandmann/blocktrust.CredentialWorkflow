@@ -4,16 +4,15 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 
+using Actions;
+
 public class ProcessFlow
 {
-    [JsonPropertyName("triggers")] 
-    public Dictionary<Guid, Triggers.Trigger> Triggers { get; set; } = new();
-    
-    [JsonPropertyName("actions")] 
-    public Dictionary<Guid, Actions.Action> Actions { get; set; } = new();
-    
-    [JsonPropertyName("outcome")]
-    public WorkflowOutcome? Outcome { get; set; }
+    [JsonPropertyName("triggers")] public Dictionary<Guid, Triggers.Trigger> Triggers { get; set; } = new();
+
+    [JsonPropertyName("actions")] public Dictionary<Guid, Actions.Action> Actions { get; set; } = new();
+
+    [JsonPropertyName("actionOutcomes")] public Dictionary<Guid, ActionOutcome> ActionOutcomes { get; set; }
 
     public void AddTrigger(Triggers.Trigger trigger)
     {
@@ -21,22 +20,18 @@ public class ProcessFlow
         {
             throw new InvalidOperationException("Only a single trigger can be added to a ProcessFlow.");
         }
+
         var triggerId = Guid.NewGuid();
         Triggers.Add(triggerId, trigger);
     }
 
     public void AddAction(Actions.Action action)
     {
-        if (Outcome != null)
-        {
-            throw new InvalidOperationException("Cannot add actions after an outcome has been set. Remove the outcome first.");
-        }
-        
         if (!Triggers.Any())
         {
             throw new InvalidOperationException("A trigger must be added before adding any actions.");
         }
-        
+
         var actionId = Guid.NewGuid();
         if (!Actions.Any())
         {
@@ -53,7 +48,23 @@ public class ProcessFlow
                 { previousActionId, new List<EFlowStatus> { EFlowStatus.Succeeded } }
             };
         }
+
         Actions.Add(actionId, action);
+    }
+
+    public void AddActionOutcome(ActionOutcome actionOutcome)
+    {
+        // check if action exists
+        if (!Actions.ContainsKey(actionOutcome.ActionId))
+        {
+            throw new InvalidOperationException("Action does not exist.");
+        }
+
+        // Then generate a new outcome id and add the action outcome
+        var outcomeId = Guid.NewGuid();
+        actionOutcome.OutcomeId = outcomeId;
+        ActionOutcomes ??= new();
+        ActionOutcomes.Add(outcomeId, actionOutcome);
     }
 
     public void RemoveLastAction()
@@ -62,6 +73,7 @@ public class ProcessFlow
         {
             throw new InvalidOperationException("There are no actions to remove.");
         }
+
         var lastActionId = Actions.Keys.Last();
         Actions.Remove(lastActionId);
     }

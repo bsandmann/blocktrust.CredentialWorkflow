@@ -10,7 +10,5 @@ public enum EActionType
     VerifyAnoncredCredential,
     DIDComm,
     Http,
-    Email,
-    LogOutcome,
-    PostOutcome
+    Email
 }

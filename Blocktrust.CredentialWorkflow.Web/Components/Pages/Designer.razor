@@ -212,8 +212,6 @@ else
             flowItems.AddRange(currentWorkflow.ProcessFlow.Triggers.Values);
         if (currentWorkflow?.ProcessFlow?.Actions != null)
             flowItems.AddRange(currentWorkflow.ProcessFlow.Actions.Values);
-        if (currentWorkflow?.ProcessFlow?.Outcome != null)
-            flowItems.Add(currentWorkflow.ProcessFlow.Outcome);
     }
 
     private async Task SaveWorkflow()

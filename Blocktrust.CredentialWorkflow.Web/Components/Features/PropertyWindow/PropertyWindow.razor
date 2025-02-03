@@ -108,23 +108,6 @@
                 </MenuGroup>
             </div>
         </div>
-
-        <!-- Outcome Section -->
-        <div class="mb-6">
-            <div class="flex items-center mb-3">
-                <span class="material-symbols-outlined text-gray-600 mr-2">output</span>
-                <h4 class="text-sm font-medium text-gray-700">Outcomes</h4>
-            </div>
-
-            <div class="space-y-2 ml-8">
-                <MenuButton Icon="note_add" Label="Log Outcome"
-                            OnClick="@(action => HandleItemClick(EActionType.LogOutcome, action))"
-                            ShowAddButton="true"/>
-                <MenuButton Icon="cloud_upload" Label="Post Outcome"
-                            OnClick="@(action => HandleItemClick(EActionType.PostOutcome, action))"
-                            ShowAddButton="true"/>
-            </div>
-        </div>
     }
     else
     {
@@ -319,13 +302,6 @@
 
     private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action, string? template = null)
     {
-        if (!HasActions && itemType is EActionType actionType &&
-            (actionType == EActionType.LogOutcome || actionType == EActionType.PostOutcome))
-        {
-            await HandleError("Cannot add outcome before adding actions. Please add actions first.");
-            return;
-        }
-
         var newItem = CreateNewItem(itemType, template);
         if (newItem != null)
         {
