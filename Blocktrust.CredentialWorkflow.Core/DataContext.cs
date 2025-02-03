@@ -46,7 +46,7 @@ public class DataContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<TenantEntity> TenantEntities { get; set; }
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
-    public DbSet<OutcomeEntity> OutcomeEntities { get; set; }
+    public DbSet<WorkflowOutcomeEntity> WorkflowOutcomeEntities { get; set; }
 
     public DbSet<IssuingKeyEntity> IssuingKeys { get; set; }
 
@@ -78,9 +78,9 @@ public class DataContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<WorkflowEntity>().Property(p => p.WorkflowEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
         modelBuilder.Entity<WorkflowEntity>().Property(b => b.WorkflowState).HasConversion<string>();
 
-        modelBuilder.Entity<OutcomeEntity>().HasKey(p => p.OutcomeEntityId);
-        modelBuilder.Entity<OutcomeEntity>().Property(p => p.OutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
-        modelBuilder.Entity<OutcomeEntity>().Property(b => b.OutcomeState).HasConversion<string>();
+        modelBuilder.Entity<WorkflowOutcomeEntity>().HasKey(p => p.WorkflowOutcomeEntityId);
+        modelBuilder.Entity<WorkflowOutcomeEntity>().Property(p => p.WorkflowOutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
+        modelBuilder.Entity<WorkflowOutcomeEntity>().Property(b => b.WorkflowOutcomeState).HasConversion<string>();
 
 
     }

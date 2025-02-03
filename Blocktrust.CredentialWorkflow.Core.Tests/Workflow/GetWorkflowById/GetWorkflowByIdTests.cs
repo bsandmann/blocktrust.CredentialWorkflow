@@ -29,7 +29,7 @@ public partial class TestSetup
 
         // 3. Prepare GetWorkflowById request
         var getWorkflowByIdHandler = new GetWorkflowByIdHandler(_context);
-        var getWorkflowByIdRequest = new GetWorkflowByIdRequest(workflowId, tenantId);
+        var getWorkflowByIdRequest = new GetWorkflowByIdRequest(workflowId);
 
         // Act
         var result = await getWorkflowByIdHandler.Handle(getWorkflowByIdRequest, CancellationToken.None);
@@ -55,9 +55,8 @@ public partial class TestSetup
     {
         // Arrange
         var nonExistentWorkflowId = Guid.NewGuid();
-        var nonExistentTenantId = Guid.NewGuid();
         var getWorkflowByIdHandler = new GetWorkflowByIdHandler(_context);
-        var getWorkflowByIdRequest = new GetWorkflowByIdRequest(nonExistentWorkflowId, nonExistentTenantId);
+        var getWorkflowByIdRequest = new GetWorkflowByIdRequest(nonExistentWorkflowId);
 
         // Act
         var result = await getWorkflowByIdHandler.Handle(getWorkflowByIdRequest, CancellationToken.None);

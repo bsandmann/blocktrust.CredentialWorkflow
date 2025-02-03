@@ -12,11 +12,11 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
     using System;
     using System.Linq;
     using System.Text.Json;
-    using Core.Commands.Outcome.CreateOutcome;
+    using Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
     using Microsoft.AspNetCore.Authorization;
 
     [ApiController]
-    [Route("api/{tenantId:guid}/workflow/{workflowGuidId:guid}")]
+    [Route("api/workflow/{workflowGuidId:guid}")]
     [AllowAnonymous]
     public class WorkflowController : ControllerBase
     {
@@ -32,18 +32,18 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
         }
 
         [HttpGet]
-        public Task<IActionResult> ExecuteWorkflowGet([FromRoute] Guid tenantId, [FromRoute] Guid workflowGuidId)
+        public Task<IActionResult> ExecuteWorkflowGet([FromRoute] Guid workflowGuidId)
         {
-            return ExecuteWorkflowInternalAsync(HttpRequestMethod.GET, tenantId, workflowGuidId);
+            return ExecuteWorkflowInternalAsync(HttpRequestMethod.GET, workflowGuidId);
         }
 
         [HttpPost]
-        public Task<IActionResult> ExecuteWorkflowPost([FromRoute] Guid tenantId, [FromRoute] Guid workflowGuidId)
+        public Task<IActionResult> ExecuteWorkflowPost([FromRoute] Guid workflowGuidId)
         {
-            return ExecuteWorkflowInternalAsync(HttpRequestMethod.POST, tenantId, workflowGuidId);
+            return ExecuteWorkflowInternalAsync(HttpRequestMethod.POST, workflowGuidId);
         }
 
-        private async Task<IActionResult> ExecuteWorkflowInternalAsync(HttpRequestMethod httpMethod, Guid tenantId, Guid workflowGuidId)
+        private async Task<IActionResult> ExecuteWorkflowInternalAsync(HttpRequestMethod httpMethod, Guid workflowGuidId)
         {
             // Create and populate a new instance of SimplifiedHttpContext
             var simplifiedHttpContext = new SimplifiedHttpContext
@@ -64,7 +64,7 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
             }
 
             // Retrieve the workflow details via MediatR
-            var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId, tenantId);
+            var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId);
             var getWorkflowResult = await _mediator.Send(getWorkflowRequest);
 
             if (getWorkflowResult.IsFailed)
@@ -96,7 +96,7 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
 
             var executionContext = simplifiedHttpContext.ToJson();
 
-            var outcomeResult = await _mediator.Send(new CreateOutcomeRequest(getWorkflowResult.Value.WorkflowId, executionContext));
+            var outcomeResult = await _mediator.Send(new CreateWorkflowOutcomeRequest(getWorkflowResult.Value.WorkflowId, executionContext));
             if (outcomeResult.IsFailed)
             {
                 return BadRequest($"Failed to create outcome for workflow {getWorkflowResult.Value.WorkflowId}");

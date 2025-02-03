@@ -24,10 +24,14 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                     TenantEntityId = p.TenantEntityId,
                     TenantName = p.Name,
                     ApplicationUserIds = p.ApplicationUsers.Select(q => q.Id),
-                    Workflows = p.WorkflowEntities.Select(q =>
+                    WorkflowSummaries = p.WorkflowEntities.Select(q =>
                         new
                         {
-                            q.WorkflowEntityId, q.Name, q.UpdatedUtc
+                            q.WorkflowEntityId,
+                            q.Name,
+                            q.UpdatedUtc,
+                            q.WorkflowState,
+                            WorkflowOutcomeEntity = q.WorkflowOutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault()
                         })
                 })
             .FirstOrDefaultAsync(p => p.TenantEntityId == request.TenantEntityId, cancellationToken: cancellationToken);
@@ -43,11 +47,13 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                 Name = result.TenantName,
                 TenantId = request.TenantEntityId
             },
-            WorkflowSummaries = result.Workflows.Select(p => new WorkflowSummary()
+            WorkflowSummaries = result.WorkflowSummaries.Select(p => new WorkflowSummary()
             {
+                WorkflowId = p.WorkflowEntityId,
                 Name = p.Name,
                 UpdatedUtc = p.UpdatedUtc,
-                WorkflowId = p.WorkflowEntityId
+                WorkflowState = p.WorkflowState,
+                LastWorkflowOutcome = p.WorkflowOutcomeEntity?.Map()
             }).ToList()
         });
     }

@@ -12,6 +12,7 @@
 @using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ChangeWorkflowState
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowSummaries
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
@@ -57,7 +58,7 @@
 
     @if (AppStateService.IsInitialized)
     {
-        @if (workflows.Any())
+        @if (workflowSummaries.Any())
         {
             <div class="bg-white shadow-md rounded-lg overflow-hidden">
                 <table class="min-w-full">
@@ -80,7 +81,7 @@
                     </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var workflow in workflows)
+                    @foreach (var workflow in workflowSummaries)
                     {
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)"
@@ -99,11 +100,11 @@
                                         </span>
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
-                                        @if (workflow.LastOutcome != null)
+                                        @if (workflow.LastWorkflowOutcome != null)
                                         {
                                             <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastOutcome.OutcomeState)">
-                                                @workflow.LastOutcome.OutcomeState
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastWorkflowOutcome.WorkflowOutcomeState)">
+                                                @workflow.LastWorkflowOutcome.WorkflowOutcomeState
                                             </span>
                                         }
                                         else
@@ -113,11 +114,11 @@
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
                                         <div
-                                            class="text-sm text-gray-500">@(workflow.LastOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
+                                            class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
                                     </div>
                                     <div class="px-6 py-4 whitespace-nowrap">
                                         <div
-                                            class="text-sm text-gray-500">@(workflow.LastOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
+                                            class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
                                     </div>
                                 </div>
                             </td>
@@ -221,7 +222,7 @@
 
 @code {
     private readonly CancellationTokenSource cts = new();
-    private List<WorkflowOutcome> workflows = new();
+    private List<WorkflowSummary> workflowSummaries = new();
     private bool isJsonImportModalOpen;
     private string jsonInput = "";
     private string errorMessage = "";
@@ -235,7 +236,7 @@
                 await AppStateService.Initialize(AuthenticationStateProvider, Logger, cts, Mediator);
             }
 
-            await LoadWorkflows();
+            await LoadWorkflowSummaries();
         }
         catch (Exception)
         {
@@ -260,25 +261,20 @@
         }
     }
 
-    private async Task LoadWorkflows()
+    private async Task LoadWorkflowSummaries()
     {
         try
         {
-            var workflowResults = await Mediator.Send(new GetWorkflowsRequest(AppStateService.Tenant.TenantId));
-            if (workflowResults.IsFailed)
+            var workflowSummariesResult = await Mediator.Send(new GetWorkflowSummariesRequest(AppStateService.Tenant.TenantId));
+            if (workflowSummariesResult.IsFailed)
             {
                 errorMessage = "Failed to load workflows. Please try again later.";
             }
             else
             {
-                AppStateService.WorkflowSummaries = workflowResults.Value.Select(p => new WorkflowSummary()
-                {
-                    Name = p.Name,
-                    WorkflowId = p.WorkflowId,
-                    UpdatedUtc = p.UpdatedUtc,
-                }).ToList();
-                workflows = workflowResults.Value;
-                errorMessage = ""; // Clear error message on successful load
+                AppStateService.WorkflowSummaries = workflowSummariesResult.Value;
+                workflowSummaries = workflowSummariesResult.Value;
+                errorMessage = "";
             }
         }
         catch (Exception)
@@ -295,12 +291,12 @@
         _ => "bg-gray-100 text-gray-800"
     };
 
-    private string GetOutcomeStateColor(EOutcomeState state) => state switch
+    private string GetOutcomeStateColor(EWorkflowOutcomeState state) => state switch
     {
-        EOutcomeState.Success => "bg-green-100 text-green-800",
-        EOutcomeState.FailedWithErrors => "bg-red-100 text-red-800",
-        EOutcomeState.NotStarted => "bg-yellow-100 text-yellow-800",
-        EOutcomeState.Running => "bg-blue-100 text-blue-800",
+        EWorkflowOutcomeState.Success => "bg-green-100 text-green-800",
+        EWorkflowOutcomeState.FailedWithErrors => "bg-red-100 text-red-800",
+        EWorkflowOutcomeState.NotStarted => "bg-yellow-100 text-yellow-800",
+        EWorkflowOutcomeState.Running => "bg-blue-100 text-blue-800",
         _ => "bg-gray-100 text-gray-800"
     };
 
@@ -332,7 +328,7 @@
             }
             else
             {
-                await LoadWorkflows();
+                await LoadWorkflowSummaries();
                 errorMessage = ""; // Clear error message on successful delete
             }
         }
@@ -359,7 +355,7 @@
     {
         try
         {
-            var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId, AppStateService.Tenant.TenantId));
+            var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(workflowId));
             if (workflowResult.IsFailed)
             {
                 errorMessage = "Failed to export the workflow. Please try again.";
@@ -411,7 +407,7 @@
                 return;
             }
 
-            await LoadWorkflows();
+            await LoadWorkflowSummaries();
             CloseJsonImportModal();
             errorMessage = ""; // Clear any error messages on successful import
         }
@@ -425,13 +421,13 @@
         }
     }
 
-    private async Task ToggleWorkflowState(WorkflowOutcome workflow)
+    private async Task ToggleWorkflowState(WorkflowSummary workflow)
     {
         try
         {
             if (workflow.WorkflowState == EWorkflowState.Inactive)
             {
-                var completeWorkflow = await Mediator.Send(new GetWorkflowByIdRequest(workflow.WorkflowId, AppStateService.Tenant.TenantId));
+                var completeWorkflow = await Mediator.Send(new GetWorkflowByIdRequest(workflow.WorkflowId));
                 if (completeWorkflow.IsFailed)
                 {
                     errorMessage = "Failed to run the workflow. Please try again.";

@@ -5,7 +5,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 public class ActionOutcome
 {
     public Guid OutcomeId { get; set; }
-    public EOutcomeState OutcomeState { get; set; }
+    public EWorkflowOutcomeState WorkflowOutcomeState { get; set; }
     public DateTime? StartedUtc { get; set; }
     public DateTime? EndedUtc { get; set; }
     public string? ErrorJson { get; set; }

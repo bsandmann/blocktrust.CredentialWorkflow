@@ -2,19 +2,18 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
 using Domain.Common;
 using Domain.ProcessFlow.Actions;
+using Domain.Workflow;
 using Entities.Outcome;
 using FluentResults;
 using MediatR;
 
 public class ExecuteWorkflowRequest : IRequest<Result<Guid>>
 {
-    public ExecuteWorkflowRequest(Guid tenantId, ActionOutcome actionOutcome)
+    public ExecuteWorkflowRequest(WorkflowOutcome workflowOutcome)
     {
-        TenantId = tenantId;
-        ActionOutcome = actionOutcome;
+        WorkflowOutcome = workflowOutcome;
     }
 
-    public Guid TenantId { get; set; }
 
-    public ActionOutcome ActionOutcome { get; set; }
+    public WorkflowOutcome WorkflowOutcome { get; set; }
 }

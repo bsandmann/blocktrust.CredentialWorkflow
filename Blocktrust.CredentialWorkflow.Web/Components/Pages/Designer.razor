@@ -8,7 +8,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.UpdateWorkflow
-@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ChangeWorkflowState
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
@@ -186,7 +185,7 @@ else
 
     private async Task LoadWorkflow(Guid id)
     {
-        var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(id, AppStateService.Tenant.TenantId));
+        var workflowResult = await Mediator.Send(new GetWorkflowByIdRequest(id));
         if (workflowResult.IsFailed)
         {
             errorMessage = "Failed to load the workflow. Please try again.";

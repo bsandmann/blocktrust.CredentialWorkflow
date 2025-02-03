@@ -27,7 +27,7 @@ public record WorkflowEntity
     public TenantEntity TenantEntity { get; init; }
     public Guid TenantEntityId { get; init; }
 
-    public List<OutcomeEntity> OutcomeEntities { get; init; }
+    public List<WorkflowOutcomeEntity> WorkflowOutcomeEntities { get; init; }
 
 
     public Workflow Map()

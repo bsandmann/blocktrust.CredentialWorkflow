@@ -3,8 +3,8 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.CreateOutcome;
     using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetActiveRecurringWorkflows;
+    using Commands.WorkflowOutcome.CreateWorkflowOutcome;
     using MediatR;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -81,7 +81,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                                     workflow.WorkflowEntityId, nextOccurrence);
 
                                 // Call the CreateOutcome command.
-                                var outcomeResult = await mediator.Send(new CreateOutcomeRequest(workflow.WorkflowEntityId, null), stoppingToken);
+                                var outcomeResult = await mediator.Send(new CreateWorkflowOutcomeRequest(workflow.WorkflowEntityId, null), stoppingToken);
                                 if (outcomeResult.IsFailed)
                                 {
                                     _logger.LogError("Failed to create outcome for workflow {WorkflowId}.", workflow.WorkflowEntityId);

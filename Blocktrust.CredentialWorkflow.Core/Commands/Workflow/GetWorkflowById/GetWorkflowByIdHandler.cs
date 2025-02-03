@@ -17,7 +17,7 @@ public class GetWorkflowByIdHandler : IRequestHandler<GetWorkflowByIdRequest, Re
     public async Task<Result<Workflow>> Handle(GetWorkflowByIdRequest request, CancellationToken cancellationToken)
     {
         var workflow = await _context.WorkflowEntities
-            .FirstOrDefaultAsync(w => w.WorkflowEntityId == request.WorkflowId && w.TenantEntityId == request.TenantEntityId, cancellationToken);
+            .FirstOrDefaultAsync(w => w.WorkflowEntityId == request.WorkflowId, cancellationToken);
 
         if (workflow is null)
         {

@@ -94,9 +94,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.OutcomeEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.WorkflowOutcomeEntity", b =>
                 {
-                    b.Property<Guid>("OutcomeEntityId")
+                    b.Property<Guid>("WorkflowOutcomeEntityId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -112,21 +112,21 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Property<string>("OutcomeJson")
                         .HasColumnType("text");
 
-                    b.Property<string>("OutcomeState")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("StartedUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("WorkflowEntityId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("OutcomeEntityId");
+                    b.Property<string>("WorkflowOutcomeState")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("WorkflowOutcomeEntityId");
 
                     b.HasIndex("WorkflowEntityId");
 
-                    b.ToTable("OutcomeEntities");
+                    b.ToTable("WorkflowOutcomeEntities");
                 });
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.IssuingKeyEntity", b =>
@@ -379,10 +379,10 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Navigation("TenantEntity");
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.OutcomeEntity", b =>
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Outcome.WorkflowOutcomeEntity", b =>
                 {
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", "WorkflowEntity")
-                        .WithMany("OutcomeEntities")
+                        .WithMany("WorkflowOutcomeEntities")
                         .HasForeignKey("WorkflowEntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -472,7 +472,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Workflow.WorkflowEntity", b =>
                 {
-                    b.Navigation("OutcomeEntities");
+                    b.Navigation("WorkflowOutcomeEntities");
                 });
 #pragma warning restore 612, 618
         }

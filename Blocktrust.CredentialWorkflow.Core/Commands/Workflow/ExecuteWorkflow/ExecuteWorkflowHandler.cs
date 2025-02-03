@@ -8,6 +8,8 @@ using Domain.ProcessFlow.Triggers;
 using Domain.Workflow;
 using Entities.Outcome;
 using FluentResults;
+using GetWorkflowById;
+using GetWorkflows;
 using IssueCredentials.IssueW3cCredential.CreateW3cCredential;
 using IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using MediatR;
@@ -27,13 +29,23 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
     public async Task<Result<Guid>> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
     {
-        var workflow = request.ActionOutcome.Workflow;
-        var executionContextString = request.ActionOutcome.ExecutionContext;
-        ExecutionContext executionContext = BuildExecutionContext(workflow, executionContextString);
+        var workflowId = request.WorkflowOutcome.WorkflowId;
+        var executionContextString = request.WorkflowOutcome.ExecutionContext;
+        var workflow = await _mediator.Send(new GetWorkflowByIdRequest(workflowId));
+        if (workflow.IsFailed)
+        {
+            return Result.Fail("Unable to laod Workflow");
+        }
 
+        ExecutionContext executionContext = BuildExecutionContext(workflow.Value, executionContextString);
+
+        if (workflow.Value.ProcessFlow is null)
+        {
+            return Result.Fail("Unable to process Workflow. Now processflow definition");
+        }
 
         // TODO ensure the correct order of actions
-        foreach (var action in workflow!.ProcessFlow.Actions)
+        foreach (var action in workflow.Value.ProcessFlow!.Actions)
         {
             var actionId = action.Key;
             var actionType = action.Value.Type;
@@ -75,15 +87,15 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 }
 
                 var privatekeyResult = HexStringToByteArray(issuignKeyResult.Value);
-                if(privatekeyResult.IsFailed)
+                if (privatekeyResult.IsFailed)
                 {
                     return privatekeyResult.ToResult();
                 }
 
                 var signedCredentialRequest = new SignW3cCredentialRequest(
-                        credential: createW3CCredentialResult.Value,
-                        issuerDid: issuerDid,
-                        privateKey: privatekeyResult.Value);
+                    credential: createW3CCredentialResult.Value,
+                    issuerDid: issuerDid,
+                    privateKey: privatekeyResult.Value);
                 var signedCredentialResult = await _mediator.Send(signedCredentialRequest, cancellationToken);
                 if (signedCredentialResult.IsFailed)
                 {
@@ -98,7 +110,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             }
         }
 
-        return Result.Ok(request.ActionOutcome.OutcomeId);
+        return Result.Ok(request.WorkflowOutcome.WorkflowOutcomeId);
     }
 
 
@@ -147,7 +159,11 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
             foreach (var issuingKey in issuingKeys.Value)
             {
-                var keyId = Guid.Parse(parameterReference.Path);
+                var isParseable = Guid.TryParse(parameterReference.Path, out var keyId);
+                if (!isParseable)
+                {
+                    return null;
+                }
                 if (issuingKey.IssuingKeyId.Equals(keyId)) ;
                 {
                     return issuingKey.Did;

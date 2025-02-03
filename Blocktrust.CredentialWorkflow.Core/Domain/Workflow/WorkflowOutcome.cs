@@ -4,44 +4,27 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
-using ProcessFlow.Actions;
-
+/// <summary>
+/// Each workflow usually runs multiple times. Each of those runs is a Workflow-Outcome
+/// </summary>
 public class WorkflowOutcome
 {
-    [JsonPropertyName("workflowId")]
+    [JsonPropertyName("workflowOutcomeId")]
+    public Guid WorkflowOutcomeId { get; init; }
 
-    public Guid WorkflowId { get; init; }
-    
-    [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    [JsonPropertyName("workflowId")] public Guid WorkflowId { get; init; }
 
-    [JsonPropertyName("outcome")]
-    public EOutcome Outcome { get; set; }
-    
-    [JsonPropertyName("message")]
-    public string? Message { get; set; } = string.Empty;
-    
-    [JsonPropertyName("output")]
-    public string? Output { get; set; } = string.Empty;
-    
-    [JsonPropertyName("updatedUtc")]
+    [JsonPropertyName("outcomeState")] public EWorkflowOutcomeState WorkflowOutcomeState { get; set; }
+    public DateTime? StartedUtc { get; set; }
 
-    public required DateTime UpdatedUtc { get; set; }
-    
-    [JsonPropertyName("workflowState")]
+    public DateTime? EndedUtc { get; set; }
 
-    public EWorkflowState WorkflowState { get; set; }
-    
-    [JsonPropertyName("lastOutcome")]
+    [JsonPropertyName("errorJson")] public string? ErrorJson { get; set; } = string.Empty;
 
-    public ActionOutcome? LastOutcome { get; set; }
+    [JsonPropertyName("outcomeJson")] public string? OutcomeJson { get; set; } = string.Empty;
 
-    public bool IsRunable { get; set; }
-    
-}
+    public string? ExecutionContext { get; set; }
 
-public enum EOutcome
-{
-    Success,
-    Failure
+
+
 }

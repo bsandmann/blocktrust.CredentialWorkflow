@@ -7,12 +7,10 @@ using MediatR;
 
 public class GetWorkflowByIdRequest : IRequest<Result<Workflow>>
 {
-    public GetWorkflowByIdRequest(Guid workflowId, Guid tenantEntityId)
+    public GetWorkflowByIdRequest(Guid workflowId)
     {
         WorkflowId = workflowId;
-        TenantEntityId = tenantEntityId;
     }
 
     public Guid WorkflowId { get; }
-    public Guid TenantEntityId { get; }
 }

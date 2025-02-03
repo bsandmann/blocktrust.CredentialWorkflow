@@ -1,12 +1,13 @@
 ﻿@page "/logs"
+@using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.GetWorkflowOutcomes
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
-@using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomes
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Microsoft.AspNetCore.Authorization
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -27,7 +28,7 @@
     <div class="flex flex-col h-screen">
         <!-- Top bar -->
         <div class="bg-gray-100 p-4 flex items-center flex-row border-b-2 border-slate-200">
-            <select @bind="selectedWorkflowId" @bind:after="LoadOutcomes" class="mr-2 px-2 py-1 border rounded">
+            <select @bind="selectedWorkflowId" @bind:after="LoadWorkflowOutcomes" class="mr-2 px-2 py-1 border rounded">
                 @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                 {
                     <option value="@workflow.WorkflowId">@workflow.Name</option>
@@ -37,7 +38,7 @@
 
         <!-- Main content area -->
         <div class="flex-grow p-4 overflow-auto">
-            @if (outcomes.Any())
+            @if (workflowOutcomes.Any())
             {
                 <table class="min-w-full bg-white">
                     <thead class="bg-gray-100">
@@ -48,40 +49,43 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var outcome in outcomes)
+                    @foreach (var workflowOutcome in workflowOutcomes)
                     {
-                        <tr @onclick="() => ToggleOutcomeDetails(outcome.OutcomeId)"
+                        <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowId)"
                             class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
                             <td class="border-t px-4 py-2">
-                                <span class="@GetOutcomeStateColor(outcome.OutcomeState)">
-                                    @outcome.OutcomeState
+                                <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState)">
+                                    @workflowOutcome.WorkflowOutcomeState
                                 </span>
                             </td>
-                            <td class="border-t px-4 py-2">@outcome.StartedUtc?.ToString("g")</td>
-                            <td class="border-t px-4 py-2">@outcome.EndedUtc?.ToString("g")</td>
+                            <td class="border-t px-4 py-2">@workflowOutcome.StartedUtc?.ToString("g")</td>
+                            <td class="border-t px-4 py-2">@workflowOutcome.EndedUtc?.ToString("g")</td>
                         </tr>
-                        @if (expandedOutcomeId == outcome.OutcomeId)
+                        @if (expandedWorkflowOutcomeId == workflowOutcome.WorkflowOutcomeId)
                         {
                             <tr>
                                 <td colspan="3" class="border-t px-4 py-2 bg-gray-50">
                                     <div class="text-sm">
-                                        @if (outcome.OutcomeState == EOutcomeState.Success)
+                                        @if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.Success)
                                         {
                                             <p>
-                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome
+                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.OutcomeJson) ? "N/A" : workflowOutcome.OutcomeJson)
                                             </p>
                                         }
-                                        else if (outcome.OutcomeState == EOutcomeState.NotStarted)
+                                        else if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
                                         {
-                                            <p>This operation did not start yet.</p> 
+                                            <p>This operation did not start yet.</p>
                                         }
                                         else
                                         {
                                             <p>
-                                                <strong>ActionWorkflowOutcome JSON:</strong> @(string.IsNullOrEmpty(outcome.OutcomeJson) ? "N/A" : outcome.OutcomeJson)
+                                                <strong>ActionWorkflowOutcome
+                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.OutcomeJson) ? "N/A" : workflowOutcome.OutcomeJson)
                                             </p>
                                             <p>
-                                                <strong>Error JSON:</strong> @(string.IsNullOrEmpty(outcome.ErrorJson) ? "N/A" : outcome.ErrorJson)
+                                                <strong>Error
+                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ErrorJson) ? "N/A" : workflowOutcome.ErrorJson)
                                             </p>
                                         }
                                     </div>
@@ -107,8 +111,8 @@ else
 @code {
     private readonly CancellationTokenSource cts = new CancellationTokenSource();
     private Guid? selectedWorkflowId;
-    private List<ActionOutcome> outcomes = new List<ActionOutcome>();
-    private Guid? expandedOutcomeId;
+    private List<WorkflowOutcome> workflowOutcomes = new List<WorkflowOutcome>();
+    private Guid? expandedWorkflowOutcomeId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,48 +124,48 @@ else
         if (AppStateService.WorkflowSummaries.Any())
         {
             selectedWorkflowId = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First().WorkflowId;
-            await LoadOutcomes();
+            await LoadWorkflowOutcomes();
         }
     }
 
-    private async Task LoadOutcomes()
+    private async Task LoadWorkflowOutcomes()
     {
         if (selectedWorkflowId.HasValue)
         {
-            var outcomesResult = await Mediator.Send(new GetOutcomesRequest(selectedWorkflowId.Value));
+            var outcomesResult = await Mediator.Send(new GetWorkflowOutcomesRequest(selectedWorkflowId.Value));
             if (outcomesResult.IsFailed)
             {
                 Logger.LogError("Failed to fetch outcomes");
-                outcomes.Clear();
+                workflowOutcomes.Clear();
             }
             else
             {
-                outcomes = outcomesResult.Value;
+                workflowOutcomes = outcomesResult.Value;
             }
 
-            expandedOutcomeId = null;
+            expandedWorkflowOutcomeId = null;
             StateHasChanged();
         }
     }
 
-    private string GetOutcomeStateColor(EOutcomeState state) => state switch
+    private string GetOutcomeStateColor(EWorkflowOutcomeState state) => state switch
     {
-        EOutcomeState.Success => "text-green-600",
-        EOutcomeState.FailedWithErrors => "text-red-600",
-        EOutcomeState.NotStarted => "text-gray-600",
-        EOutcomeState.Running => "text-blue-600",
+        EWorkflowOutcomeState.Success => "text-green-600",
+        EWorkflowOutcomeState.FailedWithErrors => "text-red-600",
+        EWorkflowOutcomeState.NotStarted => "text-gray-600",
+        EWorkflowOutcomeState.Running => "text-blue-600",
         _ => "text-gray-600"
     };
 
-    private void ToggleOutcomeDetails(Guid outcomeId)
+    private void ToggleOutcomeDetails(Guid workflowOutcomeId)
     {
-        if (expandedOutcomeId == outcomeId)
+        if (expandedWorkflowOutcomeId == workflowOutcomeId)
         {
-            expandedOutcomeId = null;
+            expandedWorkflowOutcomeId = null;
         }
         else
         {
-            expandedOutcomeId = outcomeId;
+            expandedWorkflowOutcomeId = workflowOutcomeId;
         }
     }
 

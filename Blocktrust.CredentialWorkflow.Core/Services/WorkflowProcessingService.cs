@@ -1,6 +1,3 @@
-using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeById;
-using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.GetOutcomeIdsByState;
-using Blocktrust.CredentialWorkflow.Core.Commands.Outcome.UpdateOutcomeState;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using MediatR;
@@ -9,6 +6,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Blocktrust.CredentialWorkflow.Core.Services;
+
+using Commands.WorkflowOutcome.GetWorkflowOutcomeById;
+using Commands.WorkflowOutcome.GetWorkflowOutcomeIdsByState;
+using Commands.WorkflowOutcome.UpdateWorkflowOutcome;
+using Commands.WorkflowOutcome.UpdateWorkflowOutcomeState;
 
 public class WorkflowProcessingService : BackgroundService
 {
@@ -33,13 +35,13 @@ public class WorkflowProcessingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        var statesToRescue = new List<EOutcomeState>
+        var statesToRescue = new List<EWorkflowOutcomeState>
         {
-            EOutcomeState.NotStarted,
-            EOutcomeState.Running
+            EWorkflowOutcomeState.NotStarted,
+            EWorkflowOutcomeState.Running
         };
 
-        var rescueResult = await mediator.Send(new GetOutcomeIdsByStateRequest(statesToRescue), cancellationToken);
+        var rescueResult = await mediator.Send(new GetWorkflowOutcomeIdsByStateRequest(statesToRescue), cancellationToken);
         if (rescueResult.IsFailed)
         {
             _logger.LogError("Failed to get outcomes on startup: {Errors}", rescueResult.Errors);
@@ -50,10 +52,10 @@ public class WorkflowProcessingService : BackgroundService
 
             foreach (var outcome in outcomeIdsToProcess)
             {
-                if (outcome.OutcomeState == EOutcomeState.Running)
+                if (outcome.WorkflowOutcomeState == EWorkflowOutcomeState.Running)
                 {
                     var updateStateResult = await mediator.Send(
-                        new UpdateOutcomeStateRequest(outcome.OutcomeId, EOutcomeState.NotStarted),
+                        new UpdateWorkflowOutcomeStateRequest(outcome.OutcomeId, EWorkflowOutcomeState.NotStarted),
                         cancellationToken
                     );
                     if (updateStateResult.IsFailed)
@@ -97,7 +99,7 @@ public class WorkflowProcessingService : BackgroundService
 
                 // Update to Running
                 var updateToRunningResult = await mediator.Send(
-                    new UpdateOutcomeStateRequest(outcomeId, EOutcomeState.Running),
+                    new UpdateWorkflowOutcomeStateRequest(outcomeId, EWorkflowOutcomeState.Running),
                     stoppingToken
                 );
 
@@ -109,11 +111,11 @@ public class WorkflowProcessingService : BackgroundService
                 }
 
                 // Get the outcome
-                var outcome = await mediator.Send(new GetOutcomeByIdRequest(outcomeId));
+                var outcome = await mediator.Send(new GetWorkflowOutcomeByIdRequest(outcomeId), stoppingToken);
                 if (outcome.IsFailed)
                 {
                     await mediator.Send(
-                        new UpdateOutcomeStateRequest(outcomeId, EOutcomeState.FailedWithErrors),
+                        new UpdateWorkflowOutcomeStateRequest(outcomeId, EWorkflowOutcomeState.FailedWithErrors),
                         stoppingToken
                     );
                     continue;
@@ -121,7 +123,7 @@ public class WorkflowProcessingService : BackgroundService
 
                 // Process the workflow
                 var executeResult = await mediator.Send(
-                    new ExecuteWorkflowRequest(outcome.Value.Workflow.TenantId, outcome.Value),
+                    new ExecuteWorkflowRequest(outcome.Value),
                     stoppingToken
                 );
 
@@ -129,14 +131,14 @@ public class WorkflowProcessingService : BackgroundService
                 if (executeResult.IsSuccess)
                 {
                     await mediator.Send(
-                        new UpdateOutcomeStateRequest(outcomeId, EOutcomeState.Success),
+                        new UpdateWorkflowOutcomeRequest(outcomeId, EWorkflowOutcomeState.Success, outcomeJson: null, null),
                         stoppingToken
                     );
                 }
                 else
                 {
                     await mediator.Send(
-                        new UpdateOutcomeStateRequest(outcomeId, EOutcomeState.FailedWithErrors),
+                        new UpdateWorkflowOutcomeRequest(outcomeId, EWorkflowOutcomeState.FailedWithErrors, outcomeJson: null, executeResult.Errors.FirstOrDefault()?.Message),
                         stoppingToken
                     );
                 }
@@ -148,7 +150,7 @@ public class WorkflowProcessingService : BackgroundService
             {
                 _logger.LogError(ex, "Error while processing Outcome {OutcomeId}", outcomeId);
                 await mediator.Send(
-                    new UpdateOutcomeStateRequest(outcomeId, EOutcomeState.FailedWithErrors),
+                    new UpdateWorkflowOutcomeStateRequest(outcomeId, EWorkflowOutcomeState.FailedWithErrors),
                     stoppingToken
                 );
             }
