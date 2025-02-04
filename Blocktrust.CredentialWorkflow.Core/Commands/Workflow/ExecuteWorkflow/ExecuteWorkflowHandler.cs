@@ -3,6 +3,7 @@ using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCrede
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetPrivateIssuingKeyByDid;
+using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById;
 using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.UpdateWorkflowOutcome;
@@ -11,6 +12,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 using Blocktrust.VerifiableCredential.Common;
@@ -33,7 +35,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         var workflowId = request.WorkflowOutcome.WorkflowId;
         var workflowOutcomeId = request.WorkflowOutcome.WorkflowOutcomeId;
         var executionContextString = request.WorkflowOutcome.ExecutionContext;
-        
+
         var workflowResult = await _mediator.Send(new GetWorkflowByIdRequest(workflowId), cancellationToken);
         if (workflowResult.IsFailed)
         {
@@ -49,6 +51,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         {
             return Result.Fail("Unable to process Workflow. No process flow definition found.");
         }
+
         var actionOutcomes = new List<ActionOutcome>();
         var triggerId = workflow.ProcessFlow.Triggers.Single().Key;
 
@@ -62,8 +65,8 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             //    - If previousActionId is null, we look for an action whose runAfter references the triggerId with EFlowStatus.Succeeded
             //    - If previousActionId is set, we look for an action whose runAfter references that previousActionId with EFlowStatus.Succeeded
             var nextActionKvp = FindNextAction(
-                workflow.ProcessFlow.Actions, 
-                triggerId, 
+                workflow.ProcessFlow.Actions,
+                triggerId,
                 previousActionId
             );
 
@@ -73,22 +76,22 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 break;
             }
 
-            // 2) Check if the next action references a 'Failed' predecessor. If so, end the workflow with failure.
-            if (HasFailedPredecessor(nextActionKvp.Value.Value.RunAfter))
-            {
-                // The workflow should fail immediately if a predecessor was marked as Failed
-                var failedOutcome = new ActionOutcome(nextActionKvp.Value.Key);
-                failedOutcome.FinishOutcomeWithFailure("A predecessor was failed. Ending workflow.");
-                actionOutcomes.Add(failedOutcome);
-
-                return await FinishActionsWithFailure(
-                    workflowOutcomeId,
-                    failedOutcome,
-                    "A predecessor was failed. No further processing.",
-                    actionOutcomes,
-                    cancellationToken
-                );
-            }
+            // // 2) Check if the next action references a 'Failed' predecessor. If so, end the workflow with failure.
+            // if (HasFailedPredecessor(nextActionKvp.Value.Value.RunAfter))
+            // {
+            //     // The workflow should fail immediately if a predecessor was marked as Failed
+            //     var failedOutcome = new ActionOutcome(nextActionKvp.Value.Key);
+            //     failedOutcome.FinishOutcomeWithFailure("A predecessor was failed. Ending workflow.");
+            //     actionOutcomes.Add(failedOutcome);
+            //
+            //     return await FinishActionsWithFailure(
+            //         workflowOutcomeId,
+            //         failedOutcome,
+            //         "A predecessor was failed. No further processing.",
+            //         actionOutcomes,
+            //         cancellationToken
+            //     );
+            // }
 
             // 3) Process the action
             var actionId = nextActionKvp.Value.Key;
@@ -100,20 +103,40 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 case EActionType.IssueW3CCredential:
                 {
                     var result = await ProcessIssueW3CCredentialAction(
-                        action, 
-                        actionOutcome, 
+                        action,
+                        actionOutcome,
                         workflowOutcomeId,
                         executionContext,
                         actionOutcomes,
+                        workflow,
                         cancellationToken
                     );
-                    if (result.IsFailed)
+                    if (result.IsFailed || result.Value.Equals(false))
                     {
                         // Already finished with failure inside the method
                         return result;
                     }
 
                     // If we got here, we succeeded for this action
+                    break;
+                }
+                case EActionType.VerifyW3CCredential:
+                {
+                    var result = await ProcessVerifyW3CCredentialAction(
+                        action,
+                        actionOutcome,
+                        workflowOutcomeId,
+                        executionContext,
+                        actionOutcomes,
+                        workflow,
+                        cancellationToken
+                    );
+                    if (result.IsFailed || result.Value.Equals(false))
+                    {
+                        // Already finished with failure inside the method
+                        return result;
+                    }
+
                     break;
                 }
                 default:
@@ -153,8 +176,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         // SingleOrDefault to find a unique action that references predecessorId with Succeeded
         var nextAction = actions
             .SingleOrDefault(x => x.Value.RunAfter.Count == 1
-                && x.Value.RunAfter.Single().Key == predecessorId
-                && x.Value.RunAfter.Single().Value == EFlowStatus.Succeeded);
+                                  && x.Value.RunAfter.Single() == predecessorId);
 
         // If Key == default(Guid), it means SingleOrDefault found nothing
         if (nextAction.Key == default && nextAction.Value == null)
@@ -167,16 +189,6 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
     }
 
     /// <summary>
-    /// Checks if the runAfter dictionary references any predecessor with EFlowStatus.Failed.
-    /// In your setup, you mention that runAfter should contain only 1 item, but
-    /// we can still handle the general case.
-    /// </summary>
-    private bool HasFailedPredecessor(Dictionary<Guid, EFlowStatus> runAfter)
-    {
-        return runAfter.Any(kvp => kvp.Value == EFlowStatus.Failed);
-    }
-
-    /// <summary>
     /// Processes the IssueW3CCredential action and updates the given actionOutcome upon success/failure.
     /// Returns a Result indicating if the action was successful or not. If unsuccessful, it already finishes the workflow with failure.
     /// </summary>
@@ -186,19 +198,20 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         Guid workflowOutcomeId,
         ExecutionContext executionContext,
         List<ActionOutcome> actionOutcomes,
+        Workflow workflow,
         CancellationToken cancellationToken
     )
     {
         var input = (IssueW3cCredential)action.Input;
 
-        var subjectDid = await GetParameterFromExecutionContext(input.SubjectDid, executionContext);
+        var subjectDid = await GetParameterFromExecutionContext(input.SubjectDid, executionContext, workflow, actionOutcomes);
         if (subjectDid == null)
         {
             var errorMessage = "The subject DID is not provided in the execution context parameters.";
             return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
         }
 
-        var issuerDid = await GetParameterFromExecutionContext(input.IssuerDid, executionContext);
+        var issuerDid = await GetParameterFromExecutionContext(input.IssuerDid, executionContext, workflow, actionOutcomes);
         if (issuerDid == null)
         {
             var errorMessage = "The issuer DID is not provided.";
@@ -256,6 +269,52 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         }
 
         var successString = signedCredentialResult.Value;
+        actionOutcome.FinishOutcomeWithSuccess(successString);
+
+        return Result.Ok(true);
+    }
+
+    /// <summary>
+    /// Processes the VerifyW3CCredential action logic:
+    ///   - Retrieve the credential from execution context
+    ///   - Send VerifyW3CCredentialRequest
+    ///   - Record success/failure in the actionOutcome
+    /// </summary>
+    private async Task<Result<bool>> ProcessVerifyW3CCredentialAction(
+        Action action,
+        ActionOutcome actionOutcome,
+        Guid workflowOutcomeId,
+        ExecutionContext executionContext,
+        List<ActionOutcome> actionOutcomes,
+        Workflow workflow,
+        CancellationToken cancellationToken
+    )
+    {
+        var input = (VerifyW3cCredential)action.Input;
+
+        // Get the credential as string from context
+        var credentialStr = await GetParameterFromExecutionContext(input.CredentialReference, executionContext, workflow, actionOutcomes);
+        if (string.IsNullOrWhiteSpace(credentialStr))
+        {
+            var errorMessage = "No credential found in the execution context to verify.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        // @bjoern continue here
+        // TODO extract all the other flags from the input
+
+        // Send the verification request
+        var verifyRequest = new VerifyW3CCredentialRequest(credentialStr);
+        var verifyResult = await _mediator.Send(verifyRequest, cancellationToken);
+        if (verifyResult.IsFailed)
+        {
+            var errorMessage = verifyResult.Errors.FirstOrDefault()?.Message
+                               ?? "Verification failed.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var verificationResult = verifyResult.Value;
+        var successString = $"Credential verified. IsValid={verificationResult.IsValid}";
         actionOutcome.FinishOutcomeWithSuccess(successString);
 
         return Result.Ok(true);
@@ -322,7 +381,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return new ExecutionContext(workflow!.TenantId);
     }
 
-    private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext)
+    private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext, Workflow workflow, List<ActionOutcome> actionOutcomes)
     {
         if (parameterReference.Source == ParameterSource.TriggerInput)
         {
@@ -360,6 +419,30 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 {
                     return issuingKey.Did;
                 }
+            }
+        }
+        else if (parameterReference.Source == ParameterSource.ActionOutcome)
+        {
+            var actionId = parameterReference.ActionId;
+            var referencedActionExists = workflow.ProcessFlow!.Actions.Any(p => p.Key.Equals(actionId));
+            if (!referencedActionExists)
+            {
+                return null;
+            }
+
+            var referencedAction = workflow.ProcessFlow.Actions.FirstOrDefault(p => p.Key.Equals(actionId));
+            switch (referencedAction.Value.Type)
+            {
+                case EActionType.IssueW3CCredential:
+                    var actionOutcome = actionOutcomes.FirstOrDefault(p => p.ActionId.Equals(actionId));
+                    if (actionOutcome is null)
+                    {
+                        return null;
+                    }
+
+                    var credential = actionOutcome.OutcomeJson;
+                    return credential;
+                    break;
             }
         }
 

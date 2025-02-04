@@ -20,7 +20,7 @@ public class ProcessFlow
             throw new InvalidOperationException("Only a single trigger can be added to a ProcessFlow.");
         }
 
-        var triggerId = Guid.NewGuid();
+        var triggerId = trigger.Input.Id;
         Triggers.Add(triggerId, trigger);
     }
 
@@ -31,20 +31,20 @@ public class ProcessFlow
             throw new InvalidOperationException("A trigger must be added before adding any actions.");
         }
 
-        var actionId = Guid.NewGuid();
+        var actionId = action.Input.Id;
         if (!Actions.Any())
         {
-            action.RunAfter = new Dictionary<Guid, EFlowStatus>
+            action.RunAfter = new List<Guid>()
             {
-                { Triggers.Keys.First(), EFlowStatus.Succeeded }
+                 Triggers.Keys.First()
             };
         }
         else
         {
             var previousActionId = Actions.Keys.Last();
-            action.RunAfter = new Dictionary<Guid, EFlowStatus>
+            action.RunAfter = new List<Guid>
             {
-                { previousActionId, EFlowStatus.Succeeded }
+                 previousActionId
             };
         }
 

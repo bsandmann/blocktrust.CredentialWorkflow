@@ -115,7 +115,8 @@
             Item="@SelectedItem"
             OnBack="@(() => SelectItem(null))"
             OnChange="@OnChange"
-            TriggerParameters="@GetTriggerParameters()"/>
+            TriggerParameters="@GetTriggerParameters()"
+            FlowItems="FlowItems"/>
     }
 
     @if (_showError)
@@ -296,7 +297,7 @@
                 },
                 _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
             },
-            RunAfter = new Dictionary<Guid, EFlowStatus>()
+            RunAfter = new List<Guid>()
         };
     }
 

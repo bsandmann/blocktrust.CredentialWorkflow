@@ -7,7 +7,7 @@ GET https://localhost:7209/api/workflow/22222222-2222-2222-2222-222222222222
     &testClaim=RandomStringABC
 
 ### POST request to WorkflowController with JSON body
-POST https://localhost:7209/api/workflow/9cf41c20-2f7d-4ebb-a560-08dd454497d8
+POST https://localhost:7209/api/workflow/72a502f0-91f8-4266-a928-08dd4560caf7
 Content-Type: application/json
 
 {

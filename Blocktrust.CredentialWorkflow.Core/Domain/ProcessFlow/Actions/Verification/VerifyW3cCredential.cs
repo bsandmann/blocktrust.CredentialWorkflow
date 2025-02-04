@@ -2,8 +2,16 @@
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 
+using Common;
+
 public class VerifyW3cCredential : ActionInput
 {
+    [JsonPropertyName("credentialReference")]
+    public ParameterReference CredentialReference { get; set; } = new()
+    {
+        Source = ParameterSource.TriggerInput
+    };
+
     [JsonPropertyName("checkSignature")]
     public bool CheckSignature { get; set; } = true;
 
