@@ -37,19 +37,19 @@
                 <div class="mt-4">
                     <InputText @bind-Value="NewKey.KeyType"
                                class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Key Type"/>
+                               placeholder="Key Type (e.g. secp256k1)"/>
                     <ValidationMessage For="() => NewKey.KeyType" class="font-light text-red-500"/>
                 </div>
                 <div class="mt-4">
                     <InputText @bind-Value="NewKey.PublicKey"
                                class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Public Key"/>
+                               placeholder="Public Key (Base64 URL encoded (compressed)"/>
                     <ValidationMessage For="() => NewKey.PublicKey" class="font-light text-red-500"/>
                 </div>
                 <div class="mt-4">
                     <InputText @bind-Value="NewKey.PrivateKey"
                                class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Private Key"/>
+                               placeholder="Private Key (Base64 URL encoded compressed)"/>
                     <ValidationMessage For="() => NewKey.PrivateKey" class="font-light text-red-500"/>
                 </div>
                 <button type="submit"

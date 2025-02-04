@@ -19,6 +19,7 @@ using Org.BouncyCastle.Bcpg.Sig;
 using Tenant.GetIssuingKeys;
 using Tenant.GetIssungKeyById;
 using Tenant.GetPrivateIssuingKeyByDid;
+using VerifiableCredential.Common;
 using WorkflowOutcome.UpdateWorkflowOutcome;
 
 public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
@@ -95,21 +96,25 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                     return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
-                var privatekeyResult = HexStringToByteArray(issuignKeyResult.Value);
-                if (privatekeyResult.IsFailed)
+                var privatekeyResult = new byte[32];
+                try
                 {
-                    var errorMessage = privatekeyResult.Errors.FirstOrDefault()?.Message ?? "The private key for the issuer DID could not be parsed.";
+                    privatekeyResult = Base64Url.Decode(issuignKeyResult.Value);
+                }
+                catch (Exception e)
+                {
+                    var errorMessage = "The private key for the issuer DID could not be parsed: " + e.Message;
                     return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
                 var signedCredentialRequest = new SignW3cCredentialRequest(
                     credential: createW3CCredentialResult.Value,
                     issuerDid: issuerDid,
-                    privateKey: privatekeyResult.Value);
+                    privateKey: privatekeyResult);
                 var signedCredentialResult = await _mediator.Send(signedCredentialRequest, cancellationToken);
                 if (signedCredentialResult.IsFailed)
                 {
-                    var errorMessage = privatekeyResult.Errors.FirstOrDefault()?.Message ?? "The credential could not be signed.";
+                    var errorMessage = signedCredentialResult.Errors.FirstOrDefault()?.Message ?? "The credential could not be signed.";
                     return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
@@ -259,25 +264,4 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
     }
 
     // TODO refactor this to be placed somewhere where we actually save the private keys
-
-    public static Result<byte[]> HexStringToByteArray(string hex)
-    {
-        if (hex.Length % 2 != 0)
-        {
-            return Result.Fail("Hex string must have an even number of characters.");
-        }
-
-        var byteCount = hex.Length / 2;
-        var bytes = new byte[byteCount];
-
-        for (int i = 0; i < byteCount; i++)
-        {
-            // Grab two characters from the string
-            string twoChars = hex.Substring(i * 2, 2);
-            // Convert the two characters into a byte
-            bytes[i] = Convert.ToByte(twoChars, 16);
-        }
-
-        return Result.Ok(bytes);
-    }
 }
