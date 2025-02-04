@@ -51,6 +51,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
         // TODO ensure the correct order of actions
         var actionOutcomes = new List<ActionOutcome>();
+        var triggerId = workflow.Value.ProcessFlow.Triggers.Single().Key;
         foreach (var action in workflow.Value.ProcessFlow!.Actions)
         {
             var actionId = action.Key;
@@ -96,7 +97,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                     return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
                 }
 
-                var privatekeyResult = new byte[32];
+                byte[] privatekeyResult;
                 try
                 {
                     privatekeyResult = Base64Url.Decode(issuignKeyResult.Value);

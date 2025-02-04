@@ -10,5 +10,5 @@ public class Action
 
     [JsonPropertyName("input")] public ActionInput Input { get; set; }
 
-    [JsonPropertyName("runAfter")] public Dictionary<Guid, List<EFlowStatus>> RunAfter { get; set; }
+    [JsonPropertyName("runAfter")] public Dictionary<Guid, EFlowStatus> RunAfter { get; set; }
 }

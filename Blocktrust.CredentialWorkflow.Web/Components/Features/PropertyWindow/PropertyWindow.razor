@@ -296,7 +296,7 @@
                 },
                 _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
             },
-            RunAfter = new Dictionary<Guid, List<EFlowStatus>>()
+            RunAfter = new Dictionary<Guid, EFlowStatus>()
         };
     }
 

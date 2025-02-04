@@ -34,17 +34,17 @@ public class ProcessFlow
         var actionId = Guid.NewGuid();
         if (!Actions.Any())
         {
-            action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
+            action.RunAfter = new Dictionary<Guid, EFlowStatus>
             {
-                { Triggers.Keys.First(), new List<EFlowStatus> { EFlowStatus.Succeeded } }
+                { Triggers.Keys.First(), EFlowStatus.Succeeded }
             };
         }
         else
         {
             var previousActionId = Actions.Keys.Last();
-            action.RunAfter = new Dictionary<Guid, List<EFlowStatus>>
+            action.RunAfter = new Dictionary<Guid, EFlowStatus>
             {
-                { previousActionId, new List<EFlowStatus> { EFlowStatus.Succeeded } }
+                { previousActionId, EFlowStatus.Succeeded }
             };
         }
 
