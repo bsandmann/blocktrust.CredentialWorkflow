@@ -272,27 +272,27 @@
                 {
                     Id = Guid.NewGuid(),
                     CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
                     CheckExpiry = true,
+                    CheckRevocationStatus = false,
+                    CheckSchema = false,
                     CheckTrustRegistry = false
                 },
                 EActionType.VerifyW3CSdCredential => new VerifyW3cSdCredential
                 {
                     Id = Guid.NewGuid(),
                     CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
                     CheckExpiry = true,
+                    CheckStatus = false,
+                    CheckSchema = false,
                     CheckTrustRegistry = false
                 },
                 EActionType.VerifyAnoncredCredential => new VerifyAnoncredCredential
                 {
                     Id = Guid.NewGuid(),
                     CheckSignature = true,
-                    CheckStatus = true,
-                    CheckSchema = true,
                     CheckExpiry = true,
+                    CheckStatus = false,
+                    CheckSchema = false,
                     CheckTrustRegistry = false
                 },
                 _ => throw new ArgumentException($"Action type {actionType} is not implemented.")

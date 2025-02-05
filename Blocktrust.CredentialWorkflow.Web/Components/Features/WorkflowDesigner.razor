@@ -292,7 +292,7 @@
     {
         var checks = new List<string>();
         if (credential.CheckSignature) checks.Add("Signature");
-        if (credential.CheckStatus) checks.Add("Status");
+        if (credential.CheckRevocationStatus) checks.Add("Status");
         if (credential.CheckSchema) checks.Add("Schema");
         if (credential.CheckTrustRegistry) checks.Add("Trust Registry");
         if (credential.CheckExpiry) checks.Add("Expiry");

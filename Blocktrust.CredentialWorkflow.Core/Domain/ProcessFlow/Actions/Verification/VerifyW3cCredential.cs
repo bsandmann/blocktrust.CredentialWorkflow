@@ -16,10 +16,10 @@ public class VerifyW3cCredential : ActionInput
     public bool CheckSignature { get; set; } = true;
 
     [JsonPropertyName("checkStatus")]
-    public bool CheckStatus { get; set; } = true;
+    public bool CheckRevocationStatus { get; set; } = false;
 
     [JsonPropertyName("checkSchema")]
-    public bool CheckSchema { get; set; } = true;
+    public bool CheckSchema { get; set; } = false;
 
     [JsonPropertyName("checkTrustRegistry")]
     public bool CheckTrustRegistry { get; set; } = false;

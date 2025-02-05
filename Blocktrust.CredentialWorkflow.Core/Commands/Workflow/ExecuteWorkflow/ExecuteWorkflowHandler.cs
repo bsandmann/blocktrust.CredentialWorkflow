@@ -300,11 +300,8 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
         }
 
-        // @bjoern continue here
-        // TODO extract all the other flags from the input
-
         // Send the verification request
-        var verifyRequest = new VerifyW3CCredentialRequest(credentialStr);
+        var verifyRequest = new VerifyW3CCredentialRequest(credentialStr, input.CheckSignature, input.CheckExpiry, input.CheckRevocationStatus, input.CheckSchema, input.CheckTrustRegistry);
         var verifyResult = await _mediator.Send(verifyRequest, cancellationToken);
         if (verifyResult.IsFailed)
         {

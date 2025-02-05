@@ -35,28 +35,40 @@ public class VerifyW3CCredentialHandler : IRequestHandler<VerifyW3CCredentialReq
             var verificationResult = new CredentialVerificationResult();
 
             // Check signature
-            var signatureResult = await _mediator.Send(new CheckSignatureRequest(credential), cancellationToken);
-            if (signatureResult.IsFailed)
+            if (request.VerifySignature)
             {
-                return Result.Fail<CredentialVerificationResult>("Failed to verify signature");
+                var signatureResult = await _mediator.Send(new CheckSignatureRequest(credential), cancellationToken);
+                if (signatureResult.IsFailed)
+                {
+                    return Result.Fail<CredentialVerificationResult>("Failed to verify signature");
+                }
+
+                verificationResult.SignatureValid = signatureResult.Value;
             }
-            verificationResult.SignatureValid = signatureResult.Value;
 
             // Check expiry
-            var expiryResult = await _mediator.Send(new CheckExpiryRequest(credential), cancellationToken);
-            if (expiryResult.IsFailed)
+            if (request.VerifyExpiry)
             {
-                return Result.Fail<CredentialVerificationResult>("Failed to check expiry status");
+                var expiryResult = await _mediator.Send(new CheckExpiryRequest(credential), cancellationToken);
+                if (expiryResult.IsFailed)
+                {
+                    return Result.Fail<CredentialVerificationResult>("Failed to check expiry status");
+                }
+
+                verificationResult.IsExpired = expiryResult.Value;
             }
-            verificationResult.IsExpired = expiryResult.Value;
 
             // Check revocation
-            var revocationResult = await _mediator.Send(new CheckRevocationRequest(credential), cancellationToken);
-            if (revocationResult.IsFailed)
+            if (request.VerifyRevocationStatus)
             {
-                return Result.Fail<CredentialVerificationResult>("Failed to check revocation status");
+                var revocationResult = await _mediator.Send(new CheckRevocationRequest(credential), cancellationToken);
+                if (revocationResult.IsFailed)
+                {
+                    return Result.Fail<CredentialVerificationResult>("Failed to check revocation status");
+                }
+
+                verificationResult.IsRevoked = revocationResult.Value;
             }
-            verificationResult.IsRevoked = revocationResult.Value;
 
             return Result.Ok(verificationResult);
         }
