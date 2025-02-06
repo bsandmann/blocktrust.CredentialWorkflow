@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Blocktrust.Common.Resolver;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.CreateW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
@@ -12,9 +13,15 @@ using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
+using Blocktrust.Mediator.Client.Commands.TrustPing;
+using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
+using Blocktrust.PeerDID.DIDDoc;
+using Blocktrust.PeerDID.PeerDIDCreateResolve;
+using Blocktrust.PeerDID.Types;
 using Blocktrust.VerifiableCredential.Common;
 using FluentResults;
 using MediatR;
@@ -24,10 +31,14 @@ using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.Execut
 public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
 {
     private readonly IMediator _mediator;
+    private readonly ISecretResolver _secretResolver;
+    private readonly IDidDocResolver _didDocResolver;
 
-    public ExecuteWorkflowHandler(IMediator mediator)
+    public ExecuteWorkflowHandler(IMediator mediator, ISecretResolver secretResolver, IDidDocResolver didDocResolver)
     {
         _mediator = mediator;
+        _secretResolver = secretResolver;
+        _didDocResolver = didDocResolver;
     }
 
     public async Task<Result<bool>> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
@@ -139,6 +150,25 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
                     break;
                 }
+                case EActionType.DIDComm:
+                {
+                    var result = await ProcessDIDCommAction(
+                        action,
+                        actionOutcome,
+                        workflowOutcomeId,
+                        executionContext,
+                        actionOutcomes,
+                        workflow,
+                        cancellationToken
+                    );
+                    if (result.IsFailed || result.Value.Equals(false))
+                    {
+                        // Already finished with failure inside the method
+                        return result;
+                    }
+
+                    break;
+                }
                 default:
                 {
                     return Result.Fail($"The action type {action.Type} is not supported.");
@@ -155,6 +185,77 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
         // If we exited the loop normally, finalize with success:
         return await FinishActionsWithSuccess(workflowOutcomeId, actionOutcomes, cancellationToken);
+    }
+
+    private async Task<Result<bool>> ProcessDIDCommAction(Action action, ActionOutcome actionOutcome, Guid workflowOutcomeId, ExecutionContext executionContext, List<ActionOutcome> actionOutcomes, Workflow workflow, CancellationToken cancellationToken)
+    {
+        var input = (DIDCommAction)action.Input;
+
+        var recipientPeerDid = await GetParameterFromExecutionContext(input.PeerDid, executionContext, workflow, actionOutcomes);
+        if (recipientPeerDid == null)
+        {
+            var errorMessage = "The recipient Peer-DID is not provided in the execution context parameters.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var recipientPeerDidResult = PeerDidResolver.ResolvePeerDid(new PeerDid(recipientPeerDid), VerificationMaterialFormatPeerDid.Jwk);
+        if (recipientPeerDidResult.IsFailed)
+        {
+            var errorMessage = "The recipient Peer-DID could not be resolved: " + recipientPeerDidResult.Errors.FirstOrDefault()?.Message;
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var recipientPeerDidDocResult = DidDocPeerDid.FromJson(recipientPeerDidResult.Value);
+        if (recipientPeerDidDocResult.IsFailed)
+        {
+            var errorMessage = "The recipient Peer-DID could bot be translated into a valid DID-doc:  " + recipientPeerDidDocResult.Errors.FirstOrDefault()?.Message;
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        if (recipientPeerDidDocResult.Value.Services is null || recipientPeerDidDocResult.Value.Services.Count == 0 || recipientPeerDidDocResult.Value.Services.FirstOrDefault()!.ServiceEndpoint is null ||
+            string.IsNullOrWhiteSpace(recipientPeerDidDocResult.Value.Services.FirstOrDefault().ServiceEndpoint.Uri))
+        {
+            var errorMessage = "The recipient Peer-DID does not have a valid service endpoint.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var localDid = await _mediator.Send(new CreatePeerDidRequest(), cancellationToken);
+        if (localDid.IsFailed)
+        {
+            var errorMessage = "The local Peer-DID could not be created: " + localDid.Errors.FirstOrDefault()?.Message;
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var endpoint = recipientPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
+        if (endpoint.StartsWith("did:peer"))
+        {
+            var innerPeerDid = PeerDidResolver.ResolvePeerDid(new PeerDid(endpoint), VerificationMaterialFormatPeerDid.Jwk);
+            var innerPeerDidDocResult = DidDocPeerDid.FromJson(innerPeerDid.Value);
+            endpoint = innerPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
+        }
+
+        endpoint = "http://mediator.blocktrust.dev/";
+
+        if (input.Type == EDIDCommType.TrustPing)
+        {
+            var trustPingRequest = new TrustPingRequest(new Uri(endpoint), recipientPeerDid, localDid.Value.PeerDid.Value, suggestedLabel: "TrustPing");
+            var trustPingResult = await _mediator.Send(trustPingRequest, cancellationToken);
+            if (trustPingResult.IsFailed)
+            {
+                var errorMessage = "The TrustPing request could not be sent: " + trustPingResult.Errors.FirstOrDefault()?.Message;
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+        }
+        else
+        {
+            var errorMessage = "The recipient Peer-DID is not provided in the execution context parameters.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var successString = "Message sent successfully.";
+        actionOutcome.FinishOutcomeWithSuccess(successString);
+
+        return Result.Ok(true);
     }
 
     /// <summary>

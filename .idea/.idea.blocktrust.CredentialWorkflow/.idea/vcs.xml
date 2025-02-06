@@ -2,5 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../blocktrust.Core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../blocktrust.DIDComm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../blocktrust.Mediator" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../blocktrust.PeerDID" vcs="Git" />
   </component>
 </project>
