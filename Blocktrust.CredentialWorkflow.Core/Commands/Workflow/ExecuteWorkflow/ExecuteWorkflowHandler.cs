@@ -234,8 +234,6 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             endpoint = innerPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
         }
 
-        endpoint = "http://mediator.blocktrust.dev/";
-
         if (input.Type == EDIDCommType.TrustPing)
         {
             var trustPingRequest = new TrustPingRequest(new Uri(endpoint), recipientPeerDid, localDid.Value.PeerDid.Value, suggestedLabel: "TrustPing");
