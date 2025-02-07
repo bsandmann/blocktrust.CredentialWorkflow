@@ -5,20 +5,18 @@ using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCrede
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetPrivateIssuingKeyByDid;
 using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
-using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById;
 using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.UpdateWorkflowOutcome;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
-using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
-using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
-using Blocktrust.Mediator.Client.Commands.TrustPing;
+using Blocktrust.Mediator.Client.Commands.SendMessage;
 using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
+using Blocktrust.Mediator.Common.Protocols;
 using Blocktrust.PeerDID.DIDDoc;
 using Blocktrust.PeerDID.PeerDIDCreateResolve;
 using Blocktrust.PeerDID.Types;
@@ -27,6 +25,13 @@ using FluentResults;
 using MediatR;
 using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
 using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.ExecutionContext;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
+
+using DIDComm.GetPeerDIDs;
+using Mediator.Client.Commands.ForwardMessage;
+using Mediator.Client.Commands.TrustPing;
+using Workflow = Domain.Workflow.Workflow;
 
 public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
 {
@@ -191,7 +196,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
     {
         var input = (DIDCommAction)action.Input;
 
-        var recipientPeerDid = await GetParameterFromExecutionContext(input.PeerDid, executionContext, workflow, actionOutcomes);
+        var recipientPeerDid = await GetParameterFromExecutionContext(input.RecipientPeerDid, executionContext, workflow, actionOutcomes, EActionType.DIDComm);
         if (recipientPeerDid == null)
         {
             var errorMessage = "The recipient Peer-DID is not provided in the execution context parameters.";
@@ -219,24 +224,51 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
         }
 
-        var localDid = await _mediator.Send(new CreatePeerDidRequest(), cancellationToken);
-        if (localDid.IsFailed)
+        var tenantDids = await _mediator.Send(new GetPeerDIDsRequest(workflow.TenantId));
+        if (tenantDids.IsFailed)
         {
-            var errorMessage = "The local Peer-DID could not be created: " + localDid.Errors.FirstOrDefault()?.Message;
+            var errorMessage = "The local Peer-DIDs of the tenant could not be fetched: " + tenantDids.Errors.FirstOrDefault()?.Message;
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var localDid = await GetParameterFromExecutionContext(input.SenderPeerDid, executionContext, workflow, actionOutcomes, EActionType.DIDComm);
+        if (string.IsNullOrWhiteSpace(localDid))
+        {
+            var errorMessage = "The local Peer-DIDs of the tenant could not be identified: " + tenantDids.Errors.FirstOrDefault()?.Message;
             return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
         }
 
         var endpoint = recipientPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
+        var did = recipientPeerDidDocResult.Value.Did;
         if (endpoint.StartsWith("did:peer"))
         {
             var innerPeerDid = PeerDidResolver.ResolvePeerDid(new PeerDid(endpoint), VerificationMaterialFormatPeerDid.Jwk);
             var innerPeerDidDocResult = DidDocPeerDid.FromJson(innerPeerDid.Value);
             endpoint = innerPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
+            did = recipientPeerDidDocResult.Value.Services.First().ServiceEndpoint.Uri;
         }
 
-        if (input.Type == EDIDCommType.TrustPing)
+        if (input.Type == EDIDCommType.Message)
         {
-            var trustPingRequest = new TrustPingRequest(new Uri(endpoint), recipientPeerDid, localDid.Value.PeerDid.Value, suggestedLabel: "TrustPing");
+            var basicMessage = BasicMessage.Create("Hello you", localDid);
+            var packedBasicMessage = await BasicMessage.Pack(basicMessage, from: localDid, recipientPeerDid, _secretResolver, _didDocResolver);
+
+            var forwardMessageResult = await _mediator.Send(new SendForwardMessageRequest(
+                message: packedBasicMessage.Value,
+                localDid: localDid,
+                mediatorDid: did,
+                mediatorEndpoint: new Uri(endpoint),
+                recipientDid: recipientPeerDid
+            ), cancellationToken);
+            if (forwardMessageResult.IsFailed)
+            {
+                var errorMessage = "The Forward-Message could not be sent: " + forwardMessageResult.Errors.FirstOrDefault()?.Message;
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+        }
+        else if (input.Type == EDIDCommType.TrustPing)
+        {
+            var trustPingRequest = new TrustPingRequest(new Uri(endpoint), did, localDid, suggestedLabel: "TrustPing");
             var trustPingResult = await _mediator.Send(trustPingRequest, cancellationToken);
             if (trustPingResult.IsFailed)
             {
@@ -303,14 +335,14 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
     {
         var input = (IssueW3cCredential)action.Input;
 
-        var subjectDid = await GetParameterFromExecutionContext(input.SubjectDid, executionContext, workflow, actionOutcomes);
+        var subjectDid = await GetParameterFromExecutionContext(input.SubjectDid, executionContext, workflow, actionOutcomes, EActionType.IssueW3CCredential);
         if (subjectDid == null)
         {
             var errorMessage = "The subject DID is not provided in the execution context parameters.";
             return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
         }
 
-        var issuerDid = await GetParameterFromExecutionContext(input.IssuerDid, executionContext, workflow, actionOutcomes);
+        var issuerDid = await GetParameterFromExecutionContext(input.IssuerDid, executionContext, workflow, actionOutcomes, EActionType.IssueW3CCredential);
         if (issuerDid == null)
         {
             var errorMessage = "The issuer DID is not provided.";
@@ -392,7 +424,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         var input = (VerifyW3cCredential)action.Input;
 
         // Get the credential as string from context
-        var credentialStr = await GetParameterFromExecutionContext(input.CredentialReference, executionContext, workflow, actionOutcomes);
+        var credentialStr = await GetParameterFromExecutionContext(input.CredentialReference, executionContext, workflow, actionOutcomes, EActionType.VerifyW3CCredential);
         if (string.IsNullOrWhiteSpace(credentialStr))
         {
             var errorMessage = "No credential found in the execution context to verify.";
@@ -477,7 +509,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return new ExecutionContext(workflow!.TenantId);
     }
 
-    private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext, Workflow workflow, List<ActionOutcome> actionOutcomes)
+    private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext, Workflow workflow, List<ActionOutcome> actionOutcomes, EActionType? actionType)
     {
         if (parameterReference.Source == ParameterSource.TriggerInput)
         {
@@ -496,25 +528,63 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         }
         else if (parameterReference.Source == ParameterSource.AppSettings)
         {
-            // For example, to get an Issuing DID from "AppSettings"
-            var issuingKeys = await _mediator.Send(new GetIssuingKeysRequest(executionContext.TenantId));
-            if (issuingKeys.IsFailed)
+            if (actionType == EActionType.IssueW3CCredential)
             {
-                return null;
-            }
-
-            foreach (var issuingKey in issuingKeys.Value)
-            {
-                var isParseable = Guid.TryParse(parameterReference.Path, out var keyId);
-                if (!isParseable)
+                var issuingKeys = await _mediator.Send(new GetIssuingKeysRequest(executionContext.TenantId));
+                if (issuingKeys.IsFailed || issuingKeys.Value is null || issuingKeys.Value.Count == 0)
                 {
                     return null;
                 }
 
-                if (issuingKey.IssuingKeyId.Equals(keyId))
+                if (parameterReference.Path.Equals("DefaultIssuerDid", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    return issuingKey.Did;
+                    return issuingKeys.Value.First().Did;
                 }
+
+                foreach (var issuingKey in issuingKeys.Value)
+                {
+                    var isParseable = Guid.TryParse(parameterReference.Path, out var keyId);
+                    if (!isParseable)
+                    {
+                        return null;
+                    }
+
+                    if (issuingKey.IssuingKeyId.Equals(keyId))
+                    {
+                        return issuingKey.Did;
+                    }
+                }
+            }
+            else if (actionType == EActionType.DIDComm)
+            {
+                var peerDids = await _mediator.Send(new GetPeerDIDsRequest(executionContext.TenantId));
+                if (peerDids.IsFailed || peerDids.Value is null || peerDids.Value.Count == 0)
+                {
+                    return null;
+                }
+
+                if (parameterReference.Path.Equals("DefaultSenderDid", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return peerDids.Value.First().PeerDID;
+                }
+
+                foreach (var peerDid in peerDids.Value)
+                {
+                    var isParseable = Guid.TryParse(parameterReference.Path, out var keyId);
+                    if (!isParseable)
+                    {
+                        return null;
+                    }
+
+                    if (peerDid.PeerDIDEntityId.Equals(keyId))
+                    {
+                        return peerDid.PeerDID;
+                    }
+                }
+            }
+            else
+            {
+                return null;
             }
         }
         else if (parameterReference.Source == ParameterSource.ActionOutcome)

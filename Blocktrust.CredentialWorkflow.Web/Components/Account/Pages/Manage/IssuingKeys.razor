@@ -65,7 +65,7 @@
                         <div class="flex flex-row">
                             <div class="flex flex-col">
                                 <h3 class="font-semibold text-lg">@key.Name</h3>
-                                <p class="text-sm text-gray-600">DID: @key.Did</p>
+                                <p class="text-sm text-gray-600">DID: @Truncate(@key.Did)</p>
                                 <p class="text-sm text-gray-600">Type: @key.KeyType</p>
                                 <p class="text-sm text-gray-600">Public Key: @TruncateKey(key.PublicKey)</p>
                                 <p class="text-sm text-gray-600">Private Key: @TruncateKey(key.PrivateKey)</p>
@@ -185,6 +185,15 @@
         }
 
         return key.Substring(0, 10) + "..." + key.Substring(key.Length - 5);
+    }
+
+    private string Truncate(string? value, int frontChars = 10, int backChars = 5)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        if (value.Length <= frontChars + backChars)
+            return value;
+        return value.Substring(0, frontChars) + "..." + value.Substring(value.Length - backChars);
     }
 
     private sealed class NewKeyModel

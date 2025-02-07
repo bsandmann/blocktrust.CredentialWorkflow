@@ -1,0 +1,115 @@
+@page "/Account/Manage/DeletePeerDids/{PeerDidId:guid}"
+
+@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.DeletePeerDID
+@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDidById
+@using Blocktrust.CredentialWorkflow.Core.Domain.PeerDID
+@using MediatR
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<DeletePeerDids> Logger
+
+<PageTitle>Delete PeerDID</PageTitle>
+
+<div class="container mx-auto">
+    <div class="mx-auto w-3/4 bg-gray-100 p-4 rounded-xl mt-10">
+        <StatusMessage Message="@message" />
+
+        @if (IsLoading)
+        {
+            <p>Loading...</p>
+        }
+        else if (LoadError != null)
+        {
+            <div class="text-red-600">@LoadError</div>
+        }
+        else
+        {
+            <EditForm Model="@Input"
+                      FormName="delete-peer-did"
+                      OnValidSubmit="OnValidSubmitAsync"
+                      method="post">
+                <DataAnnotationsValidator />
+                <h2 class="font-museo text-2xl mb-4">Delete PeerDID</h2>
+
+                <p>Are you sure you want to delete the PeerDID named <strong>@(PeerDidBeingDeleted?.Name)</strong>?</p>
+                <p class="text-sm text-gray-600">
+                    PeerDID: @PeerDidBeingDeleted?.PeerDID
+                </p>
+                <div class="mt-4">
+                    <button type="submit"
+                            class="bg-red-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">
+                        Delete
+                    </button>
+                    <a href="/Account/Manage/PeerDids"
+                       class="ml-4 inline-block bg-gray-500 text-white rounded-md px-4 py-1 font-light cursor-pointer">
+                        Cancel
+                    </a>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid PeerDidId { get; set; }
+
+    private string? message;
+    private string? LoadError;
+    private bool IsLoading = true;
+    private Guid TenantId;
+
+    private PeerDIDModel? PeerDidBeingDeleted;
+
+    // Dummy model to satisfy the EditForm requirement (like your DeleteKeyModel).
+    private DeletePeerDidModel Input { get; set; } = new();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        TenantId = user.TenantEntityId!.Value;
+
+        var result = await Mediator.Send(new GetPeerDidByIdRequest(PeerDidId));
+        IsLoading = false;
+
+        if (result.IsFailed)
+        {
+            LoadError = $"Error loading PeerDID: {string.Join(", ", result.Errors)}";
+        }
+        else
+        {
+            PeerDidBeingDeleted = result.Value;
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (PeerDidBeingDeleted == null)
+        {
+            message = "No PeerDID found to delete.";
+            return;
+        }
+
+        var deleteRequest = new DeletePeerDIDRequest(PeerDidBeingDeleted.PeerDIDEntityId);
+        var deleteResult = await Mediator.Send(deleteRequest);
+
+        if (deleteResult.IsSuccess)
+        {
+            message = "PeerDID deleted successfully.";
+            RedirectManager.RedirectTo("Account/Manage/PeerDids");
+        }
+        else
+        {
+            message = $"Error deleting PeerDID: {string.Join(", ", deleteResult.Errors)}";
+        }
+    }
+
+    private sealed class DeletePeerDidModel
+    {
+        // No properties needed. Just a placeholder.
+    }
+}

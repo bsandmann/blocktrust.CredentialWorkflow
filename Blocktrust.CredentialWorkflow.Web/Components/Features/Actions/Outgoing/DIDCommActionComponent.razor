@@ -1,9 +1,78 @@
-﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
+﻿@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs
+@using Blocktrust.CredentialWorkflow.Core.Domain.PeerDID
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using MediatR
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
+
+@inject IMediator Mediator
+@inject AppStateService AppStateService
 
 <div class="p-4 text-sm">
     <div class="space-y-3">
+        <!-- Sender Peer DID Selection -->
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Sender Peer DID</label>
+            <select class="w-full rounded border px-2 py-1 text-xs"
+                    @bind="ActionInput.SenderPeerDid.Path"
+                    @bind:after="OnSenderPeerDidChanged">
+                @foreach (var pdid in PeerDIDs)
+                {
+                    // Truncate the DID if longer than, say, 20 characters
+                    var displayedDid = pdid.PeerDID.Length <= 20
+                        ? pdid.PeerDID
+                        : pdid.PeerDID.Substring(0, 20) + "...";
+
+                    <option value="@pdid.PeerDIDEntityId.ToString()">
+                        @pdid.Name (@displayedDid)
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- Recipient Peer DID Section -->
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Recipient Peer-DID</label>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.RecipientPeerDid.Source"
+                        @bind:after="OnValueChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.RecipientPeerDid.Source == ParameterSource.Static)
+                {
+                    <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                           @bind="ActionInput.RecipientPeerDid.Path"
+                           @bind:after="OnValueChanged"
+                           placeholder="Enter peer DID for a static value" />
+                }
+                else
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.RecipientPeerDid.Path"
+                            @bind:after="OnValueChanged">
+                        @if (ActionInput.RecipientPeerDid.Source == ParameterSource.TriggerInput)
+                        {
+                            @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                        else
+                        {
+                            <!-- TODO: Add previous action outcomes -->
+                            <option value="">Select output</option>
+                        }
+                    </select>
+                }
+            </div>
+        </div>
+
+        <!-- DIDComm Type Selection -->
         <div class="p-2 border rounded-md">
             <label class="block text-xs font-medium text-gray-700 mb-1">DIDComm Type</label>
             <select class="w-full rounded border px-2 py-1 text-xs"
@@ -16,46 +85,6 @@
             </select>
         </div>
 
-        <div class="p-2 border rounded-md">
-            <label class="block text-xs font-medium text-gray-700 mb-1">Peer DID</label>
-            <div class="flex space-x-2">
-                <select class="w-1/3 rounded border px-2 py-1 text-xs"
-                        @bind="ActionInput.PeerDid.Source"
-                        @bind:after="OnValueChanged">
-                    <option value="@ParameterSource.Static">Static Value</option>
-                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
-                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
-                </select>
-                
-                @if (ActionInput.PeerDid.Source == ParameterSource.Static)
-                {
-                    <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
-                           @bind="ActionInput.PeerDid.Path"
-                           @bind:after="OnValueChanged"
-                           placeholder="Enter peer DID for a static value" />
-                }
-                else
-                {
-                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
-                            @bind="ActionInput.PeerDid.Path"
-                            @bind:after="OnValueChanged">
-                        @if (ActionInput.PeerDid.Source == ParameterSource.TriggerInput)
-                        {
-                            @foreach (var param in TriggerParameters ?? Array.Empty<string>())
-                            {
-                                <option value="@param">@param</option>
-                            }
-                        }
-                        else
-                        {
-                            // TODO: Add previous action outcomes
-                            <option value="">Select output</option>
-                        }
-                    </select>
-                }
-            </div>
-        </div>
-
         @if (ActionInput.Type == EDIDCommType.Message)
         {
             <div class="p-2 border rounded-md">
@@ -66,14 +95,14 @@
                         Add Field
                     </button>
                 </div>
-                
+
                 @foreach (var field in ActionInput.MessageContent)
                 {
                     <div class="flex items-center space-x-2 mt-2">
                         <input type="text" class="w-1/3 rounded border px-2 py-1 text-xs"
                                value="@field.Key"
                                @onchange="@(e => UpdateMessageFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))" />
-                               
+
                         <select class="w-1/3 rounded border px-2 py-1 text-xs"
                                 @bind="field.Value.Source">
                             <option value="@ParameterSource.Static">Static</option>
@@ -101,16 +130,45 @@
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
 
+    // Holds the list of PeerDIDs retrieved via GetPeerDIDsRequest
+    private List<PeerDIDModel> PeerDIDs { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load the tenant from your app state
+        var tenant = AppStateService.Tenant;
+        var tenantId = tenant.TenantId;
+
+        // Fetch the list of PeerDIDs for this tenant
+        var result = await Mediator.Send(new GetPeerDIDsRequest(tenantId));
+        if (result.IsSuccess)
+        {
+            PeerDIDs = result.Value;
+        }
+        else
+        {
+            // Handle error if needed, e.g., show a toast or fallback
+        }
+    }
+
     private string GetFriendlyName(EDIDCommType type) => type switch
     {
         EDIDCommType.TrustPing => "Trust Ping",
-        EDIDCommType.Message => "Message",
-        _ => type.ToString()
+        EDIDCommType.Message   => "Message",
+        _                      => type.ToString()
     };
 
+    // Called whenever a bound property changes
     private async Task OnValueChanged()
     {
         await OnChange.InvokeAsync();
+    }
+
+    // Specifically called after the user selects a different "Sender Peer DID"
+    private async Task OnSenderPeerDidChanged()
+    {
+        ActionInput.SenderPeerDid.Source = ParameterSource.AppSettings;
+        await OnValueChanged();
     }
 
     private async Task AddMessageField()

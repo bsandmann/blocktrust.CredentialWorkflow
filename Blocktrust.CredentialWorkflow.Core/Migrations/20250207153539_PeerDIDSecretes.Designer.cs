@@ -3,6 +3,7 @@ using System;
 using Blocktrust.CredentialWorkflow.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blocktrust.CredentialWorkflow.Core.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250207153539_PeerDIDSecretes")]
+    partial class PeerDIDSecretes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,37 +24,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDEntity", b =>
-                {
-                    b.Property<Guid>("PeerDIDEntityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("PeerDID")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(5000)");
-
-                    b.Property<Guid>("TenantEntityId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PeerDIDEntityId");
-
-                    b.HasIndex("TenantEntityId");
-
-                    b.ToTable("PeerDIDEntities");
-                });
 
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDSecretEntity", b =>
                 {
@@ -432,15 +404,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDEntity", b =>
-                {
-                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", null)
-                        .WithMany("PeerDIDEntities")
-                        .HasForeignKey("TenantEntityId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Identity.ApplicationUser", b =>
                 {
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", "TenantEntity")
@@ -467,7 +430,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", null)
                         .WithMany("IssuingKeys")
                         .HasForeignKey("TenantEntityId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -538,8 +501,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Navigation("ApplicationUsers");
 
                     b.Navigation("IssuingKeys");
-
-                    b.Navigation("PeerDIDEntities");
 
                     b.Navigation("WorkflowEntities");
                 });

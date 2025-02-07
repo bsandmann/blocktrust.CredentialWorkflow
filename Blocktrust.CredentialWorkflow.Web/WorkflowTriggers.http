@@ -7,25 +7,13 @@ GET https://localhost:7209/api/workflow/22222222-2222-2222-2222-222222222222
     &testClaim=RandomStringABC
 
 ### POST request to WorkflowController with JSON body
-POST https://localhost:7209/api/workflow/529fa7cb-b7a6-4473-4358-08dd46a71c44
+POST https://localhost:7209/api/workflow/59ff292a-d29a-44f5-f5dc-08dd47abfbc4
 Content-Type: application/json
 
 {
   "subjectDid": "did:example:123",
   "exampleClaim": "ClaimValueXYZ",
-  "peerDid": "did:peer:2.Ez6LSieVW83fXyLaRYAuWBduDJMyyEdwkwNeMLQRUPukU6Mcy.Vz6MkqdEbu1u9bZMQAYWT5RwyYeNyMQX4soP7CQ9GR1iWqpQE.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU200M2c1c2VXSzN2RW12b0t6R3FIcENRbldhS1pqeFhwUXRzODRtNjNTUEZzLlZ6Nk1rZXZKd3hBa2JmV2ladDlxeDRRRzF4aGVaTEJSWlR0bTZqR1UzTUVOWm9lSDQuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXNiMk5oYkdodmMzUTZPREE0TUM4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0",
-  "email": "testuser@example.com",
-  "age": "123"
-}
-
-### POST request to WorkflowController with JSON body
-POST https://localhost:7209/api/workflow/529fa7cb-b7a6-4473-4358-08dd46a71c44
-Content-Type: application/json
-
-{
-  "subjectDid": "did:example:123",
-  "exampleClaim": "ClaimValueXYZ",
-  "peerDid": "did:peer:2.Ez6LSbmXxcVBaE8soWkPymRwEWyjztJm68pZgsUwXyuHQjrsv.Vz6Mkt1gC5pZ2z56msFouMjwXPTZxNMMwrz7zmzukjJmcozYj.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6Imh0dHA6Ly9tZWRpYXRvci5ibG9ja3RydXN0LmRldi8iLCJyIjpbXSwiYSI6WyJkaWRjb21tL3YyIl19fQ",
+  "peerDid": "did:peer:2.Ez6LSshPwzxP9guit7BJdHGYpwAeH6hT2YTr8r619i4L8WHm1.Vz6Mkqp5bXuEqFcFPWCniDZe2Vk8TQEcJB4tvr1VZ2chhaP8S.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU3FSamhhM1o5cEp4aUNWV3M5RWZZWTZrSzJYS0pKOGNKYXdYbnB3aWtDUHJ1LlZ6Nk1rc1hjM3lDSkNaUWlSWDhBM0NtUzMycWdDZks4TTN4QWtGYTkzVFZXSzE2ZlouU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXNiMk5oYkdodmMzUTZPREE0TUM4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0",
   "email": "testuser@example.com",
   "age": "123"
 }
