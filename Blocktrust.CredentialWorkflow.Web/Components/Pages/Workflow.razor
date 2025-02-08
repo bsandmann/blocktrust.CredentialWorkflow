@@ -1,5 +1,4 @@
 ﻿@page "/workflows"
-@using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflows
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
@@ -16,6 +15,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
@@ -31,7 +31,6 @@
 <PageTitle>Blocktrust Credential Workflow Platform - Workflows</PageTitle>
 
 <div class="container mx-auto p-6">
-
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Workflows</h1>
         <div class="flex space-x-4">
@@ -63,110 +62,104 @@
             <div class="bg-white shadow-md rounded-lg overflow-hidden">
                 <table class="min-w-full">
                     <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            colspan="6">
-                            <div class="grid grid-cols-6 gap-4">
-                                <div>Name</div>
-                                <div>Last Updated</div>
-                                <div>State</div>
-                                <div>Last Run ActionOutcomes</div>
-                                <div>Last Run Started</div>
-                                <div>Last Run Ended</div>
-                            </div>
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actionss
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var workflow in workflowSummaries)
-                    {
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)"
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 colspan="6">
                                 <div class="grid grid-cols-6 gap-4">
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">@workflow.Name</div>
-                                    </div>
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">@workflow.UpdatedUtc.ToString("g")</div>
-                                    </div>
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetWorkflowStateColor(workflow.WorkflowState)">
-                                            @workflow.WorkflowState
-                                        </span>
-                                    </div>
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        @if (workflow.LastWorkflowOutcome != null)
-                                        {
-                                            <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastWorkflowOutcome.WorkflowOutcomeState)">
-                                                @workflow.LastWorkflowOutcome.WorkflowOutcomeState
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-sm text-gray-500">N/A</span>
-                                        }
-                                    </div>
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        <div
-                                            class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
-                                    </div>
-                                    <div class="px-6 py-4 whitespace-nowrap">
-                                        <div
-                                            class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
-                                    </div>
+                                    <div>Name</div>
+                                    <div>Last Updated</div>
+                                    <div>State</div>
+                                    <div>Last Run ActionOutcomes</div>
+                                    <div>Last Run Started</div>
+                                    <div>Last Run Ended</div>
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <!-- Run/Stop button -->
-                                @if (workflow.IsRunable == true)
-                                {
-                                    <button @onclick="() => ToggleWorkflowState(workflow)"
-                                            @onclick:stopPropagation="true"
-                                            class="inline-flex items-center text-green-600 hover:text-green-900 mr-2">
-                                        @if (workflow.WorkflowState == EWorkflowState.Inactive)
-                                        {
-                                            <span class="material-symbols-outlined mr-1">play_arrow</span>
-                                            <span>Run</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="material-symbols-outlined mr-1">stop</span>
-                                            <span>Stop</span>
-                                        }
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button disabled
-                                            class="inline-flex items-center text-gray-400 cursor-not-allowed mr-2">
-                                        <span class="material-symbols-outlined mr-1">play_arrow</span>
-                                        Run
-                                    </button>
-                                }
-
-                                <!-- Existing Delete button -->
-                                <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)"
-                                        @onclick:stopPropagation="true"
-                                        class="text-red-600 hover:text-red-900 mr-2">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-
-                                <!-- Existing Export button -->
-                                <button @onclick="() => ExportWorkflow(workflow.WorkflowId)"
-                                        @onclick:stopPropagation="true"
-                                        class="text-blue-600 hover:text-blue-900">
-                                    <span class="material-symbols-outlined">file_download</span>
-                                </button>
-                            </td>
-
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
                         </tr>
-                    }
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var workflow in workflowSummaries)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <td class="cursor-pointer" @onclick="() => NavigateToWorkflow(workflow.WorkflowId)"
+                                    colspan="6">
+                                    <div class="grid grid-cols-6 gap-4">
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">@workflow.Name</div>
+                                        </div>
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">@workflow.UpdatedUtc.ToString("g")</div>
+                                        </div>
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetWorkflowStateColor(workflow.WorkflowState)">
+                                                @workflow.WorkflowState
+                                            </span>
+                                        </div>
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            @if (workflow.LastWorkflowOutcome != null)
+                                            {
+                                                <span @onclick="() => NavigateToLogs(workflow.WorkflowId)" 
+                                                      @onclick:stopPropagation="true"
+                                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetOutcomeStateColor(workflow.LastWorkflowOutcome.WorkflowOutcomeState) cursor-pointer hover:opacity-80">
+                                                    @workflow.LastWorkflowOutcome.WorkflowOutcomeState
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-sm text-gray-500">N/A</span>
+                                            }
+                                        </div>
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.StartedUtc?.ToString("g") ?? "N/A")</div>
+                                        </div>
+                                        <div class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">@(workflow.LastWorkflowOutcome?.EndedUtc?.ToString("g") ?? "N/A")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    @if (workflow.IsRunable == true)
+                                    {
+                                        <button @onclick="() => ToggleWorkflowState(workflow)"
+                                                @onclick:stopPropagation="true"
+                                                class="inline-flex items-center text-green-600 hover:text-green-900 mr-2">
+                                            @if (workflow.WorkflowState == EWorkflowState.Inactive)
+                                            {
+                                                <span class="material-symbols-outlined mr-1">play_arrow</span>
+                                                <span>Run</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined mr-1">stop</span>
+                                                <span>Stop</span>
+                                            }
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button disabled
+                                                class="inline-flex items-center text-gray-400 cursor-not-allowed mr-2">
+                                            <span class="material-symbols-outlined mr-1">play_arrow</span>
+                                            Run
+                                        </button>
+                                    }
+
+                                    <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)"
+                                            @onclick:stopPropagation="true"
+                                            class="text-red-600 hover:text-red-900 mr-2">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+
+                                    <button @onclick="() => ExportWorkflow(workflow.WorkflowId)"
+                                            @onclick:stopPropagation="true"
+                                            class="text-blue-600 hover:text-blue-900">
+                                        <span class="material-symbols-outlined">file_download</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -303,6 +296,11 @@
     private void NavigateToWorkflow(Guid workflowWorkflowId)
     {
         NavigationManager.NavigateTo($"designer/{workflowWorkflowId}");
+    }
+
+    private void NavigateToLogs(Guid workflowId)
+    {
+        NavigationManager.NavigateTo($"logs/{workflowId}");
     }
 
     private async Task CreateNewWorkflow()
@@ -489,5 +487,4 @@
         // Re-render to show new state or error
         StateHasChanged();
     }
-
 }

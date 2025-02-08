@@ -232,9 +232,9 @@ else
 
 
 @code {
-    private readonly CancellationTokenSource cts = new CancellationTokenSource();
+    private readonly CancellationTokenSource cts = new();
     private Guid? selectedWorkflowId;
-    private List<WorkflowOutcome> workflowOutcomes = new List<WorkflowOutcome>();
+    private List<WorkflowOutcome> workflowOutcomes = new();
     private Guid? expandedWorkflowOutcomeId;
 
     protected override async Task OnInitializedAsync()
@@ -296,10 +296,6 @@ else
     {
         public string OutcomeId { get; set; } = "";
         public string ActionId { get; set; } = "";
-        public int EActionOutcome { get; set; }
-        public string StartedUtc { get; set; } = "";
-        public string EndedUtc { get; set; } = "";
-        public string? ErrorJson { get; set; }
         public string? OutcomeJson { get; set; }
     }
 
