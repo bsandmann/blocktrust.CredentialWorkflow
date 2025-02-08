@@ -28,9 +28,14 @@ using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.Execut
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
+using System.Text;
+using Blocktrust.DIDComm.Message.Attachments;
+using Blocktrust.DIDComm.Message.Messages;
 using DIDComm.GetPeerDIDs;
 using Mediator.Client.Commands.ForwardMessage;
 using Mediator.Client.Commands.TrustPing;
+using Mediator.Common;
+using Mediator.Common.Models.CredentialOffer;
 using Workflow = Domain.Workflow.Workflow;
 
 public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
@@ -250,7 +255,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
         if (input.Type == EDIDCommType.Message)
         {
-            var basicMessage = BasicMessage.Create("Hello you", localDid);
+            var basicMessage = BasicMessage.Create("Hello you!", localDid);
             var packedBasicMessage = await BasicMessage.Pack(basicMessage, from: localDid, recipientPeerDid, _secretResolver, _didDocResolver);
 
             var forwardMessageResult = await _mediator.Send(new SendForwardMessageRequest(
@@ -276,6 +281,39 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
             }
         }
+        else if (input.Type == EDIDCommType.CredentialIssuance)
+        {
+            // Get the credential as string from context
+            var credentialStr = await GetParameterFromExecutionContext(input.CredentialReference, executionContext, workflow, actionOutcomes, EActionType.DIDComm);
+            if (string.IsNullOrWhiteSpace(credentialStr))
+            {
+                var errorMessage = "No credential found in the execution context to verify.";
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+
+            var encodedCredential = Base64Url.Encode(Encoding.UTF8.GetBytes(credentialStr));
+
+            var msg = BuildIssuingMessage(new PeerDid(localDid), new PeerDid(recipientPeerDid), Guid.NewGuid().ToString(), encodedCredential);
+            var packedBasicMessage = await BasicMessage.Pack(msg, from: localDid, recipientPeerDid, _secretResolver, _didDocResolver);
+            if (packedBasicMessage.IsFailed)
+            {
+                var errorMessage = "Failed to pack the message: " + packedBasicMessage.Errors.FirstOrDefault()?.Message;
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+
+            var forwardMessageResult = await _mediator.Send(new SendForwardMessageRequest(
+                message: packedBasicMessage.Value,
+                localDid: localDid,
+                mediatorDid: did,
+                mediatorEndpoint: new Uri(endpoint),
+                recipientDid: recipientPeerDid
+            ), cancellationToken);
+            if (forwardMessageResult.IsFailed)
+            {
+                var errorMessage = "The Forward-Message could not be sent: " + forwardMessageResult.Errors.FirstOrDefault()?.Message;
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+        }
         else
         {
             var errorMessage = "The recipient Peer-DID is not provided in the execution context parameters.";
@@ -286,6 +324,37 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         actionOutcome.FinishOutcomeWithSuccess(successString);
 
         return Result.Ok(true);
+    }
+
+
+    private static Message BuildIssuingMessage(PeerDid localPeerDid, PeerDid prismPeerDid, string messageId, string signedCredential)
+    {
+        var unixTimeStamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        var body = new Dictionary<string, object>
+        {
+            { "goal_code", GoalCodes.PrismCredentialOffer },
+            { "comment", null! },
+            { "formats", new List<string>() }
+        };
+        var attachment = new AttachmentBuilder(Guid.NewGuid().ToString(), new Base64(signedCredential))
+            .Build();
+        var responseMessage = new MessageBuilder(
+                id: Guid.NewGuid().ToString(),
+                type: ProtocolConstants.IssueCredential2Issue,
+                body: body
+            )
+            .thid(messageId)
+            .from(localPeerDid.Value)
+            .to(new List<string>() { prismPeerDid.Value })
+            .attachments(new List<Attachment>()
+            {
+                attachment
+            })
+            .createdTime(unixTimeStamp)
+            .expiresTime(unixTimeStamp + 1000)
+            .build();
+        return responseMessage;
     }
 
     /// <summary>

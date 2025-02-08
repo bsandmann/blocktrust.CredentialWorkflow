@@ -13,7 +13,10 @@ public class DIDCommAction : ActionInput
 
     [JsonPropertyName("recipientPeerDID")]
     public ParameterReference RecipientPeerDid { get; set; } = new();
-    
+
+    [JsonPropertyName("credentialReference")]
+    public ParameterReference CredentialReference { get; set; } = new();
+
     [JsonPropertyName("message")]
     public Dictionary<string, MessageFieldValue> MessageContent { get; set; } = new();
 }

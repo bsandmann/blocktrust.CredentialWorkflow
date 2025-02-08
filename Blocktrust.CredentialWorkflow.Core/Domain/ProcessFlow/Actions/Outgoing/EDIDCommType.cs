@@ -3,5 +3,6 @@
 public enum EDIDCommType
 {
     TrustPing,
-    Message
+    Message,
+    CredentialIssuance
 }

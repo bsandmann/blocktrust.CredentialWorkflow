@@ -4,6 +4,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Web.Services
 @using MediatR
+@using System.Text.RegularExpressions
+@using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
 
 @inject IMediator Mediator
@@ -48,7 +50,7 @@
                     <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
                            @bind="ActionInput.RecipientPeerDid.Path"
                            @bind:after="OnValueChanged"
-                           placeholder="Enter peer DID for a static value" />
+                           placeholder="Enter peer DID for a static value"/>
                 }
                 else
                 {
@@ -90,8 +92,9 @@
             <div class="p-2 border rounded-md">
                 <div class="flex justify-between items-center mb-2">
                     <label class="block text-xs font-medium text-gray-700">Message Content</label>
-                    <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
-                            @onclick="AddMessageField">
+                    <button
+                        class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                        @onclick="AddMessageField">
                         Add Field
                     </button>
                 </div>
@@ -101,7 +104,7 @@
                     <div class="flex items-center space-x-2 mt-2">
                         <input type="text" class="w-1/3 rounded border px-2 py-1 text-xs"
                                value="@field.Key"
-                               @onchange="@(e => UpdateMessageFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))" />
+                               @onchange="@(e => UpdateMessageFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))"/>
 
                         <select class="w-1/3 rounded border px-2 py-1 text-xs"
                                 @bind="field.Value.Source">
@@ -112,7 +115,7 @@
 
                         <input type="text" class="w-1/3 rounded border px-2 py-1 text-xs"
                                @bind="field.Value.Value"
-                               placeholder="Value" />
+                               placeholder="Value"/>
 
                         <button class="text-red-500 hover:text-red-700"
                                 @onclick="() => RemoveMessageField(field.Key)">
@@ -122,6 +125,75 @@
                 }
             </div>
         }
+        else if (ActionInput.Type == EDIDCommType.CredentialIssuance)
+        {
+        <div class="p-2 border rounded-md">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Credential Source</label>
+
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.CredentialReference.Source"
+                        @bind:after="OnCredentialSourceChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.CredentialReference.Source == ParameterSource.Static)
+                {
+                    <input type="text"
+                           class="w-2/3 rounded border px-2 py-1 text-xs"
+                           placeholder="Enter raw JWT credential"
+                           @bind="ActionInput.CredentialReference.DefaultValue"
+                           @bind:after="OnValueChanged"/>
+                }
+                else if (ActionInput.CredentialReference.Source == ParameterSource.TriggerInput)
+                {
+                    <div class="w-2/3 flex flex-col space-y-1">
+                        @if (TriggerParameters?.Any() == true)
+                        {
+                            <select class="rounded border px-2 py-1 text-xs"
+                                    @bind="ActionInput.CredentialReference.Path"
+                                    @bind:after="OnValueChanged">
+                                <option value="">Select trigger parameter</option>
+                                @foreach (var param in TriggerParameters)
+                                {
+                                    <option value="@param">@param</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div class="text-xs text-gray-600">
+                                No trigger parameters available
+                            </div>
+                        }
+                    </div>
+                }
+                else if (ActionInput.CredentialReference.Source == ParameterSource.ActionOutcome)
+                {
+                    <div class="w-2/3 flex flex-col space-y-2">
+                        <select class="rounded border px-2 py-1 text-xs"
+                                @onchange="OnActionIdChanged">
+                            <option value="">Select an action</option>
+                            @if (FlowItems is not null)
+                            {
+                                @foreach (var item in FlowItems.Where(p => p is Action && ((Action)p).Input.Id != ActionInput.Id))
+                                {
+                                    if (item is Action actionItem)
+                                    {
+                                        <option value="@actionItem.Input.Id.ToString()">
+                                            @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                        </option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        </div>
+        }
     </div>
 </div>
 
@@ -130,12 +202,14 @@
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
 
+    // New: needed if referencing previous actions for "ActionOutcome"
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+
     // Holds the list of PeerDIDs retrieved via GetPeerDIDsRequest
     private List<PeerDIDModel> PeerDIDs { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // Load the tenant from your app state
         var tenant = AppStateService.Tenant;
         var tenantId = tenant.TenantId;
 
@@ -154,17 +228,16 @@
     private string GetFriendlyName(EDIDCommType type) => type switch
     {
         EDIDCommType.TrustPing => "Trust Ping",
-        EDIDCommType.Message   => "Message",
-        _                      => type.ToString()
+        EDIDCommType.Message => "Message",
+        EDIDCommType.CredentialIssuance => "Credential Issuance",
+        _ => type.ToString()
     };
 
-    // Called whenever a bound property changes
     private async Task OnValueChanged()
     {
         await OnChange.InvokeAsync();
     }
 
-    // Specifically called after the user selects a different "Sender Peer DID"
     private async Task OnSenderPeerDidChanged()
     {
         ActionInput.SenderPeerDid.Source = ParameterSource.AppSettings;
@@ -198,4 +271,28 @@
         ActionInput.MessageContent.Remove(key);
         await OnChange.InvokeAsync();
     }
+
+    // New: For the “CredentialIssuance” block
+    private async Task OnCredentialSourceChanged()
+    {
+        // Additional logic if necessary. For now, simply notify of changes.
+        await OnValueChanged();
+    }
+
+    private async Task OnActionIdChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var guid))
+        {
+            ActionInput.CredentialReference.ActionId = guid;
+            // Clear the Path if picking a new Action
+            ActionInput.CredentialReference.Path = string.Empty;
+        }
+        else
+        {
+            ActionInput.CredentialReference.ActionId = null;
+        }
+
+        await OnValueChanged();
+    }
+
 }
