@@ -1,34 +1,35 @@
 ﻿@page "/logs"
+@using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.GetWorkflowOutcomes
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
 @using MediatR
 @using Microsoft.AspNetCore.Components.Authorization
-@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Microsoft.AspNetCore.Authorization
-@using System.Text.Json
-@using System.Text.Json.Nodes
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 @inject AppStateService AppStateService
 @inject ILogger<ActionOutcome> Logger
+@inject IJSRuntime JSRuntime
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
 @layout AppLayout
 
+
 <PageTitle>Blocktrust Credential Workflow Platform - Logs</PageTitle>
 
 @if (AppStateService.IsInitialized)
 {
-    <div class="flex flex-col h-screen">
+    <div class="flex flex-col min-h-screen">
         <!-- Top bar -->
-        <div class="bg-gray-100 p-4 flex items-center flex-row border-b-2 border-slate-200">
-            <select @bind="selectedWorkflowId" @bind:after="LoadWorkflowOutcomes" class="mr-2 px-2 py-1 border rounded">
+        <div class="bg-gray-100 p-4 flex items-center border-b-2 border-slate-200">
+            <select @bind="selectedWorkflowId" @bind:after="LoadWorkflowOutcomes" 
+                    class="max-w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
                 @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                 {
                     <option value="@workflow.WorkflowId">@workflow.Name</option>
@@ -37,170 +38,189 @@
         </div>
 
         <!-- Main content area -->
-        <div class="flex-grow p-4 overflow-auto">
+        <div class="flex-1 p-4 overflow-x-auto">
             @if (workflowOutcomes.Any())
             {
-                <table class="min-w-full bg-white">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-4 py-2 text-left">State</th>
-                            <th class="px-4 py-2 text-left">Started</th>
-                            <th class="px-4 py-2 text-left">Ended</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var workflowOutcome in workflowOutcomes)
-                        {
-                            <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
-                                class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
-                                <td class="border-t px-4 py-2">
-                                    <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState)">
-                                        @workflowOutcome.WorkflowOutcomeState
-                                    </span>
-                                </td>
-                                <td class="border-t px-4 py-2">@workflowOutcome.StartedUtc?.ToString("g")</td>
-                                <td class="border-t px-4 py-2">@workflowOutcome.EndedUtc?.ToString("g")</td>
-                            </tr>
-                            @if (expandedWorkflowOutcomeId == workflowOutcome.WorkflowOutcomeId)
-                            {
-                                <tr>
-                                    <td colspan="3" class="border-t px-4 py-2 bg-gray-50">
-                                        <div class="space-y-4">
-                                            @if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.Success)
-                                            {
-                                                @if (!string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson))
-                                                {
-                                                    <div class="bg-white rounded-lg shadow-sm p-4">
-                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Action Workflow Outcome</h3>
-                                                        <div class="space-y-4">
-                                                            @{
-                                                                var actionOutcomes = ParseAndFormatJson(workflowOutcome.ActionOutcomesJson);
-                                                                foreach (var outcome in actionOutcomes)
+                <div class="min-w-fit bg-white rounded-lg shadow-sm border border-slate-200">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">State</th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">Started</th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">Ended</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                @foreach (var workflowOutcome in workflowOutcomes)
+                                {
+                                    <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
+                                        class="cursor-pointer hover:bg-slate-50 transition-colors duration-150">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState) inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                                @workflowOutcome.WorkflowOutcomeState
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">@workflowOutcome.StartedUtc?.ToString("g")</td>
+                                        <td class="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">@workflowOutcome.EndedUtc?.ToString("g")</td>
+                                    </tr>
+                                    @if (expandedWorkflowOutcomeId == workflowOutcome.WorkflowOutcomeId)
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="px-4 py-4 bg-slate-50">
+                                                <div class="space-y-6 max-w-full">
+                                                    @if (!string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson))
+                                                    {
+                                                        <div class="bg-white rounded-lg shadow-sm p-4">
+                                                            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                                                                <h3 class="text-lg font-semibold text-slate-800">Action Outcomes</h3>
+                                                                <button @onclick="@(() => CopyToClipboard(workflowOutcome.ActionOutcomesJson))"
+                                                                        class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 shrink-0">
+                                                                    <span class="material-symbols-outlined text-lg">content_copy</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="space-y-4">
+                                                                @foreach (var outcome in ParseAndFormatJson(workflowOutcome.ActionOutcomesJson))
                                                                 {
-                                                                    <div class="bg-slate-50 p-4 rounded-lg space-y-2">
-                                                                        <div class="grid grid-cols-2 gap-4">
-                                                                            <div>
-                                                                                <span class="font-medium text-slate-700">Outcome ID:</span>
-                                                                                <span class="font-mono text-sm ml-2">@outcome.OutcomeId</span>
+                                                                    <div class="bg-slate-50 rounded-lg p-4">
+                                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                                                            <div class="min-w-0">
+                                                                                <div class="text-sm font-medium text-slate-700 mb-1">Outcome ID</div>
+                                                                                <div class="text-sm font-mono truncate">@outcome.OutcomeId</div>
                                                                             </div>
-                                                                            <div>
-                                                                                <span class="font-medium text-slate-700">Action ID:</span>
-                                                                                <span class="font-mono text-sm ml-2">@outcome.ActionId</span>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="grid grid-cols-2 gap-4">
-                                                                            <div>
-                                                                                <span class="font-medium text-slate-700">Started:</span>
-                                                                                <span class="text-sm ml-2">@DateTime.Parse(outcome.StartedUtc).ToString("g")</span>
-                                                                            </div>
-                                                                            <div>
-                                                                                <span class="font-medium text-slate-700">Ended:</span>
-                                                                                <span class="text-sm ml-2">@DateTime.Parse(outcome.EndedUtc).ToString("g")</span>
+                                                                            <div class="min-w-0">
+                                                                                <div class="text-sm font-medium text-slate-700 mb-1">Action ID</div>
+                                                                                <div class="text-sm font-mono truncate">@outcome.ActionId</div>
                                                                             </div>
                                                                         </div>
+
                                                                         @if (!string.IsNullOrEmpty(outcome.OutcomeJson))
                                                                         {
                                                                             <div>
-                                                                                <span class="font-medium text-slate-700 block mb-2">Outcome JSON:</span>
-                                                                                <div class="font-mono text-sm bg-white p-4 rounded border overflow-x-auto">
-                                                                                    @{
-                                                                                        var formattedJson = FormatJson(outcome.OutcomeJson);
-                                                                                        @foreach (var line in formattedJson.Split('\n'))
-                                                                                        {
-                                                                                            <div class="whitespace-pre">@line</div>
-                                                                                        }
-                                                                                    }
+                                                                                <div class="flex justify-between items-center mb-1">
+                                                                                    <div class="text-sm font-medium text-slate-700">Outcome JSON</div>
+                                                                                    <button @onclick="@(() => CopyToClipboard(outcome.OutcomeJson))"
+                                                                                            class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 shrink-0">
+                                                                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                                <div class="bg-white p-3 rounded-lg overflow-x-auto">
+                                                                                    <pre class="text-sm font-mono whitespace-pre-wrap break-all">@TruncateText(FormatJson(outcome.OutcomeJson), 200)</pre>
                                                                                 </div>
                                                                             </div>
                                                                         }
                                                                     </div>
                                                                 }
-                                                            }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                }
+                                                    }
 
-                                                @if (!string.IsNullOrEmpty(workflowOutcome.ExecutionContext))
-                                                {
-                                                    <div class="bg-white rounded-lg shadow-sm p-4">
-                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Execution Context</h3>
-                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
+                                                    @if (!string.IsNullOrEmpty(workflowOutcome.ExecutionContext))
+                                                    {
+                                                        <div class="bg-white rounded-lg shadow-sm p-4">
+                                                            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                                                                <h3 class="text-lg font-semibold text-slate-800">Execution Context</h3>
+                                                                <button @onclick="@(() => CopyToClipboard(workflowOutcome.ExecutionContext))"
+                                                                        class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 shrink-0">
+                                                                    <span class="material-symbols-outlined text-lg">content_copy</span>
+                                                                </button>
+                                                            </div>
                                                             @{
-                                                                var formattedContext = FormatJson(workflowOutcome.ExecutionContext);
-                                                                @foreach (var line in formattedContext.Split('\n'))
-                                                                {
-                                                                    <div class="whitespace-pre">@line</div>
-                                                                }
+                                                                var context = ParseExecutionContext(workflowOutcome.ExecutionContext);
                                                             }
-                                                        </div>
-                                                    </div>
-                                                }
-                                            }
-                                            else if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
-                                            {
-                                                <p class="text-slate-600">This operation has not started yet.</p>
-                                            }
-                                            else
-                                            {
-                                                @if (!string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson))
-                                                {
-                                                    <div class="bg-white rounded-lg shadow-sm p-4">
-                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Action Workflow Outcome</h3>
-                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
-                                                            @{
-                                                                var formattedJson = FormatJson(workflowOutcome.ActionOutcomesJson);
-                                                                @foreach (var line in formattedJson.Split('\n'))
-                                                                {
-                                                                    <div class="whitespace-pre">@line</div>
-                                                                }
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                }
+                                                            <div class="space-y-4">
+                                                                <div>
+                                                                    <div class="text-sm font-medium text-slate-700 mb-1">Method</div>
+                                                                    <div class="text-sm font-mono">@context.Method</div>
+                                                                </div>
 
-                                                @if (!string.IsNullOrEmpty(workflowOutcome.ErrorJson))
-                                                {
-                                                    <div class="bg-white rounded-lg shadow-sm p-4">
-                                                        <h3 class="text-lg font-semibold text-red-800 mb-2">Error</h3>
-                                                        <div class="font-mono text-sm bg-red-50 text-red-700 p-4 rounded overflow-x-auto">
-                                                            @{
-                                                                var formattedError = FormatJson(workflowOutcome.ErrorJson);
-                                                                @foreach (var line in formattedError.Split('\n'))
+                                                                @if (context.QueryParameters.Any())
                                                                 {
-                                                                    <div class="whitespace-pre">@line</div>
+                                                                    <div>
+                                                                        <div class="text-sm font-medium text-slate-700 mb-2">Query Parameters</div>
+                                                                        <div class="overflow-x-auto">
+                                                                            <table class="min-w-full divide-y divide-slate-200">
+                                                                                <thead class="bg-slate-50">
+                                                                                    <tr>
+                                                                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 whitespace-nowrap">Key</th>
+                                                                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500">Value</th>
+                                                                                        <th class="px-3 py-2 w-8"></th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody class="divide-y divide-slate-200 bg-white">
+                                                                                    @foreach (var param in context.QueryParameters)
+                                                                                    {
+                                                                                        <tr>
+                                                                                            <td class="px-3 py-2 text-sm text-slate-600 whitespace-nowrap">@param.Key</td>
+                                                                                            <td class="px-3 py-2 font-mono text-sm break-all">
+                                                                                                <div class="max-w-md">@TruncateText(param.Value, 50)</div>
+                                                                                            </td>
+                                                                                            <td class="px-3 py-2">
+                                                                                                @if (param.Value.Length > 50)
+                                                                                                {
+                                                                                                    <button @onclick="@(() => CopyToClipboard(param.Value))"
+                                                                                                            class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100">
+                                                                                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                                                                    </button>
+                                                                                                }
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    }
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
                                                                 }
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                }
 
-                                                @if (!string.IsNullOrEmpty(workflowOutcome.ExecutionContext))
-                                                {
-                                                    <div class="bg-white rounded-lg shadow-sm p-4">
-                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Execution Context</h3>
-                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
-                                                            @{
-                                                                var formattedContext = FormatJson(workflowOutcome.ExecutionContext);
-                                                                @foreach (var line in formattedContext.Split('\n'))
+                                                                @if (!string.IsNullOrEmpty(context.Body))
                                                                 {
-                                                                    <div class="whitespace-pre">@line</div>
+                                                                    <div>
+                                                                        <div class="flex justify-between items-center mb-1">
+                                                                            <div class="text-sm font-medium text-slate-700">Body</div>
+                                                                            <button @onclick="@(() => CopyToClipboard(context.Body))"
+                                                                                    class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 shrink-0">
+                                                                                <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="bg-slate-50 p-3 rounded-lg overflow-x-auto">
+                                                                            <pre class="text-sm font-mono whitespace-pre-wrap break-all">@TruncateText(FormatJson(context.Body), 200)</pre>
+                                                                        </div>
+                                                                    </div>
                                                                 }
-                                                            }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                }
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+                                                    }
+
+                                                    @if (!string.IsNullOrEmpty(workflowOutcome.ErrorJson))
+                                                    {
+                                                        <div class="bg-white rounded-lg shadow-sm p-4">
+                                                            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                                                                <h3 class="text-lg font-semibold text-red-800">Error</h3>
+                                                                <button @onclick="@(() => CopyToClipboard(workflowOutcome.ErrorJson))"
+                                                                        class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 shrink-0">
+                                                                    <span class="material-symbols-outlined text-lg">content_copy</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="bg-red-50 p-3 rounded-lg overflow-x-auto">
+                                                                <pre class="text-sm font-mono text-red-700 whitespace-pre-wrap break-all">@TruncateText(FormatJson(workflowOutcome.ErrorJson), 200)</pre>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             }
             else
             {
-                <p class="text-gray-600">No outcomes found for the selected workflow.</p>
+                <div class="text-center py-8">
+                    <p class="text-slate-600">No outcomes found for the selected workflow.</p>
+                </div>
             }
         </div>
     </div>
@@ -209,6 +229,7 @@ else
 {
     <p class="text-center mt-8">Loading...</p>
 }
+
 
 @code {
     private readonly CancellationTokenSource cts = new CancellationTokenSource();
@@ -252,11 +273,11 @@ else
 
     private string GetOutcomeStateColor(EWorkflowOutcomeState state) => state switch
     {
-        EWorkflowOutcomeState.Success => "text-green-600",
-        EWorkflowOutcomeState.FailedWithErrors => "text-red-600",
-        EWorkflowOutcomeState.NotStarted => "text-gray-600",
-        EWorkflowOutcomeState.Running => "text-blue-600",
-        _ => "text-gray-600"
+        EWorkflowOutcomeState.Success => "bg-green-100 text-green-800",
+        EWorkflowOutcomeState.FailedWithErrors => "bg-red-100 text-red-800",
+        EWorkflowOutcomeState.NotStarted => "bg-slate-100 text-slate-800",
+        EWorkflowOutcomeState.Running => "bg-blue-100 text-blue-800",
+        _ => "bg-slate-100 text-slate-800"
     };
 
     private void ToggleOutcomeDetails(Guid workflowOutcomeId)
@@ -282,6 +303,13 @@ else
         public string? OutcomeJson { get; set; }
     }
 
+    private class ExecutionContext
+    {
+        public string Method { get; set; } = "";
+        public Dictionary<string, string> QueryParameters { get; set; } = new();
+        public string Body { get; set; } = "";
+    }
+
     private List<ActionOutcomeDto> ParseAndFormatJson(string json)
     {
         try
@@ -292,6 +320,19 @@ else
         {
             Logger.LogError(ex, "Failed to parse JSON");
             return new List<ActionOutcomeDto>();
+        }
+    }
+
+    private ExecutionContext ParseExecutionContext(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<ExecutionContext>(json) ?? new ExecutionContext();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to parse execution context");
+            return new ExecutionContext();
         }
     }
 
@@ -307,6 +348,26 @@ else
         {
             Logger.LogError(ex, "Failed to format JSON");
             return json;
+        }
+    }
+
+    private string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+
+        return $"{text[..maxLength]}...";
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to copy text to clipboard");
         }
     }
 }
