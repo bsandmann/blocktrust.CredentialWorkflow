@@ -7,6 +7,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys
 @using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject IMediator Mediator
 @inject IdentityUserAccessor UserAccessor
@@ -55,6 +56,7 @@
 
                     <EditForm Model="NewKey" FormName="add-issuing-key" OnValidSubmit="OnAddKeySubmitAsync">
                         <DataAnnotationsValidator/>
+                        <ObjectGraphDataAnnotationsValidator/>
 
                         <div class="space-y-5">
                             <div>
@@ -114,7 +116,7 @@
                 </div>
             </div>
 
-            <!-- Info Section -->
+            <!-- Existing Keys Section -->
             <div class="md:col-span-2">
                 <div class="sticky top-4">
                     <h3 class="text-xl font-semibold text-slate-800 mb-4">Existing Keys</h3>
@@ -178,9 +180,7 @@
     private Guid TenantId { get; set; }
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
-
-    [SupplyParameterFromForm] 
-    private NewKeyModel NewKey { get; set; } = new();
+    [SupplyParameterFromForm] private NewKeyModel NewKey { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -247,14 +247,14 @@
         return $"{key[..10]}...{key[^5..]}";
     }
 
-    private sealed class NewKeyModel
+    // Model with inline validation
+    private sealed class NewKeyModel : IValidatableObject
     {
         [Required(ErrorMessage = "Name is required")]
         [Display(Name = "Key Name")]
         public string Name { get; set; } = "";
 
         [Required(ErrorMessage = "DID is required")]
-        [ValidDid]
         [Display(Name = "DID")]
         public string Did { get; set; } = "";
 
@@ -263,36 +263,55 @@
         public string KeyType { get; set; } = "secp256k1";
 
         [Required(ErrorMessage = "Public Key is required")]
-        [Base64UrlKey(33)]
         [Display(Name = "Public Key")]
         public string PublicKey { get; set; } = "";
 
         [Required(ErrorMessage = "Private Key is required")]
-        [Base64UrlKey(32)]
         [Display(Name = "Private Key")]
         public string PrivateKey { get; set; } = "";
-    }
 
-    // Custom Validation Attributes
-    private class Base64UrlKeyAttribute : ValidationAttribute
-    {
-        private readonly int _requiredLength;
-
-        public Base64UrlKeyAttribute(int requiredLength)
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            _requiredLength = requiredLength;
+            // Validate DID format
+            if (!string.IsNullOrWhiteSpace(Did) && !Regex.IsMatch(Did, @"^did:prism:[a-f0-9]{64}$"))
+            {
+                yield return new ValidationResult(
+                    "Invalid DID format. Must be in format: did:prism:[64 hex characters]",
+                    new[] { nameof(Did) }
+                );
+            }
+
+            // Validate Public Key
+            if (!string.IsNullOrWhiteSpace(PublicKey))
+            {
+                var publicKeyValidation = ValidateBase64UrlKey(PublicKey, 33, "Public Key");
+                if (publicKeyValidation != null)
+                {
+                    yield return publicKeyValidation;
+                }
+            }
+
+            // Validate Private Key
+            if (!string.IsNullOrWhiteSpace(PrivateKey))
+            {
+                var privateKeyValidation = ValidateBase64UrlKey(PrivateKey, 32, "Private Key");
+                if (privateKeyValidation != null)
+                {
+                    yield return privateKeyValidation;
+                }
+            }
         }
 
-        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        private ValidationResult? ValidateBase64UrlKey(string key, int expectedLength, string fieldName)
         {
-            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
-                return new ValidationResult("Key is required");
-
-            string key = value.ToString()!;
-            
             // Check base64url format
             if (!Regex.IsMatch(key, @"^[A-Za-z0-9_-]*$"))
-                return new ValidationResult("Key must be in base64url format");
+            {
+                return new ValidationResult(
+                    $"{fieldName} must be in base64url format",
+                    new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                );
+            }
 
             try
             {
@@ -303,31 +322,23 @@
                 // Decode and check length
                 byte[] decoded = Convert.FromBase64String(paddedBase64);
                 
-                if (decoded.Length != _requiredLength)
-                    return new ValidationResult($"Invalid key length. Expected {_requiredLength} bytes but got {decoded.Length} bytes");
+                if (decoded.Length != expectedLength)
+                {
+                    return new ValidationResult(
+                        $"{fieldName} has invalid length. Expected {expectedLength} bytes but got {decoded.Length} bytes",
+                        new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                    );
+                }
             }
             catch
             {
-                return new ValidationResult("Invalid base64url encoding");
+                return new ValidationResult(
+                    $"{fieldName} has invalid base64url encoding",
+                    new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                );
             }
 
-            return ValidationResult.Success;
-        }
-    }
-
-    private class ValidDidAttribute : ValidationAttribute
-    {
-        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
-        {
-            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
-                return new ValidationResult("DID is required");
-
-            string did = value.ToString()!;
-            
-            if (!Regex.IsMatch(did, @"^did:prism:[a-f0-9]{64}$"))
-                return new ValidationResult("Invalid DID format. Must be in format: did:prism:[64 hex characters]");
-
-            return ValidationResult.Success;
+            return null;
         }
     }
 }
