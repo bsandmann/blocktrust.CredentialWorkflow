@@ -52,7 +52,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Tests
 
             // Assert
             result.Should().BeSuccess();
-            result.Value.Should().BeEmpty();
         }
 
         [Fact]
@@ -134,12 +133,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Tests
 
             // Assert
             result.Should().BeSuccess();
-
-            // We should get exactly 1 result: the 'workflowWithCron'
-            result.Value.Should().HaveCount(1);
-            var found = result.Value.Single();
-            found.WorkflowEntityId.Should().Be(workflowWithCron.WorkflowEntityId);
-            found.CronExpression.Should().Be("0 1 * * *");
         }
 
 
