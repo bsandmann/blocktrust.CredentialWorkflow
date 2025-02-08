@@ -9,6 +9,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using Microsoft.AspNetCore.Authorization
+@using System.Text.Json
+@using System.Text.Json.Nodes
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -18,8 +20,6 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
 @layout AppLayout
-
-
 
 <PageTitle>Blocktrust Credential Workflow Platform - Logs</PageTitle>
 
@@ -42,65 +42,159 @@
             {
                 <table class="min-w-full bg-white">
                     <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 text-left">State</th>
-                        <th class="px-4 py-2 text-left">Started</th>
-                        <th class="px-4 py-2 text-left">Ended</th>
-                    </tr>
+                        <tr>
+                            <th class="px-4 py-2 text-left">State</th>
+                            <th class="px-4 py-2 text-left">Started</th>
+                            <th class="px-4 py-2 text-left">Ended</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach (var workflowOutcome in workflowOutcomes)
-                    {
-                        <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
-                            class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
-                            <td class="border-t px-4 py-2">
-                                <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState)">
-                                    @workflowOutcome.WorkflowOutcomeState
-                                </span>
-                            </td>
-                            <td class="border-t px-4 py-2">@workflowOutcome.StartedUtc?.ToString("g")</td>
-                            <td class="border-t px-4 py-2">@workflowOutcome.EndedUtc?.ToString("g")</td>
-                        </tr>
-                        @if (expandedWorkflowOutcomeId == workflowOutcome.WorkflowOutcomeId)
+                        @foreach (var workflowOutcome in workflowOutcomes)
                         {
-                            <tr>
-                                <td colspan="3" class="border-t px-4 py-2 bg-gray-50">
-                                    <div class="text-sm">
-                                        @if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.Success)
-                                        {
-                                            <p>
-                                                <strong>ActionWorkflowOutcome
-                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson) ? "N/A" : workflowOutcome.ActionOutcomesJson)
-                                            </p>
-                                            <p>
-                                                <strong>Execution Context
-                                                </strong> @(string.IsNullOrEmpty(workflowOutcome.ExecutionContext) ? "N/A" : workflowOutcome.ExecutionContext)
-                                            </p>
-                                        }
-                                        else if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
-                                        {
-                                            <p>This operation did not start yet.</p>
-                                        }
-                                        else
-                                        {
-                                            <p>
-                                                <strong>ActionWorkflowOutcome
-                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson) ? "N/A" : workflowOutcome.ActionOutcomesJson)
-                                            </p>
-                                            <p>
-                                                <strong>Error
-                                                    JSON:</strong> @(string.IsNullOrEmpty(workflowOutcome.ErrorJson) ? "N/A" : workflowOutcome.ErrorJson)
-                                            </p>
-                                            <p>
-                                                <strong>Execution Context
-                                                </strong> @(string.IsNullOrEmpty(workflowOutcome.ExecutionContext) ? "N/A" : workflowOutcome.ExecutionContext)
-                                            </p>
-                                        }
-                                    </div>
+                            <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
+                                class="cursor-pointer hover:bg-gray-50 transition-colors duration-150">
+                                <td class="border-t px-4 py-2">
+                                    <span class="@GetOutcomeStateColor(workflowOutcome.WorkflowOutcomeState)">
+                                        @workflowOutcome.WorkflowOutcomeState
+                                    </span>
                                 </td>
+                                <td class="border-t px-4 py-2">@workflowOutcome.StartedUtc?.ToString("g")</td>
+                                <td class="border-t px-4 py-2">@workflowOutcome.EndedUtc?.ToString("g")</td>
                             </tr>
+                            @if (expandedWorkflowOutcomeId == workflowOutcome.WorkflowOutcomeId)
+                            {
+                                <tr>
+                                    <td colspan="3" class="border-t px-4 py-2 bg-gray-50">
+                                        <div class="space-y-4">
+                                            @if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.Success)
+                                            {
+                                                @if (!string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson))
+                                                {
+                                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Action Workflow Outcome</h3>
+                                                        <div class="space-y-4">
+                                                            @{
+                                                                var actionOutcomes = ParseAndFormatJson(workflowOutcome.ActionOutcomesJson);
+                                                                foreach (var outcome in actionOutcomes)
+                                                                {
+                                                                    <div class="bg-slate-50 p-4 rounded-lg space-y-2">
+                                                                        <div class="grid grid-cols-2 gap-4">
+                                                                            <div>
+                                                                                <span class="font-medium text-slate-700">Outcome ID:</span>
+                                                                                <span class="font-mono text-sm ml-2">@outcome.OutcomeId</span>
+                                                                            </div>
+                                                                            <div>
+                                                                                <span class="font-medium text-slate-700">Action ID:</span>
+                                                                                <span class="font-mono text-sm ml-2">@outcome.ActionId</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="grid grid-cols-2 gap-4">
+                                                                            <div>
+                                                                                <span class="font-medium text-slate-700">Started:</span>
+                                                                                <span class="text-sm ml-2">@DateTime.Parse(outcome.StartedUtc).ToString("g")</span>
+                                                                            </div>
+                                                                            <div>
+                                                                                <span class="font-medium text-slate-700">Ended:</span>
+                                                                                <span class="text-sm ml-2">@DateTime.Parse(outcome.EndedUtc).ToString("g")</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        @if (!string.IsNullOrEmpty(outcome.OutcomeJson))
+                                                                        {
+                                                                            <div>
+                                                                                <span class="font-medium text-slate-700 block mb-2">Outcome JSON:</span>
+                                                                                <div class="font-mono text-sm bg-white p-4 rounded border overflow-x-auto">
+                                                                                    @{
+                                                                                        var formattedJson = FormatJson(outcome.OutcomeJson);
+                                                                                        @foreach (var line in formattedJson.Split('\n'))
+                                                                                        {
+                                                                                            <div class="whitespace-pre">@line</div>
+                                                                                        }
+                                                                                    }
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrEmpty(workflowOutcome.ExecutionContext))
+                                                {
+                                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Execution Context</h3>
+                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
+                                                            @{
+                                                                var formattedContext = FormatJson(workflowOutcome.ExecutionContext);
+                                                                @foreach (var line in formattedContext.Split('\n'))
+                                                                {
+                                                                    <div class="whitespace-pre">@line</div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else if (workflowOutcome.WorkflowOutcomeState == EWorkflowOutcomeState.NotStarted)
+                                            {
+                                                <p class="text-slate-600">This operation has not started yet.</p>
+                                            }
+                                            else
+                                            {
+                                                @if (!string.IsNullOrEmpty(workflowOutcome.ActionOutcomesJson))
+                                                {
+                                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Action Workflow Outcome</h3>
+                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
+                                                            @{
+                                                                var formattedJson = FormatJson(workflowOutcome.ActionOutcomesJson);
+                                                                @foreach (var line in formattedJson.Split('\n'))
+                                                                {
+                                                                    <div class="whitespace-pre">@line</div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrEmpty(workflowOutcome.ErrorJson))
+                                                {
+                                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                                        <h3 class="text-lg font-semibold text-red-800 mb-2">Error</h3>
+                                                        <div class="font-mono text-sm bg-red-50 text-red-700 p-4 rounded overflow-x-auto">
+                                                            @{
+                                                                var formattedError = FormatJson(workflowOutcome.ErrorJson);
+                                                                @foreach (var line in formattedError.Split('\n'))
+                                                                {
+                                                                    <div class="whitespace-pre">@line</div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrEmpty(workflowOutcome.ExecutionContext))
+                                                {
+                                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Execution Context</h3>
+                                                        <div class="font-mono text-sm bg-slate-50 p-4 rounded overflow-x-auto">
+                                                            @{
+                                                                var formattedContext = FormatJson(workflowOutcome.ExecutionContext);
+                                                                @foreach (var line in formattedContext.Split('\n'))
+                                                                {
+                                                                    <div class="whitespace-pre">@line</div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
                     </tbody>
                 </table>
             }
@@ -177,4 +271,42 @@ else
         }
     }
 
+    private class ActionOutcomeDto
+    {
+        public string OutcomeId { get; set; } = "";
+        public string ActionId { get; set; } = "";
+        public int EActionOutcome { get; set; }
+        public string StartedUtc { get; set; } = "";
+        public string EndedUtc { get; set; } = "";
+        public string? ErrorJson { get; set; }
+        public string? OutcomeJson { get; set; }
+    }
+
+    private List<ActionOutcomeDto> ParseAndFormatJson(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<ActionOutcomeDto>>(json) ?? new List<ActionOutcomeDto>();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to parse JSON");
+            return new List<ActionOutcomeDto>();
+        }
+    }
+
+    private string FormatJson(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            return JsonSerializer.Serialize(document, options);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to format JSON");
+            return json;
+        }
+    }
 }
