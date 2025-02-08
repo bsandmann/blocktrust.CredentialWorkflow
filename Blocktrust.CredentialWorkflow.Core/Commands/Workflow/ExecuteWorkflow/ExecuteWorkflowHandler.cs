@@ -82,7 +82,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
         while (true)
         {
-            // 1) Find the next action:
+            // Find the next action:
             //    - If previousActionId is null, we look for an action whose runAfter references the triggerId with EFlowStatus.Succeeded
             //    - If previousActionId is set, we look for an action whose runAfter references that previousActionId with EFlowStatus.Succeeded
             var nextActionKvp = FindNextAction(
@@ -97,24 +97,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 break;
             }
 
-            // // 2) Check if the next action references a 'Failed' predecessor. If so, end the workflow with failure.
-            // if (HasFailedPredecessor(nextActionKvp.Value.Value.RunAfter))
-            // {
-            //     // The workflow should fail immediately if a predecessor was marked as Failed
-            //     var failedOutcome = new ActionOutcome(nextActionKvp.Value.Key);
-            //     failedOutcome.FinishOutcomeWithFailure("A predecessor was failed. Ending workflow.");
-            //     actionOutcomes.Add(failedOutcome);
-            //
-            //     return await FinishActionsWithFailure(
-            //         workflowOutcomeId,
-            //         failedOutcome,
-            //         "A predecessor was failed. No further processing.",
-            //         actionOutcomes,
-            //         cancellationToken
-            //     );
-            // }
-
-            // 3) Process the action
+            // Process the action
             var actionId = nextActionKvp.Value.Key;
             var action = nextActionKvp.Value.Value;
 
@@ -185,11 +168,11 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 }
             }
 
-            // 4) Add success outcome for this action
+            // Add success outcome for this action
             actionOutcomes.Add(actionOutcome);
 
-            // 5) Move forward to the next iteration
-            //    Mark the "previous action" as this one (so next look-up references this action's ID)
+            //  Move forward to the next iteration
+            //  Mark the "previous action" as this one (so next look-up references this action's ID)
             previousActionId = actionId;
         }
 

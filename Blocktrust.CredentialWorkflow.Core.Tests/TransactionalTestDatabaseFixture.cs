@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 public class TransactionalTestDatabaseFixture
 {
-    private const string ConnectionString = @"Host=localhost; Database=CredentialWorkflowTests; Username=postgres; Password=Post@0DB";
+    private const string ConnectionString = @"Host=10.10.20.103; Database=CredentialWorkflowTests; Username=postgres; Password=postgres";
 
     public DataContext CreateContext()
         => new DataContext(
