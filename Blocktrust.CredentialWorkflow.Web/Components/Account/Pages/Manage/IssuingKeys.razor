@@ -1,86 +1,174 @@
 @page "/Account/Manage/IssuingKeys"
 
 @using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
 @using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateIssuingKey
 @using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.DeleteIssuingKey
 @using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys
 @using Blocktrust.CredentialWorkflow.Core.Domain.IssuingKey
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject IMediator Mediator
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 
-
 <PageTitle>Manage Issuing Keys</PageTitle>
 
-<div class="container mx-auto">
-    <div class="mx-auto w-3/4 bg-gray-100 p-4 rounded-xl mt-10">
-        <div class="flex flex-col content-between items-center justify-between">
-            <StatusMessage Message="@message"/>
-            <h2 class="font-museo text-2xl mb-4">Manage Issuing Keys</h2>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h2 class="font-museo text-3xl font-semibold text-slate-800">Manage Issuing Keys</h2>
+            <p class="mt-2 text-slate-600">Create and manage your issuing keys for credential management.</p>
+        </div>
 
-            <!-- Add New Issuing Key Form -->
-            <EditForm Model="NewKey" FormName="add-issuing-key" OnValidSubmit="OnAddKeySubmitAsync" method="post">
-                <DataAnnotationsValidator/>
-                <div class="mt-4">
-                    <InputText @bind-Value="NewKey.Name"
-                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Key Name"/>
-                    <ValidationMessage For="() => NewKey.Name" class="font-light text-red-500"/>
-                </div>
-                <div class="mt-4">
-                    <InputText @bind-Value="NewKey.Did"
-                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400" placeholder="DID"/>
-                    <ValidationMessage For="() => NewKey.Did" class="font-light text-red-500"/>
-                </div>
-                <div class="mt-4">
-                    <InputText @bind-Value="NewKey.KeyType"
-                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Key Type (e.g. secp256k1)"/>
-                    <ValidationMessage For="() => NewKey.KeyType" class="font-light text-red-500"/>
-                </div>
-                <div class="mt-4">
-                    <InputText @bind-Value="NewKey.PublicKey"
-                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Public Key (Base64 URL encoded (compressed)"/>
-                    <ValidationMessage For="() => NewKey.PublicKey" class="font-light text-red-500"/>
-                </div>
-                <div class="mt-4">
-                    <InputText @bind-Value="NewKey.PrivateKey"
-                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
-                               placeholder="Private Key (Base64 URL encoded compressed)"/>
-                    <ValidationMessage For="() => NewKey.PrivateKey" class="font-light text-red-500"/>
-                </div>
-                <button type="submit"
-                        class="mt-4 bg-slate-700 rounded-md pl-4 py-1 pr-4 text-white font-light cursor-pointer">Add
-                    Issuing Key
-                </button>
-            </EditForm>
+        <StatusMessage Message="@message"/>
 
-            <div class="mt-8 w-full">
-                @foreach (var key in IssuingKeysList)
-                {
-                    <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                        <div class="flex flex-row">
-                            <div class="flex flex-col">
-                                <h3 class="font-semibold text-lg">@key.Name</h3>
-                                <p class="text-sm text-gray-600">DID: @key.Did</p>
-                                <p class="text-sm text-gray-600">Type: @key.KeyType</p>
-                                <p class="text-sm text-gray-600">Public Key: @TruncateKey(key.PublicKey)</p>
-                                <p class="text-sm text-gray-600">Private Key: @TruncateKey(key.PrivateKey)</p>
-                                <p class="text-xs text-gray-500">Created: @key.CreatedUtc</p>
+        <div class="grid md:grid-cols-5 gap-8">
+            <!-- Form Section -->
+            <div class="md:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Add New Issuing Key</h3>
+                    
+                    <!-- Information Box -->
+                    <div class="bg-slate-50 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-slate-800 mb-2">Requirements</h4>
+                        <ul class="space-y-1 text-sm text-slate-600">
+                            <li class="flex items-start">
+                                <span class="text-slate-400 mr-2">•</span>
+                                DID must be in format: did:prism:[64 hex characters]
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-slate-400 mr-2">•</span>
+                                Public and private keys must be in base64url format
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-slate-400 mr-2">•</span>
+                                Private key must be 32 bytes when decoded
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-slate-400 mr-2">•</span>
+                                Public key must be 33 bytes when decoded
+                            </li>
+                        </ul>
+                    </div>
+
+                    <EditForm Model="NewKey" FormName="add-issuing-key" OnValidSubmit="OnAddKeySubmitAsync">
+                        <DataAnnotationsValidator/>
+                        <ObjectGraphDataAnnotationsValidator/>
+
+                        <div class="space-y-5">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Key Name</label>
+                                <InputText id="name" 
+                                          @bind-Value="NewKey.Name"
+                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                          placeholder="Enter a descriptive name"/>
+                                <ValidationMessage For="() => NewKey.Name" class="mt-1 text-sm text-red-500"/>
                             </div>
-                            <div class="grow"></div>
-                            <div class="flex flex-col items-end space-y-2">
-                                <a href="/Account/Manage/DeleteIssuingKeys/@key.IssuingKeyId"
-                                   class="bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
-                                </a>
+
+                            <div>
+                                <label for="did" class="block text-sm font-medium text-slate-700 mb-1">DID</label>
+                                <InputText id="did" 
+                                          @bind-Value="NewKey.Did"
+                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                          placeholder="did:prism:..."/>
+                                <ValidationMessage For="() => NewKey.Did" class="mt-1 text-sm text-red-500"/>
+                            </div>
+
+                            <div>
+                                <label for="keyType" class="block text-sm font-medium text-slate-700 mb-1">Key Type</label>
+                                <InputSelect id="keyType" 
+                                            @bind-Value="NewKey.KeyType"
+                                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                                    <option value="secp256k1">secp256k1</option>
+                                </InputSelect>
+                                <ValidationMessage For="() => NewKey.KeyType" class="mt-1 text-sm text-red-500"/>
+                            </div>
+
+                            <div>
+                                <label for="publicKey" class="block text-sm font-medium text-slate-700 mb-1">Public Key</label>
+                                <InputText id="publicKey" 
+                                          @bind-Value="NewKey.PublicKey"
+                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                          placeholder="Enter base64url encoded public key"/>
+                                <ValidationMessage For="() => NewKey.PublicKey" class="mt-1 text-sm text-red-500"/>
+                            </div>
+
+                            <div>
+                                <label for="privateKey" class="block text-sm font-medium text-slate-700 mb-1">Private Key</label>
+                                <InputText id="privateKey" 
+                                          @bind-Value="NewKey.PrivateKey"
+                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                          placeholder="Enter base64url encoded private key"/>
+                                <ValidationMessage For="() => NewKey.PrivateKey" class="mt-1 text-sm text-red-500"/>
+                            </div>
+
+                            <div>
+                                <button type="submit"
+                                        class="w-full bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                                    Add Issuing Key
+                                </button>
                             </div>
                         </div>
-                    </div>
-                }
+                    </EditForm>
+                </div>
+            </div>
+
+            <!-- Existing Keys Section -->
+            <div class="md:col-span-2">
+                <div class="sticky top-4">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Existing Keys</h3>
+                    
+                    @if (!IssuingKeysList.Any())
+                    {
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center text-slate-600">
+                            <p>No issuing keys added yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var key in IssuingKeysList)
+                            {
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-slate-800">@key.Name</h4>
+                                            <div class="mt-2 space-y-1">
+                                                <p class="text-sm text-slate-600">
+                                                    <span class="font-medium">DID:</span>
+                                                    <span class="font-mono text-xs ml-1">@TruncateKey(key.Did)</span>
+                                                </p>
+                                                <p class="text-sm text-slate-600">
+                                                    <span class="font-medium">Type:</span>
+                                                    <span class="ml-1">@key.KeyType</span>
+                                                </p>
+                                                <p class="text-sm text-slate-600">
+                                                    <span class="font-medium">Public Key:</span>
+                                                    <span class="font-mono text-xs ml-1">@TruncateKey(key.PublicKey)</span>
+                                                </p>
+                                                <p class="text-sm text-slate-600">
+                                                    <span class="font-medium">Private Key:</span>
+                                                    <span class="font-mono text-xs ml-1">@TruncateKey(key.PrivateKey)</span>
+                                                </p>
+                                                <p class="text-xs text-slate-500 mt-2">
+                                                    Created @key.CreatedUtc.ToLocalTime().ToString("g")
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button @onclick="() => RemoveKeyAsync(key.IssuingKeyId)"
+                                                class="ml-4 p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                                title="Delete Key">
+                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -91,14 +179,8 @@
     private List<IssuingKey> IssuingKeysList { get; set; } = new();
     private Guid TenantId { get; set; }
 
-    // Form model for creating a new key
-    [SupplyParameterFromForm] private NewKeyModel NewKey { get; set; } = new();
-
-    // Editing key details
-    private IssuingKey? EditingKey { get; set; }
-    private EditKeyModel EditingKeyModel { get; set; } = new();
-
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromForm] private NewKeyModel NewKey { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -138,23 +220,6 @@
         }
     }
 
-    private void StartEditingKey(IssuingKey key)
-    {
-        EditingKey = key;
-        EditingKeyModel = new EditKeyModel
-        {
-            Name = key.Name,
-            KeyType = key.KeyType,
-            PublicKey = key.PublicKey,
-            PrivateKey = key.PrivateKey
-        };
-    }
-
-    private void CancelEditing()
-    {
-        EditingKey = null;
-    }
-
     private async Task RemoveKeyAsync(Guid keyId)
     {
         var request = new DeleteIssuingKeyRequest(keyId);
@@ -174,50 +239,106 @@
     private string TruncateKey(string key)
     {
         if (string.IsNullOrEmpty(key))
-        {
             return "";
-        }
 
-        // Just show first 10 chars and last 5 chars for safety
         if (key.Length <= 15)
-        {
             return key;
-        }
 
-        return key.Substring(0, 10) + "..." + key.Substring(key.Length - 5);
+        return $"{key[..10]}...{key[^5..]}";
     }
 
-    private sealed class NewKeyModel
+    // Model with inline validation
+    private sealed class NewKeyModel : IValidatableObject
     {
-        [Required]
+        [Required(ErrorMessage = "Name is required")]
         [Display(Name = "Key Name")]
         public string Name { get; set; } = "";
 
-        [Required] [Display(Name = "DID")] public string Did { get; set; } = "";
+        [Required(ErrorMessage = "DID is required")]
+        [Display(Name = "DID")]
+        public string Did { get; set; } = "";
 
-        [Required]
+        [Required(ErrorMessage = "Key Type is required")]
         [Display(Name = "Key Type")]
-        public string KeyType { get; set; } = "";
+        public string KeyType { get; set; } = "secp256k1";
 
-        [Required]
+        [Required(ErrorMessage = "Public Key is required")]
         [Display(Name = "Public Key")]
         public string PublicKey { get; set; } = "";
 
-        [Required]
+        [Required(ErrorMessage = "Private Key is required")]
         [Display(Name = "Private Key")]
         public string PrivateKey { get; set; } = "";
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            // Validate DID format
+            if (!string.IsNullOrWhiteSpace(Did) && !Regex.IsMatch(Did, @"^did:prism:[a-f0-9]{64}$"))
+            {
+                yield return new ValidationResult(
+                    "Invalid DID format. Must be in format: did:prism:[64 hex characters]",
+                    new[] { nameof(Did) }
+                );
+            }
+
+            // Validate Public Key
+            if (!string.IsNullOrWhiteSpace(PublicKey))
+            {
+                var publicKeyValidation = ValidateBase64UrlKey(PublicKey, 33, "Public Key");
+                if (publicKeyValidation != null)
+                {
+                    yield return publicKeyValidation;
+                }
+            }
+
+            // Validate Private Key
+            if (!string.IsNullOrWhiteSpace(PrivateKey))
+            {
+                var privateKeyValidation = ValidateBase64UrlKey(PrivateKey, 32, "Private Key");
+                if (privateKeyValidation != null)
+                {
+                    yield return privateKeyValidation;
+                }
+            }
+        }
+
+        private ValidationResult? ValidateBase64UrlKey(string key, int expectedLength, string fieldName)
+        {
+            // Check base64url format
+            if (!Regex.IsMatch(key, @"^[A-Za-z0-9_-]*$"))
+            {
+                return new ValidationResult(
+                    $"{fieldName} must be in base64url format",
+                    new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                );
+            }
+
+            try
+            {
+                // Convert base64url to base64
+                string base64 = key.Replace('-', '+').Replace('_', '/');
+                // Add padding if necessary
+                string paddedBase64 = base64.PadRight(base64.Length + (4 - (base64.Length % 4)) % 4, '=');
+                // Decode and check length
+                byte[] decoded = Convert.FromBase64String(paddedBase64);
+                
+                if (decoded.Length != expectedLength)
+                {
+                    return new ValidationResult(
+                        $"{fieldName} has invalid length. Expected {expectedLength} bytes but got {decoded.Length} bytes",
+                        new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                    );
+                }
+            }
+            catch
+            {
+                return new ValidationResult(
+                    $"{fieldName} has invalid base64url encoding",
+                    new[] { fieldName == "Public Key" ? nameof(PublicKey) : nameof(PrivateKey) }
+                );
+            }
+
+            return null;
+        }
     }
-
-    private sealed class EditKeyModel
-    {
-        [Required] public string Name { get; set; } = "";
-        [Required] public string Did { get; set; } = "";
-
-        [Required] public string KeyType { get; set; } = "";
-
-        [Required] public string PublicKey { get; set; } = "";
-
-        [Required] public string PrivateKey { get; set; } = "";
-    }
-
 }
