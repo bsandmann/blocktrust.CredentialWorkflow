@@ -1,4 +1,6 @@
 ﻿@page "/logs"
+@page "/logs/{WorkflowId}"
+
 @using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.GetWorkflowOutcomes
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
@@ -15,11 +17,11 @@
 @inject AppStateService AppStateService
 @inject ILogger<ActionOutcome> Logger
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
 @layout AppLayout
-
 
 <PageTitle>Blocktrust Credential Workflow Platform - Logs</PageTitle>
 
@@ -28,7 +30,7 @@
     <div class="flex flex-col min-h-screen">
         <!-- Top bar -->
         <div class="bg-gray-100 p-4 flex items-center border-b-2 border-slate-200">
-            <select @bind="selectedWorkflowId" @bind:after="LoadWorkflowOutcomes" 
+            <select value="@selectedWorkflowId" @onchange="OnWorkflowSelectionChanged"
                     class="max-w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
                 @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
                 {
@@ -230,8 +232,10 @@ else
     <p class="text-center mt-8">Loading...</p>
 }
 
-
 @code {
+    [Parameter]
+    public string? WorkflowId { get; set; }
+
     private readonly CancellationTokenSource cts = new();
     private Guid? selectedWorkflowId;
     private List<WorkflowOutcome> workflowOutcomes = new();
@@ -246,7 +250,27 @@ else
 
         if (AppStateService.WorkflowSummaries.Any())
         {
-            selectedWorkflowId = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First().WorkflowId;
+            if (!string.IsNullOrEmpty(WorkflowId) && Guid.TryParse(WorkflowId, out Guid workflowGuid))
+            {
+                // If we have a workflow ID in the URL, use that
+                selectedWorkflowId = workflowGuid;
+            }
+            else
+            {
+                // Otherwise, use the first workflow in the list
+                selectedWorkflowId = AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc).First().WorkflowId;
+            }
+            await LoadWorkflowOutcomes();
+        }
+    }
+
+    private async Task OnWorkflowSelectionChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out Guid selectedId))
+        {
+            selectedWorkflowId = selectedId;
+            // Update the URL without reloading the page
+            NavigationManager.NavigateTo($"logs/{selectedId}", false);
             await LoadWorkflowOutcomes();
         }
     }
