@@ -4,6 +4,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
@@ -124,9 +125,10 @@
                 {
                     <VerifyW3cCredentialAction
                         ActionInput="verifyW3cCredential"
-                        OnChange="OnChange"/>
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"
+                        FlowItems="FlowItems" />
                 }
-
                 break;
 
             case EActionType.VerifyW3CSdCredential:
@@ -158,4 +160,5 @@
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
 }

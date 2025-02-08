@@ -36,11 +36,11 @@ public class VerifyW3CCredentialTests
     {
         _httpClient = new HttpClient();
         _credentialParser = new CredentialParser();
-        
+
         var signatureHandler = new CheckSignatureHandler(new ExtractPrismPubKeyFromLongFormDid(), new EcServiceBouncyCastle());
         var expiryHandler = new CheckExpiryHandler();
         var revocationHandler = new CheckRevocationHandler(_httpClient);
-        
+
         var serviceProvider = new ServiceCollection()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CheckSignatureHandler).Assembly))
             .AddScoped<IRequestHandler<CheckSignatureRequest, Result<bool>>, CheckSignatureHandler>(_ => signatureHandler)
@@ -56,7 +56,7 @@ public class VerifyW3CCredentialTests
     public async Task Handle_ValidCredential_ShouldReturnValidResult()
     {
         // Arrange
-        var request = new VerifyW3CCredentialRequest(ValidJwt);
+        var request = new VerifyW3CCredentialRequest(ValidJwt, true, true, false, false, false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -73,7 +73,7 @@ public class VerifyW3CCredentialTests
     public async Task Handle_ExpiredCredential_ShouldReturnInvalidResult()
     {
         // Arrange
-        var request = new VerifyW3CCredentialRequest(ExpiredJwt);
+        var request = new VerifyW3CCredentialRequest(ExpiredJwt, true, true, false, false, false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -88,7 +88,7 @@ public class VerifyW3CCredentialTests
     public async Task Handle_RevokedCredential_ShouldReturnInvalidResult()
     {
         // Arrange
-        var request = new VerifyW3CCredentialRequest(RevokedJwt);
+        var request = new VerifyW3CCredentialRequest(RevokedJwt, true, false, true, false, false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -104,7 +104,7 @@ public class VerifyW3CCredentialTests
     {
         // Arrange
         const string invalidFormat = "invalid_format";
-        var request = new VerifyW3CCredentialRequest(invalidFormat);
+        var request = new VerifyW3CCredentialRequest(invalidFormat, true, false, false, false, false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -118,7 +118,7 @@ public class VerifyW3CCredentialTests
     public async Task Handle_NullCredential_ShouldReturnFailure()
     {
         // Arrange
-        var request = new VerifyW3CCredentialRequest(null);
+        var request = new VerifyW3CCredentialRequest(null, true, false, false, false, false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
