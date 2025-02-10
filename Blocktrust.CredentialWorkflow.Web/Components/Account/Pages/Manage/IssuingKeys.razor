@@ -264,10 +264,10 @@
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             // Validate DID format
-            if (!string.IsNullOrWhiteSpace(Did) && !Regex.IsMatch(Did, @"^did:prism:[a-f0-9]{64}$"))
+            if (!string.IsNullOrWhiteSpace(Did) && !Regex.IsMatch(Did, @"^did:prism:[a-f0-9]{64}(?::[A-Za-z0-9_-]+)?$"))
             {
                 yield return new ValidationResult(
-                    "Invalid DID format. Must be in format: did:prism:[64 hex characters]",
+                    "Invalid DID format. Must be in format: did:prism:[64 hex characters][:optional alphanumeric string]",
                     new[] { nameof(Did) }
                 );
             }
