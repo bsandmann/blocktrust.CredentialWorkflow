@@ -13,6 +13,7 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
     using System.Linq;
     using System.Text.Json;
     using Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
+    using Core.Domain.Enums;
     using Microsoft.AspNetCore.Authorization;
 
     [ApiController]
@@ -66,10 +67,14 @@ namespace Blocktrust.CredentialWorkflow.Web.Controllers
             // Retrieve the workflow details via MediatR
             var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId);
             var getWorkflowResult = await _mediator.Send(getWorkflowRequest);
-
             if (getWorkflowResult.IsFailed)
             {
                 return BadRequest(getWorkflowResult.Errors);
+            }
+
+            if (getWorkflowResult.Value.WorkflowState == EWorkflowState.Inactive)
+            {
+                return BadRequest("The workflow is inactive");
             }
 
             // Check if the workflow has triggers

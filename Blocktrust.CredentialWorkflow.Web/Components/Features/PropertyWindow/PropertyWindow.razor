@@ -207,7 +207,16 @@
                 {
                     Id = Guid.NewGuid(),
                     Type = EDIDCommType.Message,
-                    PeerDid = new ParameterReference { Source = ParameterSource.Static }
+                    RecipientPeerDid = new ParameterReference
+                    {
+                        Source = ParameterSource.TriggerInput,
+                        Path = "peerDid"
+                    },
+                    SenderPeerDid =new ParameterReference()
+                    {
+                        Source = ParameterSource.AppSettings,
+                        Path = "DefaultSenderDid"
+                    }
                 },
                 EActionType.Http => new HttpAction
                 {

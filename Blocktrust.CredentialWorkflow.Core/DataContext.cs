@@ -1,5 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core;
 
+using Entities.DIDComm;
 using Entities.Identity;
 using Entities.Outcome;
 using Entities.Tenant;
@@ -47,8 +48,9 @@ public class DataContext : IdentityDbContext<ApplicationUser>
     public DbSet<TenantEntity> TenantEntities { get; set; }
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; }
     public DbSet<WorkflowOutcomeEntity> WorkflowOutcomeEntities { get; set; }
-
     public DbSet<IssuingKeyEntity> IssuingKeys { get; set; }
+    public DbSet<PeerDIDSecretEntity> PeerDIDSecrets { get; set; }
+    public DbSet<PeerDIDEntity> PeerDIDEntities { get; set; }
 
     /// <summary>
     /// Setup
@@ -73,6 +75,12 @@ public class DataContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<IssuingKeyEntity>().HasKey(p => p.IssuingKeyId);
         modelBuilder.Entity<IssuingKeyEntity>().Property(p => p.IssuingKeyId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
 
+        modelBuilder.Entity<IssuingKeyEntity>()
+            .HasOne<TenantEntity>()
+            .WithMany(t => t.IssuingKeys) // You need a navigation property on TenantEntity
+            .HasForeignKey(p => p.TenantEntityId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         //////////////////////////////////////////////////////////////// Workflow
         modelBuilder.Entity<WorkflowEntity>().HasKey(p => p.WorkflowEntityId);
         modelBuilder.Entity<WorkflowEntity>().Property(p => p.WorkflowEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
@@ -82,6 +90,18 @@ public class DataContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<WorkflowOutcomeEntity>().Property(p => p.WorkflowOutcomeEntityId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
         modelBuilder.Entity<WorkflowOutcomeEntity>().Property(b => b.WorkflowOutcomeState).HasConversion<string>();
 
+        /////////////////////////////////////////////////////////////// DIDComm 
+        modelBuilder.Entity<PeerDIDSecretEntity>().HasKey(p => p.PeerDIDSecretId);
+        modelBuilder.Entity<PeerDIDSecretEntity>().Property(p => p.PeerDIDSecretId).HasValueGenerator(typeof(SequentialGuidValueGenerator));
 
+        modelBuilder.Entity<PeerDIDEntity>().HasKey(p => p.PeerDIDEntityId);
+        modelBuilder.Entity<PeerDIDEntity>().Property(p => p.PeerDIDEntityId)
+            .HasValueGenerator(typeof(SequentialGuidValueGenerator));
+
+        modelBuilder.Entity<PeerDIDEntity>()
+            .HasOne<TenantEntity>()
+            .WithMany(t => t.PeerDIDEntities) // You need a navigation property on TenantEntity
+            .HasForeignKey(p => p.TenantEntityId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

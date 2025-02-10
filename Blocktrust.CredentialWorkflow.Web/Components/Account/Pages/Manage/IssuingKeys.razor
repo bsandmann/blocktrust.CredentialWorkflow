@@ -30,7 +30,7 @@
             <div class="md:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-6">
                     <h3 class="text-xl font-semibold text-slate-800 mb-4">Add New Issuing Key</h3>
-                    
+
                     <!-- Information Box -->
                     <div class="bg-slate-50 rounded-lg p-4 mb-6">
                         <h4 class="font-medium text-slate-800 mb-2">Requirements</h4>
@@ -61,7 +61,7 @@
                         <div class="space-y-5">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Key Name</label>
-                                <InputText id="name" 
+                                <InputText id="name"
                                           @bind-Value="NewKey.Name"
                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                                           placeholder="Enter a descriptive name"/>
@@ -70,7 +70,7 @@
 
                             <div>
                                 <label for="did" class="block text-sm font-medium text-slate-700 mb-1">DID</label>
-                                <InputText id="did" 
+                                <InputText id="did"
                                           @bind-Value="NewKey.Did"
                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                                           placeholder="did:prism:..."/>
@@ -79,7 +79,7 @@
 
                             <div>
                                 <label for="keyType" class="block text-sm font-medium text-slate-700 mb-1">Key Type</label>
-                                <InputSelect id="keyType" 
+                                <InputSelect id="keyType"
                                             @bind-Value="NewKey.KeyType"
                                             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
                                     <option value="secp256k1">secp256k1</option>
@@ -89,7 +89,7 @@
 
                             <div>
                                 <label for="publicKey" class="block text-sm font-medium text-slate-700 mb-1">Public Key</label>
-                                <InputText id="publicKey" 
+                                <InputText id="publicKey"
                                           @bind-Value="NewKey.PublicKey"
                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                                           placeholder="Enter base64url encoded public key"/>
@@ -98,7 +98,7 @@
 
                             <div>
                                 <label for="privateKey" class="block text-sm font-medium text-slate-700 mb-1">Private Key</label>
-                                <InputText id="privateKey" 
+                                <InputText id="privateKey"
                                           @bind-Value="NewKey.PrivateKey"
                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
                                           placeholder="Enter base64url encoded private key"/>
@@ -120,7 +120,7 @@
             <div class="md:col-span-2">
                 <div class="sticky top-4">
                     <h3 class="text-xl font-semibold text-slate-800 mb-4">Existing Keys</h3>
-                    
+
                     @if (!IssuingKeysList.Any())
                     {
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center text-slate-600">
@@ -179,8 +179,8 @@
     private List<IssuingKey> IssuingKeysList { get; set; } = new();
     private Guid TenantId { get; set; }
 
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
     [SupplyParameterFromForm] private NewKeyModel NewKey { get; set; } = new();
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -247,7 +247,15 @@
         return $"{key[..10]}...{key[^5..]}";
     }
 
-    // Model with inline validation
+    private string Truncate(string? value, int frontChars = 10, int backChars = 5)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        if (value.Length <= frontChars + backChars)
+            return value;
+        return value.Substring(0, frontChars) + "..." + value.Substring(value.Length - backChars);
+    }
+
     private sealed class NewKeyModel : IValidatableObject
     {
         [Required(ErrorMessage = "Name is required")]
@@ -321,7 +329,7 @@
                 string paddedBase64 = base64.PadRight(base64.Length + (4 - (base64.Length % 4)) % 4, '=');
                 // Decode and check length
                 byte[] decoded = Convert.FromBase64String(paddedBase64);
-                
+
                 if (decoded.Length != expectedLength)
                 {
                     return new ValidationResult(

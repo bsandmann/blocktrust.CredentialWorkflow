@@ -24,7 +24,7 @@ public class GetWorkflowSummariesHandler : IRequestHandler<GetWorkflowSummariesR
                 WorkflowId = p.WorkflowEntityId,
                 p.UpdatedUtc,
                 p.WorkflowState,
-                LastOutcome = p.WorkflowOutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault(),
+                LastOutcome = p.WorkflowOutcomeEntities.OrderBy(q => q.EndedUtc).FirstOrDefault(),
                 IsRunable = p.IsRunable
             }).ToListAsync(cancellationToken: cancellationToken);
 

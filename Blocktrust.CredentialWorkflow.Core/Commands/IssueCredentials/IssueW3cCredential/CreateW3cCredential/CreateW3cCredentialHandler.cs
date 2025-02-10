@@ -8,12 +8,24 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cC
 
 public class CreateW3cCredentialHandler : IRequestHandler<CreateW3cCredentialRequest, Result<Credential>>
 {
-    private static readonly CredentialOrPresentationContext DefaultContext = 
-        new() { Contexts = new List<object> { "https://www.w3.org/2018/credentials/v1" } };
+    private static readonly CredentialOrPresentationContext DefaultContext =
+        new()
+        {
+            Contexts = new List<object> { "https://www.w3.org/2018/credentials/v1" },
+            SerializationOption = new SerializationOption()
+            {
+                UseArrayEvenForSingleElement = true
+            }
+
+        };
 
     private static readonly CredentialOrPresentationType DefaultType = new()
     {
-        Type = new HashSet<string> { "VerifiableCredential" }
+        Type = new HashSet<string> { "VerifiableCredential" },
+        SerializationOption = new SerializationOption()
+        {
+            UseArrayEvenForSingleElement = true
+        }
     };
 
     public async Task<Result<Credential>> Handle(CreateW3cCredentialRequest request, CancellationToken cancellationToken)
