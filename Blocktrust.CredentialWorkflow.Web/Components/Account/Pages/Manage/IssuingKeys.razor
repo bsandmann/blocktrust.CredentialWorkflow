@@ -158,11 +158,10 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        <button @onclick="() => RemoveKeyAsync(key.IssuingKeyId)"
-                                                class="ml-4 p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                                title="Delete Key">
-                                            <span class="material-symbols-outlined text-lg">delete</span>
-                                        </button>
+                                        <a href="/Account/Manage/DeleteIssuingKeys/@key.IssuingKeyId"
+                                           class="bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                        </a>
                                     </div>
                                 </div>
                             }
@@ -213,22 +212,6 @@
             message = "Issuing Key added successfully.";
             await LoadIssuingKeys();
             NewKey = new NewKeyModel();
-        }
-        else
-        {
-            message = $"Error: {string.Join(", ", result.Errors)}";
-        }
-    }
-
-    private async Task RemoveKeyAsync(Guid keyId)
-    {
-        var request = new DeleteIssuingKeyRequest(keyId);
-        var result = await Mediator.Send(request);
-
-        if (result.IsSuccess)
-        {
-            message = "Issuing Key removed successfully.";
-            await LoadIssuingKeys();
         }
         else
         {
