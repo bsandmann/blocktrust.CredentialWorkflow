@@ -12,14 +12,12 @@
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Verification
 
-<div class="bg-white p-4 rounded-lg shadow-md">
+<div class="bg-white p-4 rounded-lg shadow-md overflow-x-hidden">
     <div class="flex items-start mb-4">
         <button @onclick="OnBack" class="text-gray-600 hover:text-gray-900 mr-4">
             <span class="material-symbols-outlined text-sm">arrow_back</span>
         </button>
     </div>
-
-@* In PropertyEditor.razor *@
 @if (Item is Trigger trigger)
 {
     @switch (trigger.Type)
@@ -30,7 +28,7 @@
                 <HttpRequestTrigger
                     TriggerInput="request"
                     OnChange="OnChange"
-                    WorkflowId="@WorkflowId"/>
+                    WorkflowId="@WorkflowId" />
             }
             break;
              case ETriggerType.RecurringTimer:
@@ -154,7 +152,6 @@
         }
     }
 </div>
-
 @code {
     [Parameter] public object Item { get; set; } = null!;
     [Parameter] public string? Template { get; set; }

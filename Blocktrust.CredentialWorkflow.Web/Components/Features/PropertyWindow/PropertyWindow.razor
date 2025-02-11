@@ -116,7 +116,8 @@
             OnBack="@(() => SelectItem(null))"
             OnChange="@OnChange"
             TriggerParameters="@GetTriggerParameters()"
-            FlowItems="FlowItems"/>
+            FlowItems="FlowItems"
+             WorkflowId="@workflowId"/>
     }
 
     @if (_showError)
@@ -140,6 +141,7 @@
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public List<object> FlowItems { get; set; } = new();
+    [Parameter] public Guid workflowId { get; set; }
 
     private string? _errorMessage;
     private bool _showError;
