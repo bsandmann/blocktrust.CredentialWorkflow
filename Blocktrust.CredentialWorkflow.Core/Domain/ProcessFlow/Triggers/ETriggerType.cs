@@ -5,5 +5,6 @@ public enum ETriggerType
     HttpRequest,
     RecurringTimer,
     WalletInteraction,
-    ManualTrigger
+    ManualTrigger,
+    Form
 }

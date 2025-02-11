@@ -25,3 +25,15 @@ public class TriggerInputManual : TriggerInput
     [JsonPropertyName("requiredParameters")]
     public Dictionary<string, ParameterDefinition> RequiredParameters { get; set; } = new();
 }
+
+public class TriggerInputForm : TriggerInput
+{
+    [JsonPropertyName("parameters")]
+    public Dictionary<string, ParameterDefinition> Parameters { get; set; }
+
+    public TriggerInputForm()
+    {
+        Id = Guid.NewGuid();
+        Parameters = new Dictionary<string, ParameterDefinition>();
+    }
+}
