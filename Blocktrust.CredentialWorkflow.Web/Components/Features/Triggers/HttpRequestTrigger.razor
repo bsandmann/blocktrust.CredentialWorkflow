@@ -1,22 +1,35 @@
 ﻿@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Blocktrust.CredentialWorkflow.Web.Services
 @using System.Text.RegularExpressions
+@using System.Web
+@inject NavigationManager NavigationManager
+@inject ClipboardService ClipboardService
 
 <div class="p-4 text-sm">
     @if (showToast)
     {
-        <div
-            class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
             @toastMessage
         </div>
     }
 
-    <div class="space-y-3">
-        <div>
-            <label class="block text-xs font-medium text-gray-700">Trigger Configuration</label>
+    <div class="space-y-4">
+        <!-- Endpoint URL Section -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <div class="font-medium text-gray-900">Endpoint URL</div>
+                <button @onclick="() => CopyToClipboard(FullUrl)"
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                    <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                    Copy URL
+                </button>
+            </div>
+            <div class="font-mono text-sm text-gray-600 break-all">@FullUrl</div>
         </div>
 
+        <!-- Method Selection -->
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Method</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
@@ -30,10 +43,17 @@
         <!-- Parameter Section -->
         <div class="border-t pt-3">
             <div class="flex justify-between items-center mb-2">
-                <h4 class="text-sm font-medium">Parameters</h4>
+                <div class="flex items-center">
+                    <h4 class="text-sm font-medium mr-2">Parameters</h4>
+                    <button @onclick="() => CopyToClipboard(JsonSchema)"
+                            class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                        <span class="material-symbols-outlined text-sm mr-1">description</span>
+                        Copy Schema
+                    </button>
+                </div>
             </div>
 
-            <!-- Custom Parameters -->
+            <!-- Parameters List -->
             @foreach (var param in httpQueryParameters)
             {
                 <div class="p-2 border rounded-md mb-2">
@@ -78,20 +98,34 @@
                 Add Parameter
             </button>
         </div>
+
+        <!-- cURL Example Section -->
+        <div class="mt-6 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <div class="font-medium text-gray-900">cURL Example</div>
+                <button @onclick="() => CopyToClipboard(CurlCommand)"
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                    <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                    Copy Command
+                </button>
+            </div>
+            <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded">@CurlCommand</pre>
+        </div>
     </div>
 </div>
 
 @code {
     [Parameter] public TriggerInputHttpRequest TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
 
-    private ECredentialType selectedCredentialType = ECredentialType.W3cCredential;
-    private string schemaId = "";
     private string? toastMessage;
     private bool showToast;
     private List<HttpQueryParameters> httpQueryParameters = new();
-    private bool areParametersValid = true; // Track overall validity, including delivery destination
+    private bool areParametersValid = true;
     private string deliveryValidationError = "";
+
+    private string FullUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}";
 
     private class HttpQueryParameters
     {
@@ -105,6 +139,73 @@
     protected override void OnInitialized()
     {
         InitializeParameters();
+    }
+
+    private string CurlCommand
+    {
+        get
+        {
+            var command = $"curl -X {TriggerInput.Method} \"{FullUrl}\"";
+
+            var requiredParams = TriggerInput.Parameters.Where(p => p.Value.Required);
+
+            if (TriggerInput.Method == "GET" && requiredParams.Any())
+            {
+                var queryParams = requiredParams
+                    .Select(p => $"{p.Key}={HttpUtility.UrlEncode($"example {p.Key}")}");
+                command += $"?{string.Join("&", queryParams)}";
+            }
+
+            if (TriggerInput.Method is "POST" or "PUT" && requiredParams.Any())
+            {
+                command += " \\\n    -H \"Content-Type: application/json\"";
+
+                var exampleBody = requiredParams
+                    .ToDictionary(
+                        p => p.Key,
+                        p => $"example {p.Key}"
+                    );
+
+                var jsonBody = System.Text.Json.JsonSerializer.Serialize(exampleBody, 
+                    new System.Text.Json.JsonSerializerOptions { 
+                        WriteIndented = true,
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                    });
+                command += $" \\\n    -d '{jsonBody}'";
+            }
+
+            return command;
+        }
+    }
+
+    private string JsonSchema
+    {
+        get
+        {
+            var schema = new
+            {
+                type = "object",
+                required = TriggerInput.Parameters
+                    .Where(p => p.Value.Required)
+                    .Select(p => p.Key)
+                    .ToList(),
+                properties = TriggerInput.Parameters.ToDictionary(
+                    p => p.Key,
+                    p => new
+                    {
+                        type = p.Value.Type.ToString().ToLower(),
+                        description = p.Value.Description ?? $"Parameter: {p.Key}",
+                        required = p.Value.Required
+                    }
+                )
+            };
+
+            return System.Text.Json.JsonSerializer.Serialize(schema, 
+                new System.Text.Json.JsonSerializerOptions { 
+                    WriteIndented = true,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
+        }
     }
 
     private void InitializeParameters()
@@ -152,7 +253,7 @@
             TriggerInput.Parameters.Remove(key);
         }
 
-        var nameValidationRegex = new Regex("^[a-zA-Z]+$"); // Updated to allow uppercase
+        var nameValidationRegex = new Regex("^[a-zA-Z]+$");
 
         foreach (var param in httpQueryParameters)
         {
@@ -185,14 +286,14 @@
         await OnChange.InvokeAsync();
     }
 
-    private async Task ShowToast(string message)
+    private async Task CopyToClipboard(string text)
     {
-        toastMessage = message;
+        await ClipboardService.CopyTextToClipboard(text);
+        toastMessage = "Copied to clipboard!";
         showToast = true;
         StateHasChanged();
-        await Task.Delay(3000);
+        await Task.Delay(2000);
         showToast = false;
         StateHasChanged();
     }
-
 }

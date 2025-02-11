@@ -19,20 +19,21 @@
         </button>
     </div>
 
-    @if (Item is Trigger trigger)
+@* In PropertyEditor.razor *@
+@if (Item is Trigger trigger)
+{
+    @switch (trigger.Type)
     {
-        @switch (trigger.Type)
-        {
-            case ETriggerType.HttpRequest:
-                @if (trigger.Input is TriggerInputHttpRequest request)
-                {
-                    <HttpRequestTrigger
-                        TriggerInput="request"
-                        OnChange="OnChange"/>
-                }
-
-                break;
-            case ETriggerType.RecurringTimer:
+        case ETriggerType.HttpRequest:
+            @if (trigger.Input is TriggerInputHttpRequest request)
+            {
+                <HttpRequestTrigger
+                    TriggerInput="request"
+                    OnChange="OnChange"
+                    WorkflowId="@WorkflowId"/>
+            }
+            break;
+             case ETriggerType.RecurringTimer:
                 @if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
                 {
                     <RecurringTimerTrigger
@@ -161,4 +162,5 @@
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
     [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
 }
