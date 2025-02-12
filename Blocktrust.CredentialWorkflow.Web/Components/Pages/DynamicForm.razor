@@ -9,7 +9,6 @@
 @inject NavigationManager NavigationManager
 @inject ILogger<DynamicForm> Logger
 @inject IFormService FormService
-
 @attribute [AllowAnonymous]
 
 <PageTitle>Workflow Form</PageTitle>
@@ -33,133 +32,79 @@
                 </div>
             </div>
         }
-        else
+        else if (!string.IsNullOrEmpty(successMessage))
         {
-            @if (!string.IsNullOrEmpty(successMessage))
-            {
-                <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                    <div class="flex">
-                        <div class="ml-3">
-                            <p class="text-sm text-green-700">@successMessage</p>
-                        </div>
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">@successMessage</p>
                     </div>
                 </div>
-            }
-            else
-            {
-                <EditForm Model="formModel" OnValidSubmit="HandleSubmit" class="space-y-6">
-                    <DataAnnotationsValidator />
-
-                    @foreach (var param in parameters)
-                    {
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                @(param.Description ?? param.Name)
-                            </label>
-
-                            @{
-                                var fieldModel = new FieldModel 
-                                { 
-                                    Value = formModel[param.Name],
-                                    OnValueChanged = val => 
-                                    {
-                                        formModel[param.Name] = val;
-                                        StateHasChanged();
-                                    }
-                                };
-                            }
-
-                            @switch (param.Type.ToLower())
-                            {
-                                case "string":
-                                case "email":
-                                    <InputText @bind-Value="fieldModel.StringValue"
-                                             type="@(param.Type.ToLower() == "email" ? "email" : "text")"
-                                             class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                                case "number":
-                                    <InputNumber @bind-Value="fieldModel.DecimalValue"
-                                               class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                                case "boolean":
-                                    <InputCheckbox @bind-Value="fieldModel.BoolValue"
-                                                 class="h-4 w-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500" />
-                                    break;
-                                case "date":
-                                    <InputDate @bind-Value="fieldModel.DateValue"
-                                             class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                            }
-                            <ValidationMessage For="@(() => formModel[param.Name])" class="mt-1 text-sm text-red-600" />
-                        </div>
-                    }
-
-                    <div class="pt-4">
-                        <button type="submit"
-                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                            Submit
-                        </button>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@formModel" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+                
+                @foreach (var field in formModel.Fields)
+                {
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            @(field.Description ?? field.Name)
+                        </label>
+                        
+                        @switch (field.Type.ToLower())
+                        {
+                            case "string":
+                            case "email":
+                                <InputText @bind-Value="field.StringValue"
+                                         type="@(field.Type.ToLower() == "email" ? "email" : "text")"
+                                         class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
+                                break;
+                                
+                            case "number":
+                                <InputNumber @bind-Value="field.NumberValue"
+                                           class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
+                                break;
+                                
+                            case "boolean":
+                                <InputCheckbox @bind-Value="field.BoolValue"
+                                             class="h-4 w-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500" />
+                                break;
+                                
+                            case "date":
+                                <InputDate @bind-Value="field.DateValue"
+                                         class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
+                                break;
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                        {
+                            <div class="mt-1 text-sm text-red-600">@field.ValidationMessage</div>
+                        }
                     </div>
-                </EditForm>
-            }
+                }
+
+                <div class="pt-4">
+                    <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                        Submit
+                    </button>
+                </div>
+            </EditForm>
         }
     </div>
 </div>
 
 @code {
-    [Parameter] public Guid WorkflowId { get; set; }
+    [Parameter]
+    public Guid WorkflowId { get; set; }
 
     private bool isLoading = true;
     private string? error;
     private string? successMessage;
-    private List<(string Name, string Type, string? Description)> parameters = new();
     private DynamicFormModel formModel = new();
-
-    private class FieldModel
-    {
-        private object _value;
-        private Action<object> _onValueChanged;
-
-        public object Value
-        {
-            get => _value;
-            set
-            {
-                _value = value;
-                _onValueChanged?.Invoke(value);
-            }
-        }
-
-        public Action<object> OnValueChanged
-        {
-            get => _onValueChanged;
-            set => _onValueChanged = value;
-        }
-
-        public string StringValue
-        {
-            get => (string)(_value ?? string.Empty);
-            set => Value = value;
-        }
-
-        public decimal DecimalValue
-        {
-            get => _value == null ? 0 : Convert.ToDecimal(_value);
-            set => Value = value;
-        }
-
-        public bool BoolValue
-        {
-            get => _value != null && Convert.ToBoolean(_value);
-            set => Value = value;
-        }
-
-        public DateTime DateValue
-        {
-            get => _value == null ? DateTime.Today : Convert.ToDateTime(_value);
-            set => Value = value;
-        }
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -190,8 +135,13 @@
             {
                 foreach (var param in formTrigger.Parameters)
                 {
-                    parameters.Add((param.Key, param.Value.Type.ToString().ToLower(), param.Value.Description));
-                    formModel[param.Key] = GetDefaultValueForParameter(param.Value.Type);
+                    formModel.Fields.Add(new FormField
+                    {
+                        Name = param.Key,
+                        Type = param.Value.Type.ToString().ToLower(),
+                        Description = param.Value.Description,
+                        IsRequired = param.Value.Required
+                    });
                 }
             }
         }
@@ -206,36 +156,28 @@
         }
     }
 
-    private object GetDefaultValueForParameter(ParameterType type)
-    {
-        return type switch
-        {
-            ParameterType.String => string.Empty,
-            ParameterType.Number => 0m,
-            ParameterType.Boolean => false,
-            ParameterType.Date => DateTime.Today,
-            _ => string.Empty
-        };
-    }
-
     private async Task HandleSubmit()
     {
         try
         {
+            if (!ValidateForm())
+            {
+                return;
+            }
+
             isLoading = true;
             StateHasChanged();
 
-            // Convert form data to object dictionary
-            var formData = formModel.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value
+            var formData = formModel.Fields.ToDictionary(
+                field => field.Name,
+                field => field.GetValue()
             );
 
             var result = await FormService.ProcessFormSubmission(WorkflowId, formData);
-
             if (result.IsSuccess)
             {
                 successMessage = "Form submitted successfully!";
+                formModel = new DynamicFormModel(); // Reset form
             }
             else
             {
@@ -254,96 +196,88 @@
         }
     }
 
-    public class DynamicFormModel : Dictionary<string, object>
+    private bool ValidateForm()
     {
-        public new object this[string key]
+        bool isValid = true;
+        foreach (var field in formModel.Fields)
         {
-            get => ContainsKey(key) ? base[key] : null;
-            set => base[key] = value;
-        }
-
-        // Custom validation attributes
-        public class RequiredPropertyAttribute : ValidationAttribute
-        {
-            private readonly string _propertyName;
-
-            public RequiredPropertyAttribute(string propertyName)
+            if (!field.Validate())
             {
-                _propertyName = propertyName;
-            }
-
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-            {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName];
-
-                if (propertyValue == null || (propertyValue is string str && string.IsNullOrWhiteSpace(str)))
-                {
-                    return new ValidationResult($"The {_propertyName} field is required.");
-                }
-
-                return ValidationResult.Success;
+                isValid = false;
             }
         }
+        return isValid;
+    }
 
-        public class EmailValidationAttribute : ValidationAttribute
+    public class DynamicFormModel
+    {
+        public List<FormField> Fields { get; set; } = new();
+    }
+
+    public class FormField
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string? Description { get; set; }
+        public bool IsRequired { get; set; }
+        public string? ValidationMessage { get; set; }
+
+        public string StringValue { get; set; } = "";
+        public decimal NumberValue { get; set; }
+        public bool BoolValue { get; set; }
+        public DateTime DateValue { get; set; } = DateTime.Today;
+
+        public bool Validate()
         {
-            private readonly string _propertyName;
+            ValidationMessage = null;
 
-            public EmailValidationAttribute(string propertyName)
+            if (IsRequired)
             {
-                _propertyName = propertyName;
+                switch (Type.ToLower())
+                {
+                    case "string":
+                    case "email":
+                        if (string.IsNullOrWhiteSpace(StringValue))
+                        {
+                            ValidationMessage = $"{Name} is required.";
+                            return false;
+                        }
+                        if (Type.ToLower() == "email" && !IsValidEmail(StringValue))
+                        {
+                            ValidationMessage = $"{Name} must be a valid email address.";
+                            return false;
+                        }
+                        break;
+                }
             }
 
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+            return true;
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
             {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName]?.ToString();
-
-                if (string.IsNullOrEmpty(propertyValue))
-                {
-                    return ValidationResult.Success;
-                }
-
-                try
-                {
-                    var addr = new System.Net.Mail.MailAddress(propertyValue);
-                    return addr.Address == propertyValue ? ValidationResult.Success 
-                        : new ValidationResult($"The {_propertyName} field is not a valid email address.");
-                }
-                catch
-                {
-                    return new ValidationResult($"The {_propertyName} field is not a valid email address.");
-                }
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
             }
         }
 
-        public class DateValidationAttribute : ValidationAttribute
+        public object GetValue()
         {
-            private readonly string _propertyName;
-
-            public DateValidationAttribute(string propertyName)
+            return Type.ToLower() switch
             {
-                _propertyName = propertyName;
-            }
-
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-            {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName]?.ToString();
-
-                if (string.IsNullOrEmpty(propertyValue))
-                {
-                    return ValidationResult.Success;
-                }
-
-                if (!DateTime.TryParse(propertyValue, out _))
-                {
-                    return new ValidationResult($"The {_propertyName} field must be a valid date.");
-                }
-
-                return ValidationResult.Success;
-            }
+                "string" => StringValue,
+                "email" => StringValue,
+                "number" => NumberValue,
+                "boolean" => BoolValue,
+                "date" => DateValue,
+                _ => StringValue
+            };
         }
     }
 }
