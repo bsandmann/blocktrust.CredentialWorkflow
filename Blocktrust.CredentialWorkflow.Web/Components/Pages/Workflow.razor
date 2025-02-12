@@ -280,10 +280,11 @@
     {
         EWorkflowState.ActiveWithExternalTrigger => "bg-green-100 text-green-800",
         EWorkflowState.ActiveWithRecurrentTrigger => "bg-green-100 text-green-800",
+        EWorkflowState.ActiveWithFormTrigger => "bg-green-100 text-green-800",
         EWorkflowState.Inactive => "bg-gray-100 text-gray-800",
         _ => "bg-gray-100 text-gray-800"
     };
-
+    
     private string GetOutcomeStateColor(EWorkflowOutcomeState state) => state switch
     {
         EWorkflowOutcomeState.Success => "bg-green-100 text-green-800",
@@ -419,72 +420,62 @@
         }
     }
 
-    private async Task ToggleWorkflowState(WorkflowSummary workflow)
+private async Task ToggleWorkflowState(WorkflowSummary workflow)
+{
+    try
     {
-        try
+        if (workflow.WorkflowState == EWorkflowState.Inactive)
         {
-            if (workflow.WorkflowState == EWorkflowState.Inactive)
+            var completeWorkflow = await Mediator.Send(new GetWorkflowByIdRequest(workflow.WorkflowId));
+            if (completeWorkflow.IsFailed)
             {
-                var completeWorkflow = await Mediator.Send(new GetWorkflowByIdRequest(workflow.WorkflowId));
-                if (completeWorkflow.IsFailed)
-                {
-                    errorMessage = "Failed to run the workflow. Please try again.";
-                    return;
-                }
+                errorMessage = "Failed to run the workflow. Please try again.";
+                return;
+            }
 
-                if (completeWorkflow.Value.ProcessFlow is null || !completeWorkflow.Value.ProcessFlow.Triggers.Any())
-                {
-                    errorMessage = "Workflow has no triggers. Please add a trigger before running.";
-                    return;
-                }
+            if (completeWorkflow.Value.ProcessFlow is null || !completeWorkflow.Value.ProcessFlow.Triggers.Any())
+            {
+                errorMessage = "Workflow has no triggers. Please add a trigger before running.";
+                return;
+            }
 
-                var firstTriggerType = completeWorkflow.Value.ProcessFlow.Triggers.First().Value.Type;
-                EWorkflowState newState;
-                switch (firstTriggerType)
-                {
-                    case ETriggerType.HttpRequest:
-                        newState = EWorkflowState.ActiveWithExternalTrigger;
-                        break;
-                    case ETriggerType.RecurringTimer:
-                        newState = EWorkflowState.ActiveWithRecurrentTrigger;
-                        break;
-                    default:
-                        errorMessage = "Failed to run the workflow. Unsupported trigger type.";
-                        StateHasChanged();
-                        return;
-                }
+            var firstTriggerType = completeWorkflow.Value.ProcessFlow.Triggers.First().Value.Type;
+            EWorkflowState newState = firstTriggerType switch
+            {
+                ETriggerType.HttpRequest => EWorkflowState.ActiveWithExternalTrigger,
+                ETriggerType.RecurringTimer => EWorkflowState.ActiveWithRecurrentTrigger,
+                ETriggerType.Form => EWorkflowState.ActiveWithFormTrigger,
+                _ => throw new InvalidOperationException($"Unsupported trigger type: {firstTriggerType}")
+            };
 
-                var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, newState));
-                if (result.IsFailed)
-                {
-                    errorMessage = "Failed to run the workflow. Please try again.";
-                }
-                else
-                {
-                    // Update the local state so the table refreshes correctly
-                    workflow.WorkflowState = newState;
-                }
+            var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, newState));
+            if (result.IsFailed)
+            {
+                errorMessage = "Failed to run the workflow. Please try again.";
             }
             else
             {
-                // "Stop" the workflow
-                var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, EWorkflowState.Inactive));
-                if (result.IsFailed)
-                {
-                    errorMessage = "Failed to stop the workflow. Please try again.";
-                }
-                else
-                {
-                    workflow.WorkflowState = EWorkflowState.Inactive;
-                }
+                workflow.WorkflowState = newState;
             }
         }
-        catch (Exception ex)
+        else
         {
-            errorMessage = $"An error occurred: {ex.Message}";
+            var result = await Mediator.Send(new ChangeWorkflowStateRequest(workflow.WorkflowId, EWorkflowState.Inactive));
+            if (result.IsFailed)
+            {
+                errorMessage = "Failed to stop the workflow. Please try again.";
+            }
+            else
+            {
+                workflow.WorkflowState = EWorkflowState.Inactive;
+            }
         }
-
-        // Re-render to show new state or error
-        StateHasChanged();
     }
+    catch (Exception ex)
+    {
+        errorMessage = $"An error occurred: {ex.Message}";
+    }
+    StateHasChanged();
+}
+
 }
