@@ -2,7 +2,6 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.PropertyWindow
-@using Blocktrust.CredentialWorkflow.Web.Components.Features.HttpEndpointInfo 
 
 @using Blocktrust.CredentialWorkflow.Web.Components.Layout
 @using Blocktrust.CredentialWorkflow.Web.Services
@@ -26,7 +25,6 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
 @layout AppLayout
-
 <PageTitle>Blocktrust Credential Workflow Platform - Designer</PageTitle>
 
 @if (AppStateService.IsInitialized)
@@ -113,17 +111,7 @@
 
         <!-- Main content area -->
         <div class="flex flex-row">
-            <!-- Left Panel - HTTP Endpoint Info -->
-            @if (currentWorkflow?.ProcessFlow?.Triggers.Any() == true && 
-                 currentWorkflow.ProcessFlow.Triggers.First().Value.Type == ETriggerType.HttpRequest)
-            {
-                <div class="w-1/4 bg-gray-100 p-4 border-r border-gray-200">
-                    <HttpEndpointInfo 
-                        WorkflowId="@workflowId" 
-                        TriggerInput="@((TriggerInputHttpRequest)currentWorkflow.ProcessFlow.Triggers.First().Value.Input)" />
-                </div>
-            }
-
+          
             <!-- Workflow Designer Area -->
             <div class="flex-grow bg-white p-4">
                 @if (showToast)
@@ -144,7 +132,9 @@
                     SelectedItem="@selectedItem"
                     OnItemCreated="HandleItemCreated"
                     OnChange="HandleChange"
-                    FlowItems="@flowItems"/>
+                    FlowItems="@flowItems"
+                    workflowId="@workflowId"
+                    />
             </div>
         </div>
     </div>

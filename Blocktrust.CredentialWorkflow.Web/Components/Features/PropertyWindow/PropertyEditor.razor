@@ -12,27 +12,26 @@
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Verification
 
-<div class="bg-white p-4 rounded-lg shadow-md">
+<div class="bg-white p-4 rounded-lg shadow-md overflow-x-hidden">
     <div class="flex items-start mb-4">
         <button @onclick="OnBack" class="text-gray-600 hover:text-gray-900 mr-4">
             <span class="material-symbols-outlined text-sm">arrow_back</span>
         </button>
     </div>
-
-    @if (Item is Trigger trigger)
+@if (Item is Trigger trigger)
+{
+    @switch (trigger.Type)
     {
-        @switch (trigger.Type)
-        {
-            case ETriggerType.HttpRequest:
-                @if (trigger.Input is TriggerInputHttpRequest request)
-                {
-                    <HttpRequestTrigger
-                        TriggerInput="request"
-                        OnChange="OnChange"/>
-                }
-
-                break;
-            case ETriggerType.RecurringTimer:
+        case ETriggerType.HttpRequest:
+            @if (trigger.Input is TriggerInputHttpRequest request)
+            {
+                <HttpRequestTrigger
+                    TriggerInput="request"
+                    OnChange="OnChange"
+                    WorkflowId="@WorkflowId" />
+            }
+            break;
+             case ETriggerType.RecurringTimer:
                 @if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
                 {
                     <RecurringTimerTrigger
@@ -59,6 +58,16 @@
                 }
 
                 break;
+                
+        case ETriggerType.Form:
+            @if (trigger.Input is TriggerInputForm formTrigger)
+            {
+                <FormTrigger
+                    TriggerInput="formTrigger"
+                    OnChange="OnChange"
+                    WorkflowId="@WorkflowId"/>
+            }
+            break;
         }
     }
     else if (Item is WorkflowAction action)
@@ -154,7 +163,6 @@
         }
     }
 </div>
-
 @code {
     [Parameter] public object Item { get; set; } = null!;
     [Parameter] public string? Template { get; set; }
@@ -162,4 +170,5 @@
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
     [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
 }

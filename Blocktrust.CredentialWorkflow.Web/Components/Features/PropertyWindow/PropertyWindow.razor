@@ -53,6 +53,9 @@
                     <MenuButton Icon="play_circle" Label="Manual triggering"
                                 OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))"
                                 ShowAddButton="true"/>
+                    <MenuButton Icon="feed" Label="Form"
+                                OnClick="@(action => HandleItemClick(ETriggerType.Form, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
             </div>
         </div>
@@ -116,7 +119,8 @@
             OnBack="@(() => SelectItem(null))"
             OnChange="@OnChange"
             TriggerParameters="@GetTriggerParameters()"
-            FlowItems="FlowItems"/>
+            FlowItems="FlowItems"
+             WorkflowId="@workflowId"/>
     }
 
     @if (_showError)
@@ -140,6 +144,7 @@
     [Parameter] public EventCallback<object> OnItemCreated { get; set; }
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public List<object> FlowItems { get; set; } = new();
+    [Parameter] public Guid workflowId { get; set; }
 
     private string? _errorMessage;
     private bool _showError;
@@ -411,6 +416,14 @@
                 Id = Guid.NewGuid(),
                 Description = "Manual trigger point",
                 RequiredParameters = new Dictionary<string, ParameterDefinition>()
+            };
+        }
+        else if (triggerType == ETriggerType.Form)
+        {
+            trigger = new TriggerInputForm
+            {
+                Id = Guid.NewGuid(),
+                Parameters = new Dictionary<string, ParameterDefinition>()
             };
         }
         else

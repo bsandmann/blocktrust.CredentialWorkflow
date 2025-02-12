@@ -56,6 +56,9 @@ builder.Services.AddHostedService<RecurringWorkflowBackgroundService>();
 
 builder.Services.AddSingleton<ITriggerValidationService, HttpTriggerValidationService>();
 
+builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
+builder.Services.AddScoped<IFormService, FormService>();
+
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));

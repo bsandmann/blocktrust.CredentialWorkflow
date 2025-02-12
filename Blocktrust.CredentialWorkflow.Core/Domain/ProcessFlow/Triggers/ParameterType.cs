@@ -4,5 +4,6 @@ public enum ParameterType
 {
     String,
     Number,
-    Boolean
+    Boolean,
+    Date
 }
