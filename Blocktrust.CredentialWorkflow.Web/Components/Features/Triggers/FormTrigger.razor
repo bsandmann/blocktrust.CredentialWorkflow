@@ -1,0 +1,183 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using System.Text.RegularExpressions
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
+
+<div class="p-4 text-sm">
+    <div class="space-y-4">
+        <!-- Parameter Section -->
+        <div class="pt-3 border-t">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center">
+                    <h4 class="text-sm font-medium mr-2">Form Parameters</h4>
+                </div>
+            </div>
+            <!-- Parameters List -->
+            <div class="space-y-2">
+                @foreach (var param in formParameters)
+                {
+                    <div class="p-2 border rounded-md">
+                        @if (!string.IsNullOrEmpty(param.ValidationError))
+                        {
+                            <p class="text-red-500 text-xs mb-1">@param.ValidationError</p>
+                        }
+                        <div class="flex items-center justify-between mb-1 gap-2">
+                            <input type="text"
+                                   class="rounded border px-2 py-1 text-xs flex-1"
+                                   placeholder="Parameter name"
+                                   @bind="param.Name"
+                                   @bind:event="oninput"
+                                   @bind:after="UpdateParameters"/>
+
+                            <select class="rounded border px-2 py-1 text-xs w-24"
+                                    @bind="param.Type"
+                                    @bind:after="UpdateParameters">
+                                <option value="string">string</option>
+                                <option value="number">number</option>
+                                <option value="boolean">boolean</option>
+                                @* <option value="date">date</option> *@
+                                @* <option value="email">email</option> *@
+                            </select>
+
+                            <button class="text-red-500 hover:text-red-700 shrink-0"
+                                    @onclick="() => RemoveParameter(param)">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <input type="text"
+                                   class="rounded border px-2 py-1 text-xs w-full"
+                                   placeholder="Parameter description (optional)"
+                                   @bind="param.Description"
+                                   @bind:event="oninput"
+                                   @bind:after="UpdateParameters"/>
+                        </div>
+                    </div>
+                }
+            </div>
+            <!-- Add Parameter Button -->
+            <button class="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded transition-colors duration-200 flex items-center justify-center"
+                    @onclick="AddParameter">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Parameter
+            </button>
+        </div>
+
+        <!-- Preview Form Link -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <div class="font-medium text-gray-900">Form URL</div>
+                <button @onclick="() => CopyToClipboard(FormUrl)"
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs shrink-0 ml-2">
+                    <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                    Copy URL
+                </button>
+            </div>
+            <div class="font-mono text-sm text-gray-600 break-all">
+                @FormUrl
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public TriggerInputForm TriggerInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    private List<FormParameter> formParameters = new();
+    private string FormUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/form/{WorkflowId}";
+
+    private class FormParameter
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string? Description { get; set; }
+        public string ValidationError { get; set; } = "";
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (WorkflowId != Guid.Empty)
+        {
+            InitializeParameters();
+        }
+    }
+
+    private void InitializeParameters()
+    {
+        formParameters.Clear();
+        foreach (var param in TriggerInput.Parameters)
+        {
+            formParameters.Add(new FormParameter
+            {
+                Name = param.Key,
+                Type = param.Value.Type.ToString().ToLower(),
+                Description = param.Value.Description
+            });
+        }
+    }
+
+    private async Task AddParameter()
+    {
+        var paramName = $"param{formParameters.Count + 1}";
+        var param = new FormParameter
+        {
+            Name = paramName,
+            Type = "string",
+            Description = $"Parameter {paramName}"
+        };
+        formParameters.Add(param);
+        await UpdateParameters();
+        StateHasChanged();
+    }
+    private async Task RemoveParameter(FormParameter param)
+    {
+        formParameters.Remove(param);
+        await UpdateParameters();
+        StateHasChanged();
+    }
+
+    private async Task UpdateParameters()
+    {
+        // Clear and rebuild parameters
+        var existingKeys = TriggerInput.Parameters.Keys.ToList();
+        foreach (var key in existingKeys)
+        {
+            TriggerInput.Parameters.Remove(key);
+        }
+
+        // Validate parameter names
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+        foreach (var param in formParameters)
+        {
+            param.ValidationError = "";
+            if (string.IsNullOrEmpty(param.Name))
+            {
+                param.ValidationError = "Parameter name cannot be empty.";
+                continue;
+            }
+
+            if (!nameValidationRegex.IsMatch(param.Name))
+            {
+                param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers.";
+                continue;
+            }
+
+            TriggerInput.Parameters[param.Name] = new ParameterDefinition
+            {
+                Type = Enum.Parse<ParameterType>(param.Type, true),
+                Description = param.Description ?? $"Enter {param.Name}",
+                Required = true // Making all form fields required by default
+            };
+        }
+
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        // Could add toast notification here
+    }
+}

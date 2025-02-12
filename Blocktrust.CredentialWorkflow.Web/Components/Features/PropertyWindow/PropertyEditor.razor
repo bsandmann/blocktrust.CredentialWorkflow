@@ -58,6 +58,16 @@
                 }
 
                 break;
+                
+        case ETriggerType.Form:
+            @if (trigger.Input is TriggerInputForm formTrigger)
+            {
+                <FormTrigger
+                    TriggerInput="formTrigger"
+                    OnChange="OnChange"
+                    WorkflowId="@WorkflowId"/>
+            }
+            break;
         }
     }
     else if (Item is WorkflowAction action)

@@ -53,6 +53,9 @@
                     <MenuButton Icon="play_circle" Label="Manual triggering"
                                 OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))"
                                 ShowAddButton="true"/>
+                    <MenuButton Icon="feed" Label="Form"
+                                OnClick="@(action => HandleItemClick(ETriggerType.Form, action))"
+                                ShowAddButton="true"/>
                 </MenuGroup>
             </div>
         </div>
@@ -404,6 +407,14 @@
                 Id = Guid.NewGuid(),
                 Description = "Manual trigger point",
                 RequiredParameters = new Dictionary<string, ParameterDefinition>()
+            };
+        }
+        else if (triggerType == ETriggerType.Form)
+        {
+            trigger = new TriggerInputForm
+            {
+                Id = Guid.NewGuid(),
+                Parameters = new Dictionary<string, ParameterDefinition>()
             };
         }
         else

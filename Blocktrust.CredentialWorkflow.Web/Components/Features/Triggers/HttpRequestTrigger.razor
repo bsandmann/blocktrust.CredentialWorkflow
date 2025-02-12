@@ -256,12 +256,17 @@
 
     private async Task AddParameter()
     {
-        var param = new HttpQueryParameters();
+        var paramName = $"param{httpQueryParameters.Count + 1}";
+        var param = new HttpQueryParameters
+        {
+            Name = paramName,
+            Type = "string",
+            Required = false
+        };
         httpQueryParameters.Add(param);
         await UpdateParameters();
         StateHasChanged();
     }
-
     private async Task RemoveParameter(HttpQueryParameters param)
     {
         httpQueryParameters.Remove(param);
