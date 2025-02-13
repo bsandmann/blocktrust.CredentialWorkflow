@@ -10,7 +10,7 @@
 <div class="p-4 text-sm max-w-2xl">
     @if (showToast)
     {
-        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500">
             @toastMessage
         </div>
     }
@@ -45,7 +45,7 @@
             </select>
         </div>
 
-        <!-- Parameter Section -->
+        <!-- Parameters Section -->
         <div class="pt-3 border-t">
             <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center">
@@ -58,46 +58,57 @@
                 </div>
             </div>
 
-            <!-- Parameters List -->
-            <div class="space-y-2">
-                @foreach (var param in httpQueryParameters)
-                {
-                    <div class="p-2 border rounded-md">
-                        @if (!string.IsNullOrEmpty(param.ValidationError))
-                        {
-                            <p class="text-red-500 text-xs mb-1">@param.ValidationError</p>
-                        }
-                        <div class="flex items-center justify-between mb-1 gap-2">
-                            <input type="text"
-                                   class="rounded border px-2 py-1 text-xs flex-1"
-                                   placeholder="Parameter name"
-                                   @bind="param.Name"
-                                   @bind:event="oninput"
-                                   @bind:after="UpdateParameters"
-                                   disabled="@param.Required" />
-
-                            <select class="rounded border px-2 py-1 text-xs w-24"
-                                    @bind="param.Type"
-                                    @bind:after="UpdateParameters"
-                                    disabled="@param.Required">
-                                <option value="string">string</option>
-                                <option value="number">number</option>
-                                <option value="boolean">boolean</option>
-                            </select>
-                            <button class="text-red-500 hover:text-red-700 shrink-0"
-                                    @onclick="() => RemoveParameter(param)">
-                                <span class="material-symbols-outlined text-sm">delete</span>
-                            </button>
-                        </div>
-                        @if (!string.IsNullOrEmpty(param.Description))
-                        {
-                            <p class="text-xs text-gray-500">@param.Description</p>
-                        }
+            <!-- Required Parameters (if any) -->
+            @foreach (var param in Parameters.Where(p => p.IsRequired))
+            {
+                <div class="p-2 border rounded-md bg-gray-50 mb-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <input type="text"
+                               class="rounded border px-2 py-1 text-xs flex-1"
+                               value="@param.Name"
+                               disabled="true" />
+                        <select class="rounded border px-2 py-1 text-xs w-24"
+                                value="@param.Type"
+                                disabled="true">
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                        </select>
                     </div>
-                }
-            </div>
+                    <div class="mt-1 text-xs text-gray-500">@param.Description</div>
+                </div>
+            }
 
-            <!-- Add Parameter Button -->
+            <!-- Custom Parameters -->
+            @foreach (var param in Parameters.Where(p => !p.IsRequired))
+            {
+                <div class="p-2 border rounded-md mb-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <input type="text"
+                               class="rounded border px-2 py-1 text-xs flex-1"
+                               placeholder="Parameter name"
+                               @bind="param.Name"
+                               @bind:event="oninput"
+                               @bind:after="() => ValidateAndUpdateParameters()" />
+                        <select class="rounded border px-2 py-1 text-xs w-24"
+                                @bind="param.Type"
+                                @bind:after="() => ValidateAndUpdateParameters()">
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                        </select>
+                        <button class="text-red-500 hover:text-red-700 shrink-0"
+                                @onclick="() => RemoveParameter(param)">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(param.ValidationError))
+                    {
+                        <div class="mt-1 text-xs text-red-500">@param.ValidationError</div>
+                    }
+                </div>
+            }
+
             <button class="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded transition-colors duration-200 flex items-center justify-center"
                     @onclick="AddParameter">
                 <span class="material-symbols-outlined text-sm mr-1">add</span>
@@ -105,8 +116,8 @@
             </button>
         </div>
 
-        <!-- cURL Example Section -->
-        <div class="mt-6 bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <!-- cURL Example -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
             <div class="flex items-center justify-between mb-2">
                 <div class="font-medium text-gray-900">cURL Example</div>
                 <button @onclick="() => CopyToClipboard(CurlCommand)"
@@ -115,27 +126,11 @@
                     Copy Command
                 </button>
             </div>
-            <div class="relative">
-                <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded overflow-scroll @(isExpanded ? "max-h-none" : "max-h-24")">@CurlCommand</pre>
-                @if (!isExpanded && CurlCommand.Length > 200)
-                {
-                    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
-                    <button @onclick="() => isExpanded = true"
-                            class="absolute bottom-1 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white px-2 py-1 rounded">
-                        Show More
-                    </button>
-                }
-                @if (isExpanded && CurlCommand.Length > 200)
-                {
-                    <button @onclick="() => isExpanded = false"
-                            class="text-xs text-blue-600 hover:text-blue-800 mt-1">
-                        Show Less
-                    </button>
-                }
-            </div>
+            <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded">@CurlCommand</pre>
         </div>
     </div>
 </div>
+
 @code {
     [Parameter] public TriggerInputHttpRequest TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
@@ -143,12 +138,123 @@
 
     private string? toastMessage;
     private bool showToast;
-    private bool isExpanded;
-    private List<HttpQueryParameters> httpQueryParameters = new();
-    private bool areParametersValid = true;
-    private string deliveryValidationError = "";
+    private List<ParameterData> Parameters { get; set; } = new();
+    private int paramCounter = 0;
 
     private string FullUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}";
+
+    protected override void OnInitialized()
+    {
+        InitializeParameters();
+    }
+
+    protected override void OnParametersSet()
+    {
+        InitializeParameters();
+    }
+
+    private void InitializeParameters()
+    {
+        Parameters.Clear();
+        foreach (var param in TriggerInput.Parameters)
+        {
+            Parameters.Add(new ParameterData
+            {
+                Name = param.Key,
+                Type = param.Value.Type.ToString().ToLower(),
+                Description = param.Value.Description,
+                IsRequired = param.Value.Required
+            });
+        }
+        UpdateParamCounter();
+    }
+
+    private void UpdateParamCounter()
+    {
+        paramCounter = Parameters
+            .Select(p => p.Name)
+            .Where(name => name.StartsWith("param"))
+            .Select(name => name.Replace("param", ""))
+            .Where(num => int.TryParse(num, out _))
+            .Select(num => int.Parse(num))
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+    }
+
+    private async Task OnInputChanged()
+    {
+        await ValidateAndUpdateParameters();
+    }
+
+    private void AddParameter()
+    {
+        Parameters.Add(new ParameterData 
+        { 
+            Name = $"param{paramCounter++}",
+            Type = "string",
+            IsRequired = false
+        });
+        StateHasChanged();
+    }
+
+    private async Task RemoveParameter(ParameterData param)
+    {
+        if (!param.IsRequired)
+        {
+            Parameters.Remove(param);
+            await ValidateAndUpdateParameters();
+        }
+    }
+
+    private async Task ValidateAndUpdateParameters()
+    {
+        // Clear existing parameters
+        var existingKeys = TriggerInput.Parameters.Keys.ToList();
+        foreach (var key in existingKeys)
+        {
+            TriggerInput.Parameters.Remove(key);
+        }
+
+        // Validate and update parameters
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+        bool hasChanges = false;
+
+        foreach (var param in Parameters)
+        {
+            param.ValidationError = null;
+
+            if (string.IsNullOrWhiteSpace(param.Name))
+            {
+                param.ValidationError = "Parameter name cannot be empty";
+                continue;
+            }
+
+            if (!nameValidationRegex.IsMatch(param.Name))
+            {
+                param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers";
+                continue;
+            }
+
+            if (Parameters.Count(p => p.Name == param.Name) > 1)
+            {
+                param.ValidationError = "Parameter name must be unique";
+                continue;
+            }
+
+            TriggerInput.Parameters[param.Name] = new ParameterDefinition
+            {
+                Type = Enum.Parse<ParameterType>(param.Type, true),
+                Description = param.Description ?? $"Parameter: {param.Name}",
+                Required = param.IsRequired
+            };
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+        {
+            await OnChange.InvokeAsync();
+        }
+    }
 
     private string CurlCommand
     {
@@ -156,30 +262,22 @@
         {
             var command = $"curl -X {TriggerInput.Method} \"{FullUrl}\"";
 
-            var requiredParams = TriggerInput.Parameters.Where(p => p.Value.Required);
+            var parameters = Parameters.Where(p => p.IsRequired);
+            if (!parameters.Any()) return command;
 
-            if (TriggerInput.Method == "GET" && requiredParams.Any())
+            if (TriggerInput.Method == "GET")
             {
-                var queryParams = requiredParams
-                    .Select(p => $"{p.Key}={HttpUtility.UrlEncode($"example {p.Key}")}");
+                var queryParams = parameters.Select(p => $"{p.Name}={HttpUtility.UrlEncode($"example_{p.Name}")}");
                 command += $"?{string.Join("&", queryParams)}";
             }
-
-            if (TriggerInput.Method is "POST" or "PUT" && requiredParams.Any())
+            else if (TriggerInput.Method == "POST")
             {
                 command += " \\\n    -H \"Content-Type: application/json\"";
-
-                var exampleBody = requiredParams
-                    .ToDictionary(
-                        p => p.Key,
-                        p => $"example {p.Key}"
-                    );
-
-                var jsonBody = System.Text.Json.JsonSerializer.Serialize(exampleBody, 
-                    new System.Text.Json.JsonSerializerOptions { 
-                        WriteIndented = true,
-                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                    });
+                var body = parameters.ToDictionary(p => p.Name, p => $"example_{p.Name}");
+                var jsonBody = System.Text.Json.JsonSerializer.Serialize(body, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
                 command += $" \\\n    -d '{jsonBody}'";
             }
 
@@ -194,128 +292,23 @@
             var schema = new
             {
                 type = "object",
-                required = TriggerInput.Parameters
-                    .Where(p => p.Value.Required)
-                    .Select(p => p.Key)
-                    .ToList(),
-                properties = TriggerInput.Parameters.ToDictionary(
-                    p => p.Key,
+                required = Parameters.Where(p => p.IsRequired).Select(p => p.Name).ToList(),
+                properties = Parameters.ToDictionary(
+                    p => p.Name,
                     p => new
                     {
-                        type = p.Value.Type.ToString().ToLower(),
-                        description = p.Value.Description ?? $"Parameter: {p.Key}",
-                        required = p.Value.Required
+                        type = p.Type,
+                        description = p.Description ?? $"Parameter: {p.Name}",
+                        required = p.IsRequired
                     }
                 )
             };
 
-            return System.Text.Json.JsonSerializer.Serialize(schema, 
-                new System.Text.Json.JsonSerializerOptions { 
-                    WriteIndented = true,
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                });
-        }
-    }
-
-    private class HttpQueryParameters
-    {
-        public string Name { get; set; } = "";
-        public string Type { get; set; } = "string";
-        public string? Description { get; set; }
-        public bool Required { get; set; }
-        public string ValidationError { get; set; } = "";
-    }
-
-    protected override void OnParametersSet()
-    {
-        if (WorkflowId != Guid.Empty)
-        {
-            InitializeParameters();
-        }
-    }
-
-    private void InitializeParameters()
-    {
-        httpQueryParameters.Clear();
-        foreach (var param in TriggerInput.Parameters)
-        {
-            httpQueryParameters.Add(new HttpQueryParameters
+            return System.Text.Json.JsonSerializer.Serialize(schema, new System.Text.Json.JsonSerializerOptions
             {
-                Name = param.Key,
-                Type = param.Value.Type.ToString().ToLower(),
-                Description = param.Value.Description,
-                Required = param.Value.Required
+                WriteIndented = true
             });
         }
-    }
-
-    private async Task OnInputChanged()
-    {
-        await OnChange.InvokeAsync();
-    }
-
-    private async Task AddParameter()
-    {
-        var paramName = $"param{httpQueryParameters.Count + 1}";
-        var param = new HttpQueryParameters
-        {
-            Name = paramName,
-            Type = "string",
-            Required = false
-        };
-        httpQueryParameters.Add(param);
-        await UpdateParameters();
-        StateHasChanged();
-    }
-    private async Task RemoveParameter(HttpQueryParameters param)
-    {
-        httpQueryParameters.Remove(param);
-        await UpdateParameters();
-        StateHasChanged();
-    }
-
-    private async Task UpdateParameters()
-    {
-        areParametersValid = true;
-        deliveryValidationError = "";
-
-        var existingKeys = TriggerInput.Parameters.Keys.ToList();
-        foreach (var key in existingKeys)
-        {
-            TriggerInput.Parameters.Remove(key);
-        }
-
-        var nameValidationRegex = new Regex("^[a-zA-Z]+$");
-
-        foreach (var param in httpQueryParameters)
-        {
-            param.ValidationError = "";
-
-            if (string.IsNullOrEmpty(param.Name))
-            {
-                param.ValidationError = "Parameter name cannot be empty.";
-                areParametersValid = false;
-            }
-            else
-            {
-                if (!nameValidationRegex.IsMatch(param.Name))
-                {
-                    param.ValidationError = "Parameter name must contain only letters (a-z, A-Z).";
-                    areParametersValid = false;
-                }
-                else
-                {
-                    TriggerInput.Parameters[param.Name] = new ParameterDefinition
-                    {
-                        Type = Enum.Parse<ParameterType>(param.Type, true),
-                        Description = $"Custom parameter: {param.Name}",
-                        Required = param.Required
-                    };
-                }
-            }
-        }
-
-        await OnChange.InvokeAsync();
     }
 
     private async Task CopyToClipboard(string text)
@@ -327,5 +320,14 @@
         await Task.Delay(2000);
         showToast = false;
         StateHasChanged();
+    }
+
+    private class ParameterData
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string? Description { get; set; }
+        public bool IsRequired { get; set; }
+        public string? ValidationError { get; set; }
     }
 }

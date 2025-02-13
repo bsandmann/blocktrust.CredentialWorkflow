@@ -4,56 +4,56 @@
 
 <div class="p-4 text-sm">
     <div class="space-y-4">
-        <!-- Parameter Section -->
+        <!-- Parameters Section -->
         <div class="pt-3 border-t">
             <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center">
                     <h4 class="text-sm font-medium mr-2">Form Parameters</h4>
                 </div>
             </div>
+
             <!-- Parameters List -->
             <div class="space-y-2">
-                @foreach (var param in formParameters)
+                @foreach (var param in Parameters)
                 {
                     <div class="p-2 border rounded-md">
-                        @if (!string.IsNullOrEmpty(param.ValidationError))
-                        {
-                            <p class="text-red-500 text-xs mb-1">@param.ValidationError</p>
-                        }
-                        <div class="flex items-center justify-between mb-1 gap-2">
+                        <div class="flex items-center justify-between gap-2">
                             <input type="text"
                                    class="rounded border px-2 py-1 text-xs flex-1"
                                    placeholder="Parameter name"
                                    @bind="param.Name"
                                    @bind:event="oninput"
-                                   @bind:after="UpdateParameters"/>
-
+                                   @bind:after="() => ValidateAndUpdateParameters()" />
                             <select class="rounded border px-2 py-1 text-xs w-24"
                                     @bind="param.Type"
-                                    @bind:after="UpdateParameters">
+                                    @bind:after="() => ValidateAndUpdateParameters()">
                                 <option value="string">string</option>
                                 <option value="number">number</option>
                                 <option value="boolean">boolean</option>
-                                @* <option value="date">date</option> *@
-                                @* <option value="email">email</option> *@
+                                <option value="date">date</option>
+                                <option value="email">email</option>
                             </select>
-
                             <button class="text-red-500 hover:text-red-700 shrink-0"
                                     @onclick="() => RemoveParameter(param)">
                                 <span class="material-symbols-outlined text-sm">delete</span>
                             </button>
                         </div>
+                        @if (!string.IsNullOrEmpty(param.ValidationError))
+                        {
+                            <div class="mt-1 text-xs text-red-500">@param.ValidationError</div>
+                        }
                         <div class="mt-2">
                             <input type="text"
                                    class="rounded border px-2 py-1 text-xs w-full"
                                    placeholder="Parameter description (optional)"
                                    @bind="param.Description"
                                    @bind:event="oninput"
-                                   @bind:after="UpdateParameters"/>
+                                   @bind:after="() => ValidateAndUpdateParameters()" />
                         </div>
                     </div>
                 }
             </div>
+
             <!-- Add Parameter Button -->
             <button class="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded transition-colors duration-200 flex items-center justify-center"
                     @onclick="AddParameter">
@@ -62,7 +62,7 @@
             </button>
         </div>
 
-        <!-- Preview Form Link -->
+        <!-- Form URL -->
         <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
             <div class="flex items-center justify-between mb-2">
                 <div class="font-medium text-gray-900">Form URL</div>
@@ -85,82 +85,96 @@
     [Parameter] public Guid WorkflowId { get; set; }
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    private List<FormParameter> formParameters = new();
+    
+    private List<ParameterData> Parameters { get; set; } = new();
     private string FormUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/form/{WorkflowId}";
+    private int paramCounter = 0;
 
-    private class FormParameter
+    protected override void OnInitialized()
     {
-        public string Name { get; set; } = "";
-        public string Type { get; set; } = "string";
-        public string? Description { get; set; }
-        public string ValidationError { get; set; } = "";
+        InitializeParameters();
     }
 
     protected override void OnParametersSet()
     {
-        if (WorkflowId != Guid.Empty)
-        {
-            InitializeParameters();
-        }
+        InitializeParameters();
     }
 
     private void InitializeParameters()
     {
-        formParameters.Clear();
+        Parameters.Clear();
         foreach (var param in TriggerInput.Parameters)
         {
-            formParameters.Add(new FormParameter
+            Parameters.Add(new ParameterData
             {
                 Name = param.Key,
                 Type = param.Value.Type.ToString().ToLower(),
                 Description = param.Value.Description
             });
         }
+        UpdateParamCounter();
     }
 
-    private async Task AddParameter()
+    private void UpdateParamCounter()
     {
-        var paramName = $"param{formParameters.Count + 1}";
-        var param = new FormParameter
-        {
-            Name = paramName,
-            Type = "string",
-            Description = $"Parameter {paramName}"
-        };
-        formParameters.Add(param);
-        await UpdateParameters();
-        StateHasChanged();
+        paramCounter = Parameters
+            .Select(p => p.Name)
+            .Where(name => name.StartsWith("param"))
+            .Select(name => name.Replace("param", ""))
+            .Where(num => int.TryParse(num, out _))
+            .Select(num => int.Parse(num))
+            .DefaultIfEmpty(0)
+            .Max() + 1;
     }
-    private async Task RemoveParameter(FormParameter param)
+
+    private void AddParameter()
     {
-        formParameters.Remove(param);
-        await UpdateParameters();
+        Parameters.Add(new ParameterData 
+        { 
+            Name = $"param{paramCounter++}",
+            Type = "string"
+        });
         StateHasChanged();
     }
 
-    private async Task UpdateParameters()
+    private async Task RemoveParameter(ParameterData param)
     {
-        // Clear and rebuild parameters
+        Parameters.Remove(param);
+        await ValidateAndUpdateParameters();
+    }
+
+    private async Task ValidateAndUpdateParameters()
+    {
+        // Clear existing parameters
         var existingKeys = TriggerInput.Parameters.Keys.ToList();
         foreach (var key in existingKeys)
         {
             TriggerInput.Parameters.Remove(key);
         }
 
-        // Validate parameter names
+        // Validate and update parameters
         var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
-        foreach (var param in formParameters)
+        bool hasChanges = false;
+
+        foreach (var param in Parameters)
         {
-            param.ValidationError = "";
-            if (string.IsNullOrEmpty(param.Name))
+            param.ValidationError = null;
+
+            if (string.IsNullOrWhiteSpace(param.Name))
             {
-                param.ValidationError = "Parameter name cannot be empty.";
+                param.ValidationError = "Parameter name cannot be empty";
                 continue;
             }
 
             if (!nameValidationRegex.IsMatch(param.Name))
             {
-                param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers.";
+                param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers";
+                continue;
+            }
+
+            if (Parameters.Count(p => p.Name == param.Name) > 1)
+            {
+                param.ValidationError = "Parameter name must be unique";
                 continue;
             }
 
@@ -168,16 +182,27 @@
             {
                 Type = Enum.Parse<ParameterType>(param.Type, true),
                 Description = param.Description ?? $"Enter {param.Name}",
-                Required = true // Making all form fields required by default
+                Required = true // All form parameters are required by default
             };
+            hasChanges = true;
         }
 
-        await OnChange.InvokeAsync();
+        if (hasChanges)
+        {
+            await OnChange.InvokeAsync();
+        }
     }
 
     private async Task CopyToClipboard(string text)
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        // Could add toast notification here
+    }
+
+    private class ParameterData
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string? Description { get; set; }
+        public string? ValidationError { get; set; }
     }
 }
