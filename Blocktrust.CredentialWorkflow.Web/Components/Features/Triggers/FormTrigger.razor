@@ -2,72 +2,21 @@
 @using System.Text.RegularExpressions
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 
-<div class="p-4 text-sm">
-    <div class="space-y-4">
-        <!-- Parameters Section -->
-        <div class="pt-3 border-t">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center">
-                    <h4 class="text-sm font-medium mr-2">Form Parameters</h4>
-                </div>
-            </div>
-
-            <!-- Parameters List -->
-            <div class="space-y-2">
-                @foreach (var param in Parameters)
-                {
-                    <div class="p-2 border rounded-md">
-                        <div class="flex items-center justify-between gap-2">
-                            <input type="text"
-                                   class="rounded border px-2 py-1 text-xs flex-1"
-                                   placeholder="Parameter name"
-                                   @bind="param.Name"
-                                   @bind:event="oninput"
-                                   @bind:after="() => ValidateAndUpdateParameters()" />
-                            <select class="rounded border px-2 py-1 text-xs w-24"
-                                    @bind="param.Type"
-                                    @bind:after="() => ValidateAndUpdateParameters()">
-                                <option value="string">string</option>
-                                <option value="number">number</option>
-                                <option value="boolean">boolean</option>
-                                <option value="date">date</option>
-                                <option value="email">email</option>
-                            </select>
-                            <button class="text-red-500 hover:text-red-700 shrink-0"
-                                    @onclick="() => RemoveParameter(param)">
-                                <span class="material-symbols-outlined text-sm">delete</span>
-                            </button>
-                        </div>
-                        @if (!string.IsNullOrEmpty(param.ValidationError))
-                        {
-                            <div class="mt-1 text-xs text-red-500">@param.ValidationError</div>
-                        }
-                        <div class="mt-2">
-                            <input type="text"
-                                   class="rounded border px-2 py-1 text-xs w-full"
-                                   placeholder="Parameter description (optional)"
-                                   @bind="param.Description"
-                                   @bind:event="oninput"
-                                   @bind:after="() => ValidateAndUpdateParameters()" />
-                        </div>
-                    </div>
-                }
-            </div>
-
-            <!-- Add Parameter Button -->
-            <button class="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded transition-colors duration-200 flex items-center justify-center"
-                    @onclick="AddParameter">
-                <span class="material-symbols-outlined text-sm mr-1">add</span>
-                Add Parameter
-            </button>
+<div class="p-4 text-sm max-w-2xl">
+    @if (showToast)
+    {
+        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500">
+            @toastMessage
         </div>
+    }
 
-        <!-- Form URL -->
+    <div class="space-y-4">
+        <!-- Form URL Section -->
         <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
             <div class="flex items-center justify-between mb-2">
                 <div class="font-medium text-gray-900">Form URL</div>
                 <button @onclick="() => CopyToClipboard(FormUrl)"
-                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs shrink-0 ml-2">
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
                     <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
                     Copy URL
                 </button>
@@ -76,6 +25,135 @@
                 @FormUrl
             </div>
         </div>
+
+        <!-- Fields Section -->
+        <div class="pt-3 border-t">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-sm font-medium">Form Fields</h4>
+                <div class="text-xs text-gray-500">All fields are required by default</div>
+            </div>
+
+            <!-- Fields List -->
+            <div class="space-y-3">
+                @foreach (var param in Parameters)
+                {
+                    <div class="bg-white border rounded-lg p-3 @(param.IsEditing ? "ring-2 ring-slate-500" : "")">
+                        <div class="flex items-center gap-2 mb-2">
+                            @if (param.IsEditing)
+                            {
+                                <input type="text"
+                                       class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
+                                       placeholder="Field name"
+                                       @bind="param.TempName"
+                                       @bind:event="oninput" />
+                                <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
+                                        @bind="param.TempType">
+                                    <option value="string">Text</option>
+                                    <option value="number">Number</option>
+                                    <option value="boolean">Yes/No</option>
+                                    <option value="date">Date</option>
+                                </select>
+                                <div class="flex gap-1">
+                                    <button class="p-1 text-green-600 hover:text-green-800 rounded"
+                                            @onclick="() => SaveParameter(param)">
+                                        <span class="material-symbols-outlined text-sm">save</span>
+                                    </button>
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => CancelEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex-1 py-1 px-2 text-sm">@param.Name</div>
+                                <div class="w-28 py-1 px-2 text-sm text-gray-600">
+                                    @GetDisplayType(param.Type)
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => StartEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button class="p-1 text-red-500 hover:text-red-700 rounded"
+                                            @onclick="() => RemoveParameter(param)">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        @if (param.IsEditing)
+                        {
+                            <div class="space-y-2">
+                                <input type="text"
+                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                                       placeholder="Description"
+                                       @bind="param.TempDescription"
+                                       @bind:event="oninput" />
+                                <input type="text"
+                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                                       placeholder="Default value (optional)"
+                                       @bind="param.TempDefaultValue"
+                                       @bind:event="oninput" />
+                                <div class="space-y-1">
+                                    <label class="text-xs text-gray-600">Allowed Values (optional, one per line)</label>
+                                    <textarea
+                                        class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                                        placeholder="Enter allowed values, one per line"
+                                        rows="3"
+                                        @bind="param.TempAllowedValuesText"
+                                        @bind:event="oninput"></textarea>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @if (!string.IsNullOrEmpty(param.Description))
+                            {
+                                <div class="text-sm text-gray-700">@param.Description</div>
+                            }
+                            @if (param.AllowedValues?.Any() == true)
+                            {
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Allowed values: @string.Join(", ", param.AllowedValues)
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(param.DefaultValue))
+                            {
+                                <div class="text-xs text-gray-500">
+                                    Default: @param.DefaultValue
+                                </div>
+                            }
+                        }
+
+                        @if (!string.IsNullOrEmpty(param.ValidationError))
+                        {
+                            <div class="text-xs text-red-500 mt-1">@param.ValidationError</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Add Field Button -->
+            <button class="w-full mt-3 bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center"
+                    @onclick="AddParameter">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Field
+            </button>
+        </div>
+
+        <!-- Preview Form Button -->
+        @if (Parameters.Any(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name)))
+        {
+            <div class="flex justify-end">
+                <a href="@FormUrl" target="_blank"
+                   class="inline-flex items-center text-slate-700 hover:text-slate-900">
+                    <span class="material-symbols-outlined text-sm mr-1">preview</span>
+                    Preview Form
+                </a>
+            </div>
+        }
     </div>
 </div>
 
@@ -83,12 +161,14 @@
     [Parameter] public TriggerInputForm TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public Guid WorkflowId { get; set; }
+
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
-    private List<ParameterData> Parameters { get; set; } = new();
+
+    private string? toastMessage;
+    private bool showToast;
+    private List<FieldData> Parameters { get; set; } = new();
     private string FormUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/form/{WorkflowId}";
-    private int paramCounter = 0;
 
     protected override void OnInitialized()
     {
@@ -105,45 +185,115 @@
         Parameters.Clear();
         foreach (var param in TriggerInput.Parameters)
         {
-            Parameters.Add(new ParameterData
+            Parameters.Add(new FieldData
             {
                 Name = param.Key,
                 Type = param.Value.Type.ToString().ToLower(),
-                Description = param.Value.Description
+                Description = param.Value.Description,
+                AllowedValues = param.Value.AllowedValues,
+                DefaultValue = param.Value.DefaultValue
             });
         }
-        UpdateParamCounter();
     }
 
-    private void UpdateParamCounter()
+    private string GetDisplayType(string type) => type switch
     {
-        paramCounter = Parameters
-            .Select(p => p.Name)
-            .Where(name => name.StartsWith("param"))
-            .Select(name => name.Replace("param", ""))
-            .Where(num => int.TryParse(num, out _))
-            .Select(num => int.Parse(num))
-            .DefaultIfEmpty(0)
-            .Max() + 1;
-    }
+        "string" => "Text",
+        "number" => "Number",
+        "boolean" => "Yes/No",
+        "date" => "Date",
+        _ => type
+    };
 
     private void AddParameter()
     {
-        Parameters.Add(new ParameterData 
-        { 
-            Name = $"param{paramCounter++}",
-            Type = "string"
-        });
-        StateHasChanged();
+        var newParam = new FieldData
+        {
+            IsEditing = true,
+            TempName = "",
+            TempType = "string",
+            TempDescription = ""
+        };
+        Parameters.Add(newParam);
     }
 
-    private async Task RemoveParameter(ParameterData param)
+    private void StartEdit(FieldData param)
+    {
+        param.IsEditing = true;
+        param.TempName = param.Name;
+        param.TempType = param.Type;
+        param.TempDescription = param.Description;
+        param.TempDefaultValue = param.DefaultValue;
+        param.TempAllowedValuesText = param.AllowedValues != null ? string.Join("\n", param.AllowedValues) : null;
+        param.ValidationError = null;
+    }
+
+    private void CancelEdit(FieldData param)
+    {
+        if (string.IsNullOrEmpty(param.Name))
+        {
+            Parameters.Remove(param);
+        }
+        else
+        {
+            param.IsEditing = false;
+            param.ValidationError = null;
+        }
+    }
+
+    private async Task SaveParameter(FieldData param)
+    {
+        if (ValidateParameter(param))
+        {
+            param.Name = param.TempName!;
+            param.Type = param.TempType!;
+            param.Description = param.TempDescription ?? "";
+            param.DefaultValue = param.TempDefaultValue;
+            param.AllowedValues = param.TempAllowedValues;
+            param.IsEditing = false;
+            param.ValidationError = null;
+            await UpdateTriggerParameters();
+        }
+    }
+
+    private bool ValidateParameter(FieldData param)
+    {
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+
+        if (string.IsNullOrWhiteSpace(param.TempName))
+        {
+            param.ValidationError = "Field name cannot be empty";
+            return false;
+        }
+
+        if (!nameValidationRegex.IsMatch(param.TempName))
+        {
+            param.ValidationError = "Field name must start with a letter and contain only letters and numbers";
+            return false;
+        }
+
+        if (Parameters.Any(p => p != param && p.Name == param.TempName))
+        {
+            param.ValidationError = "Field name must be unique";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(param.TempDescription))
+        {
+            param.ValidationError = "Description cannot be empty";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task RemoveParameter(FieldData param)
     {
         Parameters.Remove(param);
-        await ValidateAndUpdateParameters();
+        await UpdateTriggerParameters();
     }
 
-    private async Task ValidateAndUpdateParameters()
+    private async Task UpdateTriggerParameters()
     {
         // Clear existing parameters
         var existingKeys = TriggerInput.Parameters.Keys.ToList();
@@ -152,57 +302,56 @@
             TriggerInput.Parameters.Remove(key);
         }
 
-        // Validate and update parameters
-        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
-        bool hasChanges = false;
-
-        foreach (var param in Parameters)
+        // Update with current parameters
+        foreach (var param in Parameters.Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name)))
         {
-            param.ValidationError = null;
-
-            if (string.IsNullOrWhiteSpace(param.Name))
-            {
-                param.ValidationError = "Parameter name cannot be empty";
-                continue;
-            }
-
-            if (!nameValidationRegex.IsMatch(param.Name))
-            {
-                param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers";
-                continue;
-            }
-
-            if (Parameters.Count(p => p.Name == param.Name) > 1)
-            {
-                param.ValidationError = "Parameter name must be unique";
-                continue;
-            }
-
             TriggerInput.Parameters[param.Name] = new ParameterDefinition
             {
                 Type = Enum.Parse<ParameterType>(param.Type, true),
-                Description = param.Description ?? $"Enter {param.Name}",
-                Required = true // All form parameters are required by default
+                Description = param.Description,
+                AllowedValues = param.AllowedValues,
+                DefaultValue = param.DefaultValue,
+                Required = true // All form fields are required by default
             };
-            hasChanges = true;
         }
 
-        if (hasChanges)
-        {
-            await OnChange.InvokeAsync();
-        }
+        await OnChange.InvokeAsync();
     }
 
     private async Task CopyToClipboard(string text)
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        toastMessage = "Copied to clipboard!";
+        showToast = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        showToast = false;
+        StateHasChanged();
     }
 
-    private class ParameterData
+    private class FieldData
     {
         public string Name { get; set; } = "";
         public string Type { get; set; } = "string";
-        public string? Description { get; set; }
+        public string Description { get; set; } = "";
+        public string[]? AllowedValues { get; set; }
+        public string? DefaultValue { get; set; }
         public string? ValidationError { get; set; }
+
+        // Editing state
+        public bool IsEditing { get; set; }
+        public string? TempName { get; set; }
+        public string? TempType { get; set; }
+        public string? TempDescription { get; set; }
+        public string? TempDefaultValue { get; set; }
+        private string? _tempAllowedValuesText;
+        public string? TempAllowedValuesText
+        {
+            get => _tempAllowedValuesText ?? (AllowedValues != null ? string.Join("\n", AllowedValues) : null);
+            set => _tempAllowedValuesText = value;
+        }
+        public string[]? TempAllowedValues => !string.IsNullOrWhiteSpace(TempAllowedValuesText) 
+            ? TempAllowedValuesText.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : null;
     }
 }
