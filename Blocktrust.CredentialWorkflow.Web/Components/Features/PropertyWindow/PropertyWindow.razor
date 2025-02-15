@@ -224,8 +224,9 @@
                 {
                     Id = Guid.NewGuid(),
                     To = new ParameterReference { Source = ParameterSource.Static },
-                    Subject = new ParameterReference { Source = ParameterSource.Static },
-                    Body = new ParameterReference { Source = ParameterSource.Static }
+                    Subject = string.Empty,
+                    Body = string.Empty,
+                    Parameters = new Dictionary<string, ParameterReference>()
                 },
                 EActionType.IssueW3CCredential => new IssueW3cCredential
                 {

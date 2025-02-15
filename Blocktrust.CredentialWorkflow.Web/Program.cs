@@ -58,6 +58,8 @@ builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<CredentialSettings>(
     builder.Configuration.GetSection("CredentialSettings"));
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
 // Configure Authentication and Authorization
 builder.Services.AddAuthentication(options =>
