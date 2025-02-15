@@ -10,7 +10,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services;
 
 public interface IFormService
 {
-    Task<Result<Guid>> ProcessFormSubmission(Guid workflowId, Dictionary<string, object> formData);
+    Task<Result<Guid>> ProcessFormSubmission(Guid workflowId, Dictionary<string, string> formData);
 }
 
 public class FormService : IFormService
@@ -26,7 +26,7 @@ public class FormService : IFormService
         _workflowQueue = workflowQueue;
     }
 
-    public async Task<Result<Guid>> ProcessFormSubmission(Guid workflowId, Dictionary<string, object> formData)
+    public async Task<Result<Guid>> ProcessFormSubmission(Guid workflowId, Dictionary<string, string> formData)
     {
         try
         {
