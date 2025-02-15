@@ -2,9 +2,9 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using MediatR
-@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using Blocktrust.CredentialWorkflow.Core.Services
+
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 @inject ILogger<DynamicForm> Logger
@@ -12,96 +12,189 @@
 
 @attribute [AllowAnonymous]
 
-<PageTitle>Workflow Form</PageTitle>
-
-<div class="min-h-screen bg-gray-50 py-12">
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm">
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-2xl mx-auto py-8 px-4 sm:px-6">
         @if (isLoading)
         {
-            <div class="flex justify-center items-center h-32">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-            </div>
-        }
-        else if (!string.IsNullOrEmpty(error))
-        {
-            <div class="bg-red-50 border-l-4 border-red-400 p-4">
-                <div class="flex">
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Error</h3>
-                        <p class="text-sm text-red-700 mt-2">@error</p>
-                    </div>
-                </div>
+            <div class="flex justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-900"></div>
             </div>
         }
         else
         {
-            @if (!string.IsNullOrEmpty(successMessage))
-            {
-                <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                    <div class="flex">
-                        <div class="ml-3">
-                            <p class="text-sm text-green-700">@successMessage</p>
+            <div class="bg-white shadow rounded-lg">
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="p-6">
+                        <div class="bg-red-50 border-l-4 border-red-400 p-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <span class="material-symbols-outlined text-red-400">error</span>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">Error</h3>
+                                    <div class="mt-2 text-sm text-red-700">@error</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
-            else
-            {
-                <EditForm Model="formModel" OnValidSubmit="HandleSubmit" class="space-y-6">
-                    <DataAnnotationsValidator />
-
-                    @foreach (var param in parameters)
-                    {
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                @(param.Description ?? param.Name)
-                            </label>
-
-                            @{
-                                var fieldModel = new FieldModel 
-                                { 
-                                    Value = formModel[param.Name],
-                                    OnValueChanged = val => 
-                                    {
-                                        formModel[param.Name] = val;
-                                        StateHasChanged();
-                                    }
-                                };
-                            }
-
-                            @switch (param.Type.ToLower())
-                            {
-                                case "string":
-                                case "email":
-                                    <InputText @bind-Value="fieldModel.StringValue"
-                                             type="@(param.Type.ToLower() == "email" ? "email" : "text")"
-                                             class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                                case "number":
-                                    <InputNumber @bind-Value="fieldModel.DecimalValue"
-                                               class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                                case "boolean":
-                                    <InputCheckbox @bind-Value="fieldModel.BoolValue"
-                                                 class="h-4 w-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500" />
-                                    break;
-                                case "date":
-                                    <InputDate @bind-Value="fieldModel.DateValue"
-                                             class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm" />
-                                    break;
-                            }
-                            <ValidationMessage For="@(() => formModel[param.Name])" class="mt-1 text-sm text-red-600" />
+                }
+                else if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="p-6">
+                        <div class="text-center">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-4">
+                                <span class="material-symbols-outlined text-green-600">check_circle</span>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">@successMessage</h3>
+                            <div class="mt-6">
+                                <button @onclick="ResetForm" 
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                                    Submit Another Response
+                                </button>
+                            </div>
                         </div>
-                    }
-
-                    <div class="pt-4">
-                        <button type="submit"
-                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                            Submit
-                        </button>
                     </div>
-                </EditForm>
-            }
+                }
+                else
+                {
+                    <div class="p-6">
+                        <div class="pb-5 mb-5 border-b border-gray-200">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900">@(formTitle ?? "New Form")</h3>
+                        </div>
+
+                        <EditForm Model="@formModel" OnValidSubmit="@HandleSubmit" FormName="workflow-form">
+                            <div class="space-y-6">
+                                @foreach (var field in formModel.Fields)
+                                {
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            @(field.Description ?? field.Name)
+                                            @if (field.IsRequired)
+                                            {
+                                                <span class="text-red-500 ml-0.5">*</span>
+                                            }
+                                        </label>
+
+                                        @switch (field.Type.ToLower())
+                                        {
+                                            case "string":
+                                                @if (field.AllowedValues?.Any() == true)
+                                                {
+                                                    <InputSelect @bind-Value="field.StringValue" 
+                                                          class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-slate-600 sm:text-sm sm:leading-6">
+                                                        @if (!field.IsRequired)
+                                                        {
+                                                            <option value="">Select...</option>
+                                                        }
+                                                        @foreach (var value in field.AllowedValues)
+                                                        {
+                                                            <option value="@value">@value</option>
+                                                        }
+                                                    </InputSelect>
+                                                }
+                                                else
+                                                {
+                                                    <div class="relative rounded-md shadow-sm">
+                                                    <InputText @bind-Value="field.StringValue"
+                                                             class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-600 sm:text-sm sm:leading-6"
+                                                             placeholder="@(field.DefaultValue ?? $"Enter {field.Description ?? field.Name}...")" />
+                                                    @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                                    {
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="material-symbols-outlined text-red-500">error</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                }
+                                                break;
+
+                                            case "number":
+                                                <div class="relative rounded-md shadow-sm">
+                                                    <InputNumber @bind-Value="field.NumberValue"
+                                                               class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-600 sm:text-sm sm:leading-6"
+                                                               placeholder="@(field.DefaultValue ?? $"Enter {field.Description ?? field.Name}...")" />
+                                                    @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                                    {
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="material-symbols-outlined text-red-500">error</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                break;
+
+                                            case "boolean":
+                                                <div class="mt-1">
+                                                    <InputCheckbox @bind-Value="field.BoolValue"
+                                                                 class="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded" />
+                                                    @if (!string.IsNullOrEmpty(field.DefaultValue))
+                                                    {
+                                                        <span class="ml-2 text-sm text-gray-500">@field.DefaultValue</span>
+                                                    }
+                                                </div>
+                                                break;
+
+                                            case "date":
+                                                <div class="relative rounded-md shadow-sm">
+                                                    <InputDate @bind-Value="field.DateValue"
+                                                             class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-slate-600 sm:text-sm sm:leading-6" />
+                                                    @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                                    {
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="material-symbols-outlined text-red-500">error</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                break;
+
+                                            case "email":
+                                                <div class="relative rounded-md shadow-sm">
+                                                    <InputText @bind-Value="field.StringValue"
+                                                             type="email"
+                                                             class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-600 sm:text-sm sm:leading-6"
+                                                             placeholder="@(field.DefaultValue ?? $"Enter {field.Description ?? field.Name}...")" />
+                                                    @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                                    {
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="material-symbols-outlined text-red-500">error</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                break;
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                        {
+                                            <p class="mt-1 text-sm text-red-600 flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">error</span>
+                                                @field.ValidationMessage
+                                            </p>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="pt-5">
+                                    <button type="submit"
+                                            disabled="@isSubmitting"
+                                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        @if (isSubmitting)
+                                        {
+                                            <span class="inline-flex items-center">
+                                                <div class="mr-2 h-4 w-4 rounded-full border-2 border-b-transparent border-white animate-spin"></div>
+                                                Submitting...
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>Submit</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </EditForm>
+                    </div>
+                }
+            </div>
         }
     </div>
 </div>
@@ -110,56 +203,11 @@
     [Parameter] public Guid WorkflowId { get; set; }
 
     private bool isLoading = true;
+    private bool isSubmitting = false;
     private string? error;
     private string? successMessage;
-    private List<(string Name, string Type, string? Description)> parameters = new();
+    private string? formTitle;
     private DynamicFormModel formModel = new();
-
-    private class FieldModel
-    {
-        private object _value;
-        private Action<object> _onValueChanged;
-
-        public object Value
-        {
-            get => _value;
-            set
-            {
-                _value = value;
-                _onValueChanged?.Invoke(value);
-            }
-        }
-
-        public Action<object> OnValueChanged
-        {
-            get => _onValueChanged;
-            set => _onValueChanged = value;
-        }
-
-        public string StringValue
-        {
-            get => (string)(_value ?? string.Empty);
-            set => Value = value;
-        }
-
-        public decimal DecimalValue
-        {
-            get => _value == null ? 0 : Convert.ToDecimal(_value);
-            set => Value = value;
-        }
-
-        public bool BoolValue
-        {
-            get => _value != null && Convert.ToBoolean(_value);
-            set => Value = value;
-        }
-
-        public DateTime DateValue
-        {
-            get => _value == null ? DateTime.Today : Convert.ToDateTime(_value);
-            set => Value = value;
-        }
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -168,36 +216,44 @@
             var result = await Mediator.Send(new GetWorkflowByIdRequest(WorkflowId));
             if (result.IsFailed)
             {
-                error = "Failed to load the form. The workflow may not exist.";
+                error = "Unable to load the form. Please try again later.";
                 return;
             }
 
             var workflow = result.Value;
             if (workflow.ProcessFlow?.Triggers == null || !workflow.ProcessFlow.Triggers.Any())
             {
-                error = "This workflow does not have any triggers configured.";
+                error = "This form is not properly configured.";
                 return;
             }
 
             var trigger = workflow.ProcessFlow.Triggers.First().Value;
             if (trigger.Type != ETriggerType.Form)
             {
-                error = "This workflow is not configured with a form trigger.";
+                error = "Invalid form configuration.";
                 return;
             }
 
             if (trigger.Input is TriggerInputForm formTrigger)
             {
+                formTitle = workflow.Name;
                 foreach (var param in formTrigger.Parameters)
                 {
-                    parameters.Add((param.Key, param.Value.Type.ToString().ToLower(), param.Value.Description));
-                    formModel[param.Key] = GetDefaultValueForParameter(param.Value.Type);
+                    formModel.Fields.Add(new FormField
+                    {
+                        Name = param.Key,
+                        Type = param.Value.Type.ToString().ToLower(),
+                        Description = param.Value.Description,
+                        IsRequired = param.Value.Required,
+                        DefaultValue = param.Value.DefaultValue,
+                        AllowedValues = param.Value.AllowedValues
+                    });
                 }
             }
         }
         catch (Exception ex)
         {
-            error = "An unexpected error occurred while loading the form.";
+            error = "An error occurred while loading the form.";
             Logger.LogError(ex, "Error loading form for workflow {WorkflowId}", WorkflowId);
         }
         finally
@@ -206,40 +262,82 @@
         }
     }
 
-    private object GetDefaultValueForParameter(ParameterType type)
-    {
-        return type switch
-        {
-            ParameterType.String => string.Empty,
-            ParameterType.Number => 0m,
-            ParameterType.Boolean => false,
-            ParameterType.Date => DateTime.Today,
-            _ => string.Empty
-        };
-    }
-
     private async Task HandleSubmit()
     {
+        if (isSubmitting) return;
+
         try
         {
-            isLoading = true;
+            // Clear any existing validation messages
+            foreach (var field in formModel.Fields)
+            {
+                field.ValidationMessage = null;
+            }
+
+            // Validate the form data
+            bool isValid = true;
+            foreach (var field in formModel.Fields.Where(f => f.IsRequired))
+            {
+                switch (field.Type.ToLower())
+                {
+                    case "string":
+                    case "email":
+                        if (string.IsNullOrWhiteSpace(field.StringValue))
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        else if (field.Type.ToLower() == "email" && !IsValidEmail(field.StringValue))
+                        {
+                            field.ValidationMessage = "Please enter a valid email address";
+                            isValid = false;
+                        }
+                        break;
+
+                    case "number":
+                        if (!field.IsNumberSet)
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        break;
+
+                    case "date":
+                        if (field.DateValue == default)
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        break;
+                }
+            }
+
+            if (!isValid)
+            {
+                return;
+            }
+
+            isSubmitting = true;
             StateHasChanged();
 
-            // Convert form data to object dictionary
-            var formData = formModel.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value
+            // Prepare form data
+            var formData = formModel.Fields.ToDictionary(
+                field => field.Name,
+                field => field.GetValue()
             );
 
+            // Submit the form data
             var result = await FormService.ProcessFormSubmission(WorkflowId, formData);
-
+            
             if (result.IsSuccess)
             {
                 successMessage = "Form submitted successfully!";
+                StateHasChanged();
             }
             else
             {
                 error = result.Errors.First().Message;
+                StateHasChanged();
             }
         }
         catch (Exception ex)
@@ -249,100 +347,179 @@
         }
         finally
         {
-            isLoading = false;
+            isSubmitting = false;
             StateHasChanged();
         }
     }
 
-    public class DynamicFormModel : Dictionary<string, object>
+    private bool ValidateForm()
     {
-        public new object this[string key]
+        bool isValid = true;
+        foreach (var field in formModel.Fields)
         {
-            get => ContainsKey(key) ? base[key] : null;
-            set => base[key] = value;
-        }
-
-        // Custom validation attributes
-        public class RequiredPropertyAttribute : ValidationAttribute
-        {
-            private readonly string _propertyName;
-
-            public RequiredPropertyAttribute(string propertyName)
+            if (field.IsRequired)
             {
-                _propertyName = propertyName;
-            }
-
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-            {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName];
-
-                if (propertyValue == null || (propertyValue is string str && string.IsNullOrWhiteSpace(str)))
+                switch (field.Type.ToLower())
                 {
-                    return new ValidationResult($"The {_propertyName} field is required.");
-                }
+                    case "string":
+                    case "email":
+                        if (string.IsNullOrWhiteSpace(field.StringValue))
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        else if (field.Type.ToLower() == "email" && !IsValidEmail(field.StringValue))
+                        {
+                            field.ValidationMessage = "Please enter a valid email address";
+                            isValid = false;
+                        }
+                        break;
 
-                return ValidationResult.Success;
-            }
-        }
+                    case "number":
+                        if (!field.IsNumberSet)
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        break;
 
-        public class EmailValidationAttribute : ValidationAttribute
-        {
-            private readonly string _propertyName;
-
-            public EmailValidationAttribute(string propertyName)
-            {
-                _propertyName = propertyName;
-            }
-
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-            {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName]?.ToString();
-
-                if (string.IsNullOrEmpty(propertyValue))
-                {
-                    return ValidationResult.Success;
-                }
-
-                try
-                {
-                    var addr = new System.Net.Mail.MailAddress(propertyValue);
-                    return addr.Address == propertyValue ? ValidationResult.Success 
-                        : new ValidationResult($"The {_propertyName} field is not a valid email address.");
-                }
-                catch
-                {
-                    return new ValidationResult($"The {_propertyName} field is not a valid email address.");
+                    case "date":
+                        if (field.DateValue == default)
+                        {
+                            field.ValidationMessage = "This field is required";
+                            isValid = false;
+                        }
+                        break;
                 }
             }
         }
+        return isValid;
+    }
 
-        public class DateValidationAttribute : ValidationAttribute
+    private void ResetForm()
+    {
+        successMessage = null;
+        error = null;
+        formModel = new DynamicFormModel();
+        OnInitializedAsync();
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
         {
-            private readonly string _propertyName;
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
-            public DateValidationAttribute(string propertyName)
+    public class DynamicFormModel
+    {
+        public List<FormField> Fields { get; set; } = new();
+    }
+
+    public class FormField
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string Description { get; set; } = "";
+        public bool IsRequired { get; set; }
+        public string? DefaultValue { get; set; }
+        public string[]? AllowedValues { get; set; }
+        public string? ValidationMessage { get; set; }
+
+        private string _stringValue = "";
+        public string StringValue
+        {
+            get => _stringValue;
+            set
             {
-                _propertyName = propertyName;
+                _stringValue = value ?? "";
+                ValidationMessage = null;
             }
+        }
 
-            protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        private decimal _numberValue;
+        private bool _isNumberSet;
+        public decimal NumberValue
+        {
+            get => _numberValue;
+            set
             {
-                var model = (DynamicFormModel)validationContext.ObjectInstance;
-                var propertyValue = model[_propertyName]?.ToString();
+                _numberValue = value;
+                _isNumberSet = true;
+                ValidationMessage = null;
+            }
+        }
+        public bool IsNumberSet => _isNumberSet;
 
-                if (string.IsNullOrEmpty(propertyValue))
-                {
-                    return ValidationResult.Success;
-                }
+        private bool _boolValue;
+        public bool BoolValue
+        {
+            get => _boolValue;
+            set
+            {
+                _boolValue = value;
+                ValidationMessage = null;
+            }
+        }
 
-                if (!DateTime.TryParse(propertyValue, out _))
-                {
-                    return new ValidationResult($"The {_propertyName} field must be a valid date.");
-                }
+        private DateTime _dateValue = DateTime.Today;
+        public DateTime DateValue
+        {
+            get => _dateValue;
+            set
+            {
+                _dateValue = value;
+                ValidationMessage = null;
+            }
+        }
 
-                return ValidationResult.Success;
+        public object GetValue()
+        {
+            return Type.ToLower() switch
+            {
+                "string" => StringValue,
+                "email" => StringValue,
+                "number" => NumberValue,
+                "boolean" => BoolValue,
+                "date" => DateValue.ToString("yyyy-MM-dd"),
+                _ => StringValue
+            };
+        }
+
+        public void SetDefaultValue()
+        {
+            if (string.IsNullOrEmpty(DefaultValue)) return;
+
+            switch (Type.ToLower())
+            {
+                case "string":
+                case "email":
+                    StringValue = DefaultValue;
+                    break;
+                case "number":
+                    if (decimal.TryParse(DefaultValue, out decimal numValue))
+                    {
+                        NumberValue = numValue;
+                    }
+                    break;
+                case "boolean":
+                    if (bool.TryParse(DefaultValue, out bool boolValue))
+                    {
+                        BoolValue = boolValue;
+                    }
+                    break;
+                case "date":
+                    if (DateTime.TryParse(DefaultValue, out DateTime dateValue))
+                    {
+                        DateValue = dateValue;
+                    }
+                    break;
             }
         }
     }

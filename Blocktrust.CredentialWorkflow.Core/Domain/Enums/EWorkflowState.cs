@@ -5,4 +5,6 @@ public enum EWorkflowState
     Inactive,
     ActiveWithExternalTrigger,
     ActiveWithRecurrentTrigger,
+    ActiveWithFormTrigger
+
 }

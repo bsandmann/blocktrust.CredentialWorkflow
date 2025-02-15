@@ -10,7 +10,7 @@
 <div class="p-4 text-sm max-w-2xl">
     @if (showToast)
     {
-        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500">
             @toastMessage
         </div>
     }
@@ -21,121 +21,136 @@
             <div class="flex items-center justify-between mb-2">
                 <div class="font-medium text-gray-900">Endpoint URL</div>
                 <button @onclick="() => CopyToClipboard(FullUrl)"
-                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs shrink-0 ml-2">
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
                     <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
                     Copy URL
                 </button>
             </div>
-            <div class="font-mono text-sm text-gray-600 overflow-hidden">
-                <div class="break-all overflow-x-auto">
-                    <span class="text-gray-500">@NavigationManager.BaseUri.TrimEnd('/')/api/workflow/</span>
-                    <span class="font-semibold">@WorkflowId</span>
-                </div>
+            <div class="font-mono text-sm text-gray-600 break-all">
+                @FullUrl
             </div>
         </div>
 
         <!-- Method Selection -->
         <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Method</label>
+            <label class="block text-xs font-medium text-gray-700 mb-1">HTTP Method</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                     @bind="TriggerInput.Method"
                     @bind:after="OnInputChanged">
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
             </select>
         </div>
 
-        <!-- Parameter Section -->
+        <!-- Parameters Section -->
         <div class="pt-3 border-t">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center">
-                    <h4 class="text-sm font-medium mr-2">Parameters</h4>
-                    <button @onclick="() => CopyToClipboard(JsonSchema)"
-                            class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
-                        <span class="material-symbols-outlined text-sm mr-1">description</span>
-                        Copy Schema
-                    </button>
-                </div>
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-sm font-medium">Parameters</h4>
+                <button @onclick="() => CopyToClipboard(JsonSchema)"
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                    <span class="material-symbols-outlined text-sm mr-1">description</span>
+                    Copy Schema
+                </button>
             </div>
 
             <!-- Parameters List -->
-            <div class="space-y-2">
-                @foreach (var param in httpQueryParameters)
+            <div class="space-y-3">
+                @foreach (var param in Parameters)
                 {
-                    <div class="p-2 border rounded-md">
+                    <div class="bg-white border rounded-lg p-3 @(param.IsEditing ? "ring-2 ring-slate-500" : "")">
+                        <div class="flex items-center gap-2 mb-2">
+                            @if (param.IsEditing)
+                            {
+                                <input type="text"
+                                       class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
+                                       placeholder="Parameter name"
+                                       @bind="param.TempName"
+                                       @bind:event="oninput" />
+                                <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
+                                        @bind="param.TempType">
+                                    <option value="string">string</option>
+                                    @* <option value="number">number</option> *@
+                                    @* <option value="boolean">boolean</option> *@
+                                    @* <option value="object">object</option> *@
+                                    @* <option value="array">array</option> *@
+                                </select>
+                                <div class="flex gap-1">
+                                    <button class="p-1 text-green-600 hover:text-green-800 rounded"
+                                            @onclick="() => SaveParameter(param)">
+                                        <span class="material-symbols-outlined text-sm">save</span>
+                                    </button>
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => CancelEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex-1 py-1 px-2 text-sm">@param.Name</div>
+                                <div class="w-28 py-1 px-2 text-sm text-gray-600">@param.Type</div>
+                                <div class="flex gap-1">
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => StartEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    @if (!param.IsRequired)
+                                    {
+                                        <button class="p-1 text-red-500 hover:text-red-700 rounded"
+                                                @onclick="() => RemoveParameter(param)">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        @if (param.IsEditing)
+                        {
+                            <input type="text"
+                                   class="w-full rounded border-gray-300 px-2 py-1 text-sm mt-2"
+                                   placeholder="Parameter description (optional)"
+                                   @bind="param.TempDescription"
+                                   @bind:event="oninput" />
+                        }
+                        else if (!string.IsNullOrEmpty(param.Description))
+                        {
+                            <div class="text-xs text-gray-500 mt-1">@param.Description</div>
+                        }
+
                         @if (!string.IsNullOrEmpty(param.ValidationError))
                         {
-                            <p class="text-red-500 text-xs mb-1">@param.ValidationError</p>
-                        }
-                        <div class="flex items-center justify-between mb-1 gap-2">
-                            <input type="text"
-                                   class="rounded border px-2 py-1 text-xs flex-1"
-                                   placeholder="Parameter name"
-                                   @bind="param.Name"
-                                   @bind:event="oninput"
-                                   @bind:after="UpdateParameters"
-                                   disabled="@param.Required" />
-
-                            <select class="rounded border px-2 py-1 text-xs w-24"
-                                    @bind="param.Type"
-                                    @bind:after="UpdateParameters"
-                                    disabled="@param.Required">
-                                <option value="string">string</option>
-                                <option value="number">number</option>
-                                <option value="boolean">boolean</option>
-                            </select>
-                            <button class="text-red-500 hover:text-red-700 shrink-0"
-                                    @onclick="() => RemoveParameter(param)">
-                                <span class="material-symbols-outlined text-sm">delete</span>
-                            </button>
-                        </div>
-                        @if (!string.IsNullOrEmpty(param.Description))
-                        {
-                            <p class="text-xs text-gray-500">@param.Description</p>
+                            <div class="text-xs text-red-500 mt-1">@param.ValidationError</div>
                         }
                     </div>
                 }
             </div>
 
             <!-- Add Parameter Button -->
-            <button class="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded transition-colors duration-200 flex items-center justify-center"
+            <button class="w-full mt-3 bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center"
                     @onclick="AddParameter">
                 <span class="material-symbols-outlined text-sm mr-1">add</span>
                 Add Parameter
             </button>
         </div>
 
-        <!-- cURL Example Section -->
-        <div class="mt-6 bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <!-- cURL Example -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4">
             <div class="flex items-center justify-between mb-2">
                 <div class="font-medium text-gray-900">cURL Example</div>
                 <button @onclick="() => CopyToClipboard(CurlCommand)"
-                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs shrink-0 ml-2">
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
                     <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
                     Copy Command
                 </button>
             </div>
-            <div class="relative">
-                <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded overflow-scroll @(isExpanded ? "max-h-none" : "max-h-24")">@CurlCommand</pre>
-                @if (!isExpanded && CurlCommand.Length > 200)
-                {
-                    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
-                    <button @onclick="() => isExpanded = true"
-                            class="absolute bottom-1 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white px-2 py-1 rounded">
-                        Show More
-                    </button>
-                }
-                @if (isExpanded && CurlCommand.Length > 200)
-                {
-                    <button @onclick="() => isExpanded = false"
-                            class="text-xs text-blue-600 hover:text-blue-800 mt-1">
-                        Show Less
-                    </button>
-                }
-            </div>
+            <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded">@CurlCommand</pre>
         </div>
     </div>
 </div>
+
 @code {
     [Parameter] public TriggerInputHttpRequest TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
@@ -143,12 +158,142 @@
 
     private string? toastMessage;
     private bool showToast;
-    private bool isExpanded;
-    private List<HttpQueryParameters> httpQueryParameters = new();
-    private bool areParametersValid = true;
-    private string deliveryValidationError = "";
-
+    private List<ParameterData> Parameters { get; set; } = new();
     private string FullUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}";
+
+    protected override void OnInitialized()
+    {
+        InitializeParameters();
+    }
+
+    protected override void OnParametersSet()
+    {
+        InitializeParameters();
+    }
+
+    private void InitializeParameters()
+    {
+        Parameters.Clear();
+        foreach (var param in TriggerInput.Parameters)
+        {
+            Parameters.Add(new ParameterData
+            {
+                Name = param.Key,
+                Type = param.Value.Type.ToString().ToLower(),
+                Description = param.Value.Description,
+                IsRequired = param.Value.Required
+            });
+        }
+    }
+
+    private async Task OnInputChanged()
+    {
+        await UpdateTriggerParameters();
+    }
+
+    private void AddParameter()
+    {
+        var newParam = new ParameterData
+        {
+            IsEditing = true,
+            TempName = "",
+            TempType = "string",
+            TempDescription = ""
+        };
+        Parameters.Add(newParam);
+    }
+
+    private void StartEdit(ParameterData param)
+    {
+        param.IsEditing = true;
+        param.TempName = param.Name;
+        param.TempType = param.Type;
+        param.TempDescription = param.Description;
+        param.ValidationError = null;
+    }
+
+    private void CancelEdit(ParameterData param)
+    {
+        if (string.IsNullOrEmpty(param.Name))
+        {
+            Parameters.Remove(param);
+        }
+        else
+        {
+            param.IsEditing = false;
+            param.ValidationError = null;
+        }
+    }
+
+    private async Task SaveParameter(ParameterData param)
+    {
+        if (ValidateParameter(param))
+        {
+            param.Name = param.TempName!;
+            param.Type = param.TempType!;
+            param.Description = param.TempDescription;
+            param.IsEditing = false;
+            param.ValidationError = null;
+            await UpdateTriggerParameters();
+        }
+    }
+
+    private bool ValidateParameter(ParameterData param)
+    {
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+
+        if (string.IsNullOrWhiteSpace(param.TempName))
+        {
+            param.ValidationError = "Parameter name cannot be empty";
+            return false;
+        }
+
+        if (!nameValidationRegex.IsMatch(param.TempName))
+        {
+            param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers";
+            return false;
+        }
+
+        if (Parameters.Any(p => p != param && p.Name == param.TempName))
+        {
+            param.ValidationError = "Parameter name must be unique";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task RemoveParameter(ParameterData param)
+    {
+        if (!param.IsRequired)
+        {
+            Parameters.Remove(param);
+            await UpdateTriggerParameters();
+        }
+    }
+
+    private async Task UpdateTriggerParameters()
+    {
+        // Clear existing parameters
+        var existingKeys = TriggerInput.Parameters.Keys.ToList();
+        foreach (var key in existingKeys)
+        {
+            TriggerInput.Parameters.Remove(key);
+        }
+
+        // Update with current parameters
+        foreach (var param in Parameters.Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name)))
+        {
+            TriggerInput.Parameters[param.Name] = new ParameterDefinition
+            {
+                Type = Enum.Parse<ParameterType>(param.Type, true),
+                Description = param.Description ?? $"Parameter: {param.Name}",
+                Required = param.IsRequired
+            };
+        }
+
+        await OnChange.InvokeAsync();
+    }
 
     private string CurlCommand
     {
@@ -156,30 +301,22 @@
         {
             var command = $"curl -X {TriggerInput.Method} \"{FullUrl}\"";
 
-            var requiredParams = TriggerInput.Parameters.Where(p => p.Value.Required);
+            var parameters = Parameters.Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name));
+            if (!parameters.Any()) return command;
 
-            if (TriggerInput.Method == "GET" && requiredParams.Any())
+            if (TriggerInput.Method == "GET")
             {
-                var queryParams = requiredParams
-                    .Select(p => $"{p.Key}={HttpUtility.UrlEncode($"example {p.Key}")}");
+                var queryParams = parameters.Select(p => $"{p.Name}={HttpUtility.UrlEncode($"value_{p.Name}")}");
                 command += $"?{string.Join("&", queryParams)}";
             }
-
-            if (TriggerInput.Method is "POST" or "PUT" && requiredParams.Any())
+            else
             {
                 command += " \\\n    -H \"Content-Type: application/json\"";
-
-                var exampleBody = requiredParams
-                    .ToDictionary(
-                        p => p.Key,
-                        p => $"example {p.Key}"
-                    );
-
-                var jsonBody = System.Text.Json.JsonSerializer.Serialize(exampleBody, 
-                    new System.Text.Json.JsonSerializerOptions { 
-                        WriteIndented = true,
-                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                    });
+                var body = parameters.ToDictionary(p => p.Name, p => $"value_{p.Name}");
+                var jsonBody = System.Text.Json.JsonSerializer.Serialize(body, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
                 command += $" \\\n    -d '{jsonBody}'";
             }
 
@@ -194,128 +331,24 @@
             var schema = new
             {
                 type = "object",
-                required = TriggerInput.Parameters
-                    .Where(p => p.Value.Required)
-                    .Select(p => p.Key)
-                    .ToList(),
-                properties = TriggerInput.Parameters.ToDictionary(
-                    p => p.Key,
-                    p => new
-                    {
-                        type = p.Value.Type.ToString().ToLower(),
-                        description = p.Value.Description ?? $"Parameter: {p.Key}",
-                        required = p.Value.Required
-                    }
-                )
+                required = Parameters.Where(p => p.IsRequired && !p.IsEditing).Select(p => p.Name).ToList(),
+                properties = Parameters
+                    .Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name))
+                    .ToDictionary(
+                        p => p.Name,
+                        p => new
+                        {
+                            type = p.Type,
+                            description = p.Description ?? $"Parameter: {p.Name}"
+                        }
+                    )
             };
 
-            return System.Text.Json.JsonSerializer.Serialize(schema, 
-                new System.Text.Json.JsonSerializerOptions { 
-                    WriteIndented = true,
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                });
-        }
-    }
-
-    private class HttpQueryParameters
-    {
-        public string Name { get; set; } = "";
-        public string Type { get; set; } = "string";
-        public string? Description { get; set; }
-        public bool Required { get; set; }
-        public string ValidationError { get; set; } = "";
-    }
-
-    protected override void OnParametersSet()
-    {
-        if (WorkflowId != Guid.Empty)
-        {
-            InitializeParameters();
-        }
-    }
-
-    private void InitializeParameters()
-    {
-        httpQueryParameters.Clear();
-        foreach (var param in TriggerInput.Parameters)
-        {
-            httpQueryParameters.Add(new HttpQueryParameters
+            return System.Text.Json.JsonSerializer.Serialize(schema, new System.Text.Json.JsonSerializerOptions
             {
-                Name = param.Key,
-                Type = param.Value.Type.ToString().ToLower(),
-                Description = param.Value.Description,
-                Required = param.Value.Required
+                WriteIndented = true
             });
         }
-    }
-
-    private async Task OnInputChanged()
-    {
-        await OnChange.InvokeAsync();
-    }
-
-    private async Task AddParameter()
-    {
-        var paramName = $"param{httpQueryParameters.Count + 1}";
-        var param = new HttpQueryParameters
-        {
-            Name = paramName,
-            Type = "string",
-            Required = false
-        };
-        httpQueryParameters.Add(param);
-        await UpdateParameters();
-        StateHasChanged();
-    }
-    private async Task RemoveParameter(HttpQueryParameters param)
-    {
-        httpQueryParameters.Remove(param);
-        await UpdateParameters();
-        StateHasChanged();
-    }
-
-    private async Task UpdateParameters()
-    {
-        areParametersValid = true;
-        deliveryValidationError = "";
-
-        var existingKeys = TriggerInput.Parameters.Keys.ToList();
-        foreach (var key in existingKeys)
-        {
-            TriggerInput.Parameters.Remove(key);
-        }
-
-        var nameValidationRegex = new Regex("^[a-zA-Z]+$");
-
-        foreach (var param in httpQueryParameters)
-        {
-            param.ValidationError = "";
-
-            if (string.IsNullOrEmpty(param.Name))
-            {
-                param.ValidationError = "Parameter name cannot be empty.";
-                areParametersValid = false;
-            }
-            else
-            {
-                if (!nameValidationRegex.IsMatch(param.Name))
-                {
-                    param.ValidationError = "Parameter name must contain only letters (a-z, A-Z).";
-                    areParametersValid = false;
-                }
-                else
-                {
-                    TriggerInput.Parameters[param.Name] = new ParameterDefinition
-                    {
-                        Type = Enum.Parse<ParameterType>(param.Type, true),
-                        Description = $"Custom parameter: {param.Name}",
-                        Required = param.Required
-                    };
-                }
-            }
-        }
-
-        await OnChange.InvokeAsync();
     }
 
     private async Task CopyToClipboard(string text)
@@ -327,5 +360,20 @@
         await Task.Delay(2000);
         showToast = false;
         StateHasChanged();
+    }
+
+    private class ParameterData
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string? Description { get; set; }
+        public bool IsRequired { get; set; }
+        public string? ValidationError { get; set; }
+
+        // Editing state
+        public bool IsEditing { get; set; }
+        public string? TempName { get; set; }
+        public string? TempType { get; set; }
+        public string? TempDescription { get; set; }
     }
 }

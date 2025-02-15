@@ -280,21 +280,13 @@ else
                 if (currentWorkflow.WorkflowState == EWorkflowState.Inactive)
                 {
                     var triggerType = currentWorkflow.ProcessFlow.Triggers.First().Value.Type;
-                    EWorkflowState state = EWorkflowState.ActiveWithExternalTrigger;
-                    if (triggerType == ETriggerType.HttpRequest)
+                    EWorkflowState state = triggerType switch
                     {
-                        state = EWorkflowState.ActiveWithExternalTrigger;
-                    }
-                    else if (triggerType == ETriggerType.RecurringTimer)
-                    {
-                        state = EWorkflowState.ActiveWithRecurrentTrigger;
-                    }
-                    else
-                    {
-                        errorMessage = "Failed to run the workflow. Unsupported trigger type.";
-                        await ShowToast(errorMessage);
-                        return;
-                    }
+                        ETriggerType.HttpRequest => EWorkflowState.ActiveWithExternalTrigger,
+                        ETriggerType.RecurringTimer => EWorkflowState.ActiveWithRecurrentTrigger,
+                        ETriggerType.Form => EWorkflowState.ActiveWithFormTrigger,
+                        _ => throw new InvalidOperationException($"Unsupported trigger type: {triggerType}")
+                    };
 
                     var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, state));
                     if (changeStateResult.IsFailed)
@@ -303,7 +295,6 @@ else
                         await ShowToast(errorMessage);
                         return;
                     }
-
                     currentWorkflow.WorkflowState = state;
                 }
                 else
@@ -311,19 +302,16 @@ else
                     var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, EWorkflowState.Inactive));
                     if (changeStateResult.IsFailed)
                     {
-                        errorMessage = "Failed to run the workflow. Please try again.";
+                        errorMessage = "Failed to stop the workflow. Please try again.";
                         await ShowToast(errorMessage);
                         return;
                     }
-
                     currentWorkflow.WorkflowState = EWorkflowState.Inactive;
                 }
-
                 StateHasChanged();
             }
         }
     }
-
     private void HandleItemSelected(object? item)
     {
         selectedItem = item;
