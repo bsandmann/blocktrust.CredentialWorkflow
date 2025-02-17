@@ -1,7 +1,7 @@
-namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
-
 using System.Text.Json.Serialization;
-using Common;
+using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+
+namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 
 public class EmailAction : ActionInput
 {
