@@ -1,13 +1,19 @@
+using Blocktrust.Common.Resolver;
 using Blocktrust.CredentialWorkflow.Core;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Blocktrust.CredentialWorkflow.Core.Services;
+using Blocktrust.CredentialWorkflow.Core.Services.DIDComm;
 using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
 using Blocktrust.CredentialWorkflow.Core.Services.Interfaces;
 using Blocktrust.CredentialWorkflow.Core.Settings;
 using Blocktrust.CredentialWorkflow.Web.Common;
 using Blocktrust.CredentialWorkflow.Web.Components.Account;
 using Blocktrust.CredentialWorkflow.Web.Services;
+using Blocktrust.DIDComm.Secrets;
+using Blocktrust.Mediator.Client.Commands.TrustPing;
+using Blocktrust.Mediator.Common;
+using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -78,8 +84,8 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                       throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContextFactory<DataContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -105,11 +111,16 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddTransient<IEmailSender, SendGridEmailSender>();
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, ApplicationUserEmailSender>();
 
+builder.Services.AddScoped<ISecretResolver, PeerDIDSecretResolver>();
+builder.Services.AddSingleton<IDidDocResolver, SimpleDidDocResolver>();
+
 // Add MediatR with all handlers
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(DataContext).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CreatePeerDidHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(TrustPingHandler).Assembly);
 });
 
 builder.Services.AddAntiforgery();

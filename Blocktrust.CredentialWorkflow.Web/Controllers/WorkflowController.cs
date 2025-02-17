@@ -1,18 +1,23 @@
-namespace Blocktrust.CredentialWorkflow.Web.Controllers;
-
+using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Core.Commands.Workflow.GetWorkflowById;
+using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById;
+using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
+using Blocktrust.CredentialWorkflow.Core.Services;
+using Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
 using Core.Domain.ProcessFlow.Triggers;
 using Core.Services;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
-using Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Blocktrust.CredentialWorkflow.Web.Controllers;
 
 [ApiController]
 [Route("api/workflow/{workflowGuidId:guid}")]
@@ -23,7 +28,7 @@ public class WorkflowController : ControllerBase
     private readonly ITriggerValidationService _triggerValidationService;
     private readonly IWorkflowQueue _workflowQueue;
 
-    public WorkflowController(IMediator mediator, ITriggerValidationService triggerValidationService,  IWorkflowQueue workflowQueue)
+    public WorkflowController(IMediator mediator, ITriggerValidationService triggerValidationService, IWorkflowQueue workflowQueue)
     {
         _mediator = mediator;
         _triggerValidationService = triggerValidationService;
@@ -65,10 +70,14 @@ public class WorkflowController : ControllerBase
         // Retrieve the workflow details via MediatR
         var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId);
         var getWorkflowResult = await _mediator.Send(getWorkflowRequest);
-
         if (getWorkflowResult.IsFailed)
         {
             return BadRequest(getWorkflowResult.Errors);
+        }
+
+        if (getWorkflowResult.Value.WorkflowState == EWorkflowState.Inactive)
+        {
+            return BadRequest("The workflow is inactive");
         }
 
         // Check if the workflow has triggers

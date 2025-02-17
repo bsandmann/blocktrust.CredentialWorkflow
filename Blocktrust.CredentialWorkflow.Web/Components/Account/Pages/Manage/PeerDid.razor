@@ -1,0 +1,201 @@
+@page "/Account/Manage/PeerDids"
+
+@using System.ComponentModel.DataAnnotations
+@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs
+@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.DeletePeerDID
+@using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.SavePeerDID
+@using Blocktrust.CredentialWorkflow.Core.Domain.PeerDID
+@using Blocktrust.Mediator.Common.Commands.CreatePeerDid
+@using MediatR
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Http
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Manage PeerDIDs</PageTitle>
+
+<div class="container mx-auto">
+    <div class="mx-auto w-3/4 bg-gray-100 p-4 rounded-xl mt-10">
+        <div class="flex flex-col content-between items-center justify-between">
+            <StatusMessage Message="@message"/>
+            <h2 class="font-museo text-2xl mb-4">Manage PeerDIDs</h2>
+
+            <!-- Add New PeerDID Form -->
+            <!-- The FormName and [SupplyParameterFromForm] are required when using Identity's scaffolding approach. -->
+            <EditForm Model="NewPeerDid"
+                      FormName="new-peer-did"
+                      OnValidSubmit="OnAddPeerDidSubmitAsync"
+                      class="w-full"
+                      method="post">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mt-4">
+                    <InputText @bind-Value="NewPeerDid.Name"
+                               class="bg-slate-200 px-2 py-1 rounded-md border border-slate-400"
+                               placeholder="Name for PeerDID" />
+                    <ValidationMessage For="() => NewPeerDid.Name" class="font-light text-red-500" />
+                </div>
+
+                <button type="submit" class="mt-4 bg-slate-700 rounded-md px-4 py-1 text-white font-light">
+                    Add PeerDID
+                </button>
+            </EditForm>
+
+            <div class="mt-8 w-full">
+                @foreach (var peerDid in PeerDidList)
+                {
+                    <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                        <div class="flex flex-row">
+                            <div class="flex flex-col">
+                                <h3 class="font-semibold text-lg">@peerDid.Name</h3>
+                                <p class="text-sm text-gray-600">PeerDID: @Truncate(peerDid.PeerDID)</p>
+                                <p class="text-xs text-gray-500">Created: @peerDid.CreatedUtc</p>
+                            </div>
+                            <div class="grow"></div>
+                            <div class="flex flex-col items-end space-y-2">
+                                <!-- Existing delete link -->
+                                <a href="/Account/Manage/DeletePeerDids/@peerDid.PeerDIDEntityId"
+                                   class="bg-red-500 text-white rounded-md px-2 py-1 text-sm self-end">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </a>
+
+                                <!-- New Copy DID button -->
+                                <button type="button"
+                                        class="bg-blue-500 text-white rounded-md px-2 py-1 text-sm"
+                                        onclick="copyPeerDid('@peerDid.PeerDID')">
+                                    Copy DID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // A tiny helper to copy the DID to the clipboard and optionally show a message
+    function copyPeerDid(peerDidValue) {
+        navigator.clipboard.writeText(peerDidValue)
+            .then(() => {
+                alert("PeerDID copied to clipboard!");
+            })
+            .catch(err => {
+                console.error("Failed to copy text: ", err);
+                alert("Failed to copy PeerDID");
+            });
+    }
+</script>
+
+@code {
+    private string? message;
+    private Guid TenantId { get; set; }
+    private List<PeerDIDModel> PeerDidList { get; set; } = new();
+
+    // IMPORTANT: Add the [SupplyParameterFromForm] attribute to match Identity's form-binding
+    [SupplyParameterFromForm]
+    private NewPeerDidModel NewPeerDid { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContextAccessor.HttpContext!);
+        TenantId = user.TenantEntityId!.Value;
+        await LoadPeerDIDs();
+    }
+
+    private async Task LoadPeerDIDs()
+    {
+        var result = await Mediator.Send(new GetPeerDIDsRequest(TenantId));
+        if (result.IsFailed)
+        {
+            message = $"Error loading PeerDIDs: {string.Join(", ", result.Errors)}";
+            PeerDidList = new();
+        }
+        else
+        {
+            PeerDidList = result.Value;
+        }
+    }
+
+    private async Task OnAddPeerDidSubmitAsync()
+    {
+        message = null;
+
+        try
+        {
+            // 1. Generate a new PeerDID from CreatePeerDidRequest
+            var hostUrl = string.Concat(
+                HttpContextAccessor.HttpContext!.Request.Scheme, "://",
+                HttpContextAccessor.HttpContext.Request.Host
+            );
+
+            var createPeerDidRequest = new CreatePeerDidRequest(
+                serviceEndpoint: new Uri(hostUrl),
+                numberOfAgreementKeys: 1,
+                numberOfAuthenticationKeys: 1
+            );
+
+            var createPeerDidResult = await Mediator.Send(createPeerDidRequest);
+            if (createPeerDidResult.IsFailed)
+            {
+                message = $"Failed to create PeerDID: {string.Join(", ", createPeerDidResult.Errors)}";
+                return;
+            }
+
+            // Extract the DID string
+            var generatedPeerDid = createPeerDidResult.Value.PeerDid.Value;
+
+            // 2. Save it to the database via SavePeerDIDRequest
+            var saveRequest = new SavePeerDIDRequest(TenantId, NewPeerDid.Name, generatedPeerDid);
+            var saveResult = await Mediator.Send(saveRequest);
+            if (saveResult.IsFailed)
+            {
+                message = $"Failed to save PeerDID to DB: {string.Join(", ", saveResult.Errors)}";
+                return;
+            }
+
+            // 3. Reload the list, reset the form
+            await LoadPeerDIDs();
+            message = "Successfully created and saved new PeerDID!";
+            NewPeerDid = new NewPeerDidModel();
+        }
+        catch (Exception ex)
+        {
+            message = $"Unexpected error: {ex.Message}";
+        }
+    }
+
+    private async Task OnDeletePeerDid(Guid peerDIDEntityId)
+    {
+        var deleteResult = await Mediator.Send(new DeletePeerDIDRequest(peerDIDEntityId));
+        if (deleteResult.IsFailed)
+        {
+            message = $"Error: {string.Join(", ", deleteResult.Errors)}";
+        }
+        else
+        {
+            message = "PeerDID deleted successfully.";
+            await LoadPeerDIDs();
+        }
+    }
+
+    private string Truncate(string? value, int frontChars = 10, int backChars = 5)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        if (value.Length <= frontChars + backChars)
+            return value;
+        return value.Substring(0, frontChars) + "..." + value.Substring(value.Length - backChars);
+    }
+
+    private sealed class NewPeerDidModel
+    {
+        [Required]
+        [Display(Name = "Name")]
+        public string Name { get; set; } = "";
+    }
+}

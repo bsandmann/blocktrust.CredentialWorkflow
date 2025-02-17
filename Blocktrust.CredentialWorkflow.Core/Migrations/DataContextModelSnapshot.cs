@@ -22,6 +22,69 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDEntity", b =>
+                {
+                    b.Property<Guid>("PeerDIDEntityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PeerDID")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<Guid>("TenantEntityId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PeerDIDEntityId");
+
+                    b.HasIndex("TenantEntityId");
+
+                    b.ToTable("PeerDIDEntities");
+                });
+
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDSecretEntity", b =>
+                {
+                    b.Property<Guid>("PeerDIDSecretId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kid")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("VerificationMaterialFormat")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VerificationMethodType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PeerDIDSecretId");
+
+                    b.ToTable("PeerDIDSecrets");
+                });
+
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -369,6 +432,15 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.DIDComm.PeerDIDEntity", b =>
+                {
+                    b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", null)
+                        .WithMany("PeerDIDEntities")
+                        .HasForeignKey("TenantEntityId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Blocktrust.CredentialWorkflow.Core.Entities.Identity.ApplicationUser", b =>
                 {
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", "TenantEntity")
@@ -395,7 +467,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.HasOne("Blocktrust.CredentialWorkflow.Core.Entities.Tenant.TenantEntity", null)
                         .WithMany("IssuingKeys")
                         .HasForeignKey("TenantEntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -466,6 +538,8 @@ namespace Blocktrust.CredentialWorkflow.Core.Migrations
                     b.Navigation("ApplicationUsers");
 
                     b.Navigation("IssuingKeys");
+
+                    b.Navigation("PeerDIDEntities");
 
                     b.Navigation("WorkflowEntities");
                 });

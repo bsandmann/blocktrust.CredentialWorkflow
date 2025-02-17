@@ -1,6 +1,7 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Entities.Tenant;
 
 using System.ComponentModel.DataAnnotations;
+using DIDComm;
 using Identity;
 using Domain.Tenant;
 using Microsoft.EntityFrameworkCore;
@@ -28,4 +29,7 @@ public record TenantEntity
     /// A tenant can have many issuing keys
     /// </summary>
     public IList<IssuingKeyEntity> IssuingKeys { get; set; }
+
+    public IList<PeerDIDEntity> PeerDIDEntities { get; init; }
+
 }
