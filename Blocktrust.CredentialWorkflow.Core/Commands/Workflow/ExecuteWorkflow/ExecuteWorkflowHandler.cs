@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Blocktrust.Common.Resolver;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.CreateW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
@@ -14,8 +13,6 @@ using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
-using Blocktrust.Mediator.Client.Commands.SendMessage;
-using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
 using Blocktrust.Mediator.Common.Protocols;
 using Blocktrust.PeerDID.DIDDoc;
 using Blocktrust.PeerDID.PeerDIDCreateResolve;
@@ -28,14 +25,16 @@ using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.Execut
 
 
 using System.Text;
+using System.Text.RegularExpressions;
+using Blocktrust.Common.Resolver;
+using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs;
+using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.SendEmailAction;
 using Blocktrust.DIDComm.Message.Attachments;
 using Blocktrust.DIDComm.Message.Messages;
-using DIDComm.GetPeerDIDs;
-using Mediator.Client.Commands.ForwardMessage;
-using Mediator.Client.Commands.TrustPing;
-using Mediator.Common;
-using Mediator.Common.Models.CredentialOffer;
-using Workflow = Domain.Workflow.Workflow;
+using Blocktrust.Mediator.Client.Commands.ForwardMessage;
+using Blocktrust.Mediator.Client.Commands.TrustPing;
+using Blocktrust.Mediator.Common;
+
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
 public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Result<bool>>
@@ -50,7 +49,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         _secretResolver = secretResolver;
         _didDocResolver = didDocResolver;
     }
-
+    
     public async Task<Result<bool>> Handle(ExecuteWorkflowRequest request, CancellationToken cancellationToken)
     {
         var workflowId = request.WorkflowOutcome.WorkflowId;
@@ -206,7 +205,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         Guid workflowOutcomeId,
         ExecutionContext executionContext,
         List<ActionOutcome> actionOutcomes,
-        Workflow workflow,
+        Domain.Workflow.Workflow workflow,
         CancellationToken cancellationToken
     )
     {
@@ -285,7 +284,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         Guid workflowOutcomeId,
         ExecutionContext executionContext,
         List<ActionOutcome> actionOutcomes,
-        Workflow workflow,
+        Domain.Workflow.Workflow workflow,
         CancellationToken cancellationToken
     )
     {
@@ -320,7 +319,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         Guid workflowOutcomeId,
         ExecutionContext executionContext,
         List<ActionOutcome> actionOutcomes,
-        Workflow workflow,
+        Domain.Workflow.Workflow workflow,
         CancellationToken cancellationToken
     )
     {
@@ -373,7 +372,7 @@ var body = ProcessEmailTemplate(input.Body, parameters);
         Guid workflowOutcomeId,
         ExecutionContext executionContext,
         List<ActionOutcome> actionOutcomes,
-        Workflow workflow,
+        Domain.Workflow.Workflow workflow,
         CancellationToken cancellationToken
     )
     {
@@ -503,7 +502,7 @@ var body = ProcessEmailTemplate(input.Body, parameters);
         return Result.Ok(true);
     }
 
-    private string ProcessEmailTemplate(string template, Dictionary<string, string> parameters)
+    public string ProcessEmailTemplate(string template, Dictionary<string, string> parameters)
     {
         if (string.IsNullOrEmpty(template))
             return string.Empty;
@@ -626,7 +625,7 @@ var body = ProcessEmailTemplate(input.Body, parameters);
     private async Task<string?> GetParameterFromExecutionContext(
         ParameterReference parameterReference, 
         ExecutionContext executionContext, 
-        Workflow workflow, 
+        Domain.Workflow.Workflow workflow, 
         List<ActionOutcome> actionOutcomes, 
         EActionType? actionType = null)
     {

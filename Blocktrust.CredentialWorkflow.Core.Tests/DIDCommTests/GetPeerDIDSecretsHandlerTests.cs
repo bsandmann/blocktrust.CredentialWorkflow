@@ -3,8 +3,6 @@ using Blocktrust.Common.Models.Secrets;
 using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
 using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.SavePeerDIDSecrets;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.DIDCommTests
 {
