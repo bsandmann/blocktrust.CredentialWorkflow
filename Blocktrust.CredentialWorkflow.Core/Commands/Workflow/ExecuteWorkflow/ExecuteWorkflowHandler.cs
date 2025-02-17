@@ -337,7 +337,9 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return Result.Ok(true);
     }
     
-    private async Task<Result<bool>> ProcessEmailAction(
+
+
+private async Task<Result<bool>> ProcessEmailAction(
     Action action,
     ActionOutcome actionOutcome,
     Guid workflowOutcomeId,
@@ -357,7 +359,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
     }
 
-    // Process subject and body with parameters
+    // Process parameters
     var parameters = new Dictionary<string, string>();
     foreach (var param in input.Parameters)
     {
@@ -394,16 +396,40 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
     }
 }
 
-private string ProcessEmailTemplate(string template, Dictionary<string, string> parameters)
+public string ProcessEmailTemplate(string template, Dictionary<string, string> parameters)
 {
-    return Regex.Replace(template, @"\{\{(\w+)\}\}", match =>
-    {
-        var key = match.Groups[1].Value;
-        return parameters.TryGetValue(key, out var value) ? value : match.Value;
-    });
-}
+    // Return empty string if template is null/empty
+    if (string.IsNullOrEmpty(template))
+        return string.Empty;
+        
+    // If no parameters, return original template
+    if (parameters == null || !parameters.Any())
+        return template;
 
-    private async Task<Result<bool>> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
+    var processedTemplate = template;
+    foreach (var param in parameters)
+    {
+        // Ensure key is not null before replacing
+        if (!string.IsNullOrEmpty(param.Key))
+        {
+            // Handle null values by replacing with empty string
+            var paramValue = param.Value ?? string.Empty;
+            
+            // Trim the key to handle any extra whitespace
+            var key = param.Key.Trim();
+            
+            // Make replacement case-insensitive
+            processedTemplate = Regex.Replace(
+                processedTemplate, 
+                $"\\[{key}\\]", 
+                paramValue, 
+                RegexOptions.IgnoreCase);
+        }
+    }
+
+    return processedTemplate;
+}
+private async Task<Result<bool>> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
     {
         var workflowUpdateResult = await _mediator.Send(
             new UpdateWorkflowOutcomeRequest(
