@@ -53,6 +53,8 @@ builder.Services.AddSingleton<ITriggerValidationService, HttpTriggerValidationSe
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 builder.Services.AddScoped<IFormService, FormService>();
 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));

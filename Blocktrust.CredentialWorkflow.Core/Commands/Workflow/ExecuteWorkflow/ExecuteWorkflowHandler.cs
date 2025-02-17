@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.CreateW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
@@ -6,12 +7,14 @@ using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetPrivateIssuingKeyByD
 using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById;
+using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.SendEmailAction;
 using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.UpdateWorkflowOutcome;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers;
 using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
@@ -137,6 +140,23 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                         return result;
                     }
 
+                    break;
+                }
+                case EActionType.Email:
+                {
+                    var result = await ProcessEmailAction(
+                        action,
+                        actionOutcome,
+                        workflowOutcomeId,
+                        executionContext,
+                        actionOutcomes,
+                        workflow,
+                        cancellationToken
+                    );
+                    if (result.IsFailed || result.Value.Equals(false))
+                    {
+                        return result;
+                    }
                     break;
                 }
                 default:
@@ -316,6 +336,72 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
 
         return Result.Ok(true);
     }
+    
+    private async Task<Result<bool>> ProcessEmailAction(
+    Action action,
+    ActionOutcome actionOutcome,
+    Guid workflowOutcomeId,
+    ExecutionContext executionContext,
+    List<ActionOutcome> actionOutcomes,
+    Workflow workflow,
+    CancellationToken cancellationToken
+)
+{
+    var input = (EmailAction)action.Input;
+
+    // Get the recipient email
+    var toEmail = await GetParameterFromExecutionContext(input.To, executionContext, workflow, actionOutcomes);
+    if (string.IsNullOrWhiteSpace(toEmail))
+    {
+        var errorMessage = "The recipient email address is not provided in the execution context parameters.";
+        return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+    }
+
+    // Process subject and body with parameters
+    var parameters = new Dictionary<string, string>();
+    foreach (var param in input.Parameters)
+    {
+        var value = await GetParameterFromExecutionContext(param.Value, executionContext, workflow, actionOutcomes);
+        if (value != null)
+        {
+            parameters[param.Key] = value;
+        }
+    }
+
+    try
+    {
+        // Process templates
+        var subject = ProcessEmailTemplate(input.Subject, parameters);
+        var body = ProcessEmailTemplate(input.Body, parameters);
+
+        // Send the email
+        var sendEmailRequest = new SendEmailActionRequest(toEmail, subject, body);
+        var sendResult = await _mediator.Send(sendEmailRequest, cancellationToken);
+        
+        if (sendResult.IsFailed)
+        {
+            var errorMessage = sendResult.Errors.FirstOrDefault()?.Message ?? "Failed to send email.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        actionOutcome.FinishOutcomeWithSuccess("Email sent successfully");
+        return Result.Ok(true);
+    }
+    catch (Exception ex)
+    {
+        var errorMessage = $"Error sending email: {ex.Message}";
+        return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+    }
+}
+
+private string ProcessEmailTemplate(string template, Dictionary<string, string> parameters)
+{
+    return Regex.Replace(template, @"\{\{(\w+)\}\}", match =>
+    {
+        var key = match.Groups[1].Value;
+        return parameters.TryGetValue(key, out var value) ? value : match.Value;
+    });
+}
 
     private async Task<Result<bool>> FinishActionsWithSuccess(Guid workflowOutcomeId, List<ActionOutcome> actionOutcomes, CancellationToken cancellationToken)
     {
@@ -378,10 +464,14 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return new ExecutionContext(workflow!.TenantId);
     }
 
-    private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext, Workflow workflow, List<ActionOutcome> actionOutcomes)
+private async Task<string?> GetParameterFromExecutionContext(ParameterReference parameterReference, ExecutionContext executionContext, Workflow workflow, List<ActionOutcome> actionOutcomes)
+{
+    switch (parameterReference.Source)
     {
-        if (parameterReference.Source == ParameterSource.TriggerInput)
-        {
+        case ParameterSource.Static:
+            return parameterReference.Path;  // For static values, return the path directly
+
+        case ParameterSource.TriggerInput:
             if (executionContext.InputContext is null)
             {
                 return null;
@@ -394,9 +484,8 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             }
 
             return value;
-        }
-        else if (parameterReference.Source == ParameterSource.AppSettings)
-        {
+
+        case ParameterSource.AppSettings:
             // For example, to get an Issuing DID from "AppSettings"
             var issuingKeys = await _mediator.Send(new GetIssuingKeysRequest(executionContext.TenantId));
             if (issuingKeys.IsFailed)
@@ -417,9 +506,9 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                     return issuingKey.Did;
                 }
             }
-        }
-        else if (parameterReference.Source == ParameterSource.ActionOutcome)
-        {
+            return null;
+
+        case ParameterSource.ActionOutcome:
             var actionId = parameterReference.ActionId;
             var referencedActionExists = workflow.ProcessFlow!.Actions.Any(p => p.Key.Equals(actionId));
             if (!referencedActionExists)
@@ -437,15 +526,15 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                         return null;
                     }
 
-                    var credential = actionOutcome.OutcomeJson;
-                    return credential;
-                    break;
+                    return actionOutcome.OutcomeJson;
+                default:
+                    return null;
             }
-        }
 
-        return null;
+        default:
+            return null;
     }
-
+}
     private Dictionary<string, object>? GetClaimsFromExecutionContext(Dictionary<string, ClaimValue> inputClaims, ExecutionContext executionContext)
     {
         var claims = new Dictionary<string, object>();
@@ -485,3 +574,5 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         return claims;
     }
 }
+
+
