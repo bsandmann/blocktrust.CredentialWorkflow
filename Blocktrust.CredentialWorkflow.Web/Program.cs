@@ -10,7 +10,6 @@ using Blocktrust.CredentialWorkflow.Core.Settings;
 using Blocktrust.CredentialWorkflow.Web.Common;
 using Blocktrust.CredentialWorkflow.Web.Components.Account;
 using Blocktrust.CredentialWorkflow.Web.Services;
-using Blocktrust.DIDComm.Secrets;
 using Blocktrust.Mediator.Client.Commands.TrustPing;
 using Blocktrust.Mediator.Common;
 using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
