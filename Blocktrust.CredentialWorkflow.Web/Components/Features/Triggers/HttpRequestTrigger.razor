@@ -36,7 +36,7 @@
             <label class="block text-xs font-medium text-gray-700 mb-1">HTTP Method</label>
             <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                     @bind="TriggerInput.Method"
-                    @bind:after="OnInputChanged">
+                    @bind:after="OnMethodChanged">
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
                 <option value="PUT">PUT</option>
@@ -57,35 +57,28 @@
 
             <!-- Parameters List -->
             <div class="space-y-3">
-                @foreach (var param in Parameters)
+                @foreach (var param in parameters)
                 {
-                    <div class="bg-white border rounded-lg p-3 @(param.IsEditing ? "ring-2 ring-slate-500" : "")">
+                    <div class="bg-white border rounded-lg p-3">
                         <div class="flex items-center gap-2 mb-2">
                             @if (param.IsEditing)
                             {
                                 <input type="text"
                                        class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
                                        placeholder="Parameter name"
-                                       @bind="param.TempName"
-                                       @bind:event="oninput" />
+                                       @bind="param.Name"
+                                       @bind:event="oninput"
+                                       @onchange="async () => await HandleParameterChange(param)" />
                                 <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
-                                        @bind="param.TempType">
+                                        @bind="param.Type"
+                                        @bind:event="oninput"
+                                        @onchange="async () => await HandleParameterChange(param)">
                                     <option value="string">string</option>
-                                    @* <option value="number">number</option> *@
-                                    @* <option value="boolean">boolean</option> *@
-                                    @* <option value="object">object</option> *@
-                                    @* <option value="array">array</option> *@
                                 </select>
-                                <div class="flex gap-1">
-                                    <button class="p-1 text-green-600 hover:text-green-800 rounded"
-                                            @onclick="() => SaveParameter(param)">
-                                        <span class="material-symbols-outlined text-sm">save</span>
-                                    </button>
-                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
-                                            @onclick="() => CancelEdit(param)">
-                                        <span class="material-symbols-outlined text-sm">close</span>
-                                    </button>
-                                </div>
+                                <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                        @onclick="() => CancelEdit(param)">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
                             }
                             else
                             {
@@ -96,13 +89,10 @@
                                             @onclick="() => StartEdit(param)">
                                         <span class="material-symbols-outlined text-sm">edit</span>
                                     </button>
-                                    @if (!param.IsRequired)
-                                    {
-                                        <button class="p-1 text-red-500 hover:text-red-700 rounded"
-                                                @onclick="() => RemoveParameter(param)">
-                                            <span class="material-symbols-outlined text-sm">delete</span>
-                                        </button>
-                                    }
+                                    <button class="p-1 text-red-500 hover:text-red-700 rounded"
+                                            @onclick="async () => await RemoveParameter(param)">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
                                 </div>
                             }
                         </div>
@@ -112,17 +102,18 @@
                             <input type="text"
                                    class="w-full rounded border-gray-300 px-2 py-1 text-sm mt-2"
                                    placeholder="Parameter description (optional)"
-                                   @bind="param.TempDescription"
-                                   @bind:event="oninput" />
+                                   @bind="param.Description"
+                                   @bind:event="oninput"
+                                   @onchange="async () => await HandleParameterChange(param)" />
                         }
                         else if (!string.IsNullOrEmpty(param.Description))
                         {
                             <div class="text-xs text-gray-500 mt-1">@param.Description</div>
                         }
 
-                        @if (!string.IsNullOrEmpty(param.ValidationError))
+                        @if (!string.IsNullOrEmpty(param.ValidationMessage))
                         {
-                            <div class="text-xs text-red-500 mt-1">@param.ValidationError</div>
+                            <div class="text-xs text-red-500 mt-1">@param.ValidationMessage</div>
                         }
                     </div>
                 }
@@ -158,140 +149,135 @@
 
     private string? toastMessage;
     private bool showToast;
-    private List<ParameterData> Parameters { get; set; } = new();
+    private List<Parameter> parameters = new();
     private string FullUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}";
+    private bool isInitialized = false;
 
     protected override void OnInitialized()
     {
-        InitializeParameters();
+        if (!isInitialized)
+        {
+            LoadParameters();
+            isInitialized = true;
+        }
     }
 
     protected override void OnParametersSet()
     {
-        InitializeParameters();
-    }
-
-    private void InitializeParameters()
-    {
-        Parameters.Clear();
-        foreach (var param in TriggerInput.Parameters)
+        if (!isInitialized)
         {
-            Parameters.Add(new ParameterData
-            {
-                Name = param.Key,
-                Type = param.Value.Type.ToString().ToLower(),
-                Description = param.Value.Description,
-                IsRequired = param.Value.Required
-            });
+            LoadParameters();
+            isInitialized = true;
         }
     }
 
-    private async Task OnInputChanged()
+    private void LoadParameters()
+    {
+        if (TriggerInput?.Parameters == null) return;
+
+        parameters = TriggerInput.Parameters.Select(p => new Parameter
+        {
+            Name = p.Key,
+            Type = p.Value.Type.ToString().ToLower(),
+            Description = p.Value.Description ?? "",
+            IsEditing = false,
+            OriginalName = p.Key
+        }).ToList();
+    }
+
+    private async Task OnMethodChanged()
     {
         await UpdateTriggerParameters();
     }
 
-    private void AddParameter()
+    private async Task AddParameter()
     {
-        var newParam = new ParameterData
+        var newParam = new Parameter
         {
             IsEditing = true,
-            TempName = "",
-            TempType = "string",
-            TempDescription = ""
+            Type = "string",
+            Name = ""
         };
-        Parameters.Add(newParam);
+        parameters.Add(newParam);
+        await UpdateTriggerParameters();
     }
 
-    private void StartEdit(ParameterData param)
+    private void StartEdit(Parameter param)
     {
         param.IsEditing = true;
-        param.TempName = param.Name;
-        param.TempType = param.Type;
-        param.TempDescription = param.Description;
-        param.ValidationError = null;
+        param.OriginalName = param.Name;
+        StateHasChanged();
     }
 
-    private void CancelEdit(ParameterData param)
-    {
-        if (string.IsNullOrEmpty(param.Name))
-        {
-            Parameters.Remove(param);
-        }
-        else
-        {
-            param.IsEditing = false;
-            param.ValidationError = null;
-        }
-    }
-
-    private async Task SaveParameter(ParameterData param)
+    private async Task HandleParameterChange(Parameter param)
     {
         if (ValidateParameter(param))
         {
-            param.Name = param.TempName!;
-            param.Type = param.TempType!;
-            param.Description = param.TempDescription;
-            param.IsEditing = false;
-            param.ValidationError = null;
-            await UpdateTriggerParameters();
+            param.IsEditing = true;
+            param.ValidationMessage = null;
+            UpdateTriggerParameters();
+            await OnChange.InvokeAsync();
         }
     }
 
-    private bool ValidateParameter(ParameterData param)
+    private void CancelEdit(Parameter param)
+    {
+        if (string.IsNullOrEmpty(param.OriginalName))
+        {
+            parameters.Remove(param);
+        }
+        else
+        {
+            param.Name = param.OriginalName;
+            param.IsEditing = false;
+        }
+        UpdateTriggerParameters();
+    }
+
+    private bool ValidateParameter(Parameter param)
     {
         var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
 
-        if (string.IsNullOrWhiteSpace(param.TempName))
+        if (string.IsNullOrWhiteSpace(param.Name))
         {
-            param.ValidationError = "Parameter name cannot be empty";
+            param.ValidationMessage = "Parameter name cannot be empty";
             return false;
         }
 
-        if (!nameValidationRegex.IsMatch(param.TempName))
+        if (!nameValidationRegex.IsMatch(param.Name))
         {
-            param.ValidationError = "Parameter name must start with a letter and contain only letters and numbers";
+            param.ValidationMessage = "Parameter name must start with a letter and contain only letters and numbers";
             return false;
         }
 
-        if (Parameters.Any(p => p != param && p.Name == param.TempName))
+        if (parameters.Any(p => p != param && p.Name == param.Name))
         {
-            param.ValidationError = "Parameter name must be unique";
+            param.ValidationMessage = "Parameter name must be unique";
             return false;
         }
 
         return true;
     }
 
-    private async Task RemoveParameter(ParameterData param)
+    private async Task RemoveParameter(Parameter param)
     {
-        if (!param.IsRequired)
-        {
-            Parameters.Remove(param);
-            await UpdateTriggerParameters();
-        }
+        parameters.Remove(param);
+        UpdateTriggerParameters();
+        await OnChange.InvokeAsync();
     }
 
     private async Task UpdateTriggerParameters()
     {
-        // Clear existing parameters
-        var existingKeys = TriggerInput.Parameters.Keys.ToList();
-        foreach (var key in existingKeys)
-        {
-            TriggerInput.Parameters.Remove(key);
-        }
-
-        // Update with current parameters
-        foreach (var param in Parameters.Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name)))
+        TriggerInput.Parameters.Clear();
+        foreach (var param in parameters.Where(p => !string.IsNullOrEmpty(p.Name)))
         {
             TriggerInput.Parameters[param.Name] = new ParameterDefinition
             {
                 Type = Enum.Parse<ParameterType>(param.Type, true),
-                Description = param.Description ?? $"Parameter: {param.Name}",
-                Required = param.IsRequired
+                Description = param.Description,
+                Required = true
             };
         }
-
         await OnChange.InvokeAsync();
     }
 
@@ -301,18 +287,18 @@
         {
             var command = $"curl -X {TriggerInput.Method} \"{FullUrl}\"";
 
-            var parameters = Parameters.Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name));
-            if (!parameters.Any()) return command;
+            var validParams = parameters.Where(p => !string.IsNullOrEmpty(p.Name));
+            if (!validParams.Any()) return command;
 
             if (TriggerInput.Method == "GET")
             {
-                var queryParams = parameters.Select(p => $"{p.Name}={HttpUtility.UrlEncode($"value_{p.Name}")}");
+                var queryParams = validParams.Select(p => $"{p.Name}={HttpUtility.UrlEncode($"value_{p.Name}")}");
                 command += $"?{string.Join("&", queryParams)}";
             }
             else
             {
                 command += " \\\n    -H \"Content-Type: application/json\"";
-                var body = parameters.ToDictionary(p => p.Name, p => $"value_{p.Name}");
+                var body = validParams.ToDictionary(p => p.Name, p => $"value_{p.Name}");
                 var jsonBody = System.Text.Json.JsonSerializer.Serialize(body, new System.Text.Json.JsonSerializerOptions
                 {
                     WriteIndented = true
@@ -331,9 +317,9 @@
             var schema = new
             {
                 type = "object",
-                required = Parameters.Where(p => p.IsRequired && !p.IsEditing).Select(p => p.Name).ToList(),
-                properties = Parameters
-                    .Where(p => !p.IsEditing && !string.IsNullOrEmpty(p.Name))
+                required = parameters.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList(),
+                properties = parameters
+                    .Where(p => !string.IsNullOrEmpty(p.Name))
                     .ToDictionary(
                         p => p.Name,
                         p => new
@@ -362,18 +348,13 @@
         StateHasChanged();
     }
 
-    private class ParameterData
+    private class Parameter
     {
         public string Name { get; set; } = "";
         public string Type { get; set; } = "string";
-        public string? Description { get; set; }
-        public bool IsRequired { get; set; }
-        public string? ValidationError { get; set; }
-
-        // Editing state
+        public string Description { get; set; } = "";
         public bool IsEditing { get; set; }
-        public string? TempName { get; set; }
-        public string? TempType { get; set; }
-        public string? TempDescription { get; set; }
+        public string? ValidationMessage { get; set; }
+        public string? OriginalName { get; set; }
     }
 }
