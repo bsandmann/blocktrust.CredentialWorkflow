@@ -75,5 +75,45 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.Common
 
             return new ExecutionContext(tenantId, new ReadOnlyDictionary<string, string>(mergedParameters));
         }
+
+        public static ExecutionContext FromForm(Guid tenantId, string context)
+        {
+            if (string.IsNullOrWhiteSpace(context))
+            {
+                throw new ArgumentException("Context cannot be null or empty.", nameof(context));
+            }
+
+            try
+            {
+                using var jsonDoc = JsonDocument.Parse(context);
+                var root = jsonDoc.RootElement;
+                if (root.TryGetProperty("Data", out var dataElement) && dataElement.ValueKind == JsonValueKind.Object)
+                {
+                    var parameters = new Dictionary<string, string>();
+                    foreach (var property in dataElement.EnumerateObject())
+                    {
+                        string key = property.Name.ToLowerInvariant().Trim();
+                        if (property.Value.ValueKind == JsonValueKind.String)
+                        {
+                            string value = property.Value.GetString();
+                            parameters[key] = value;
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Non-string value for key '{property.Name}' in FormSubmission data.");
+                        }
+                    }
+                    return new ExecutionContext(tenantId, new ReadOnlyDictionary<string, string>(parameters));
+                }
+                else
+                {
+                    throw new InvalidOperationException("FormSubmission data is missing or invalid.");
+                }
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException("Invalid JSON provided for FormSubmission.", nameof(context), ex);
+            }
+        }
     }
 }

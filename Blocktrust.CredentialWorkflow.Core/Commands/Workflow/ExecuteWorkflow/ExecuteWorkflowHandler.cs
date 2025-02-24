@@ -717,6 +717,10 @@ var body = ProcessEmailTemplate(input.Body, parameters);
         {
             return ExecutionContext.FromSimplifiedHttpContext(workflow.TenantId, executionContextString);
         }
+        if (trigger.Type == ETriggerType.Form && executionContextString is not null)
+        {
+            return ExecutionContext.FromForm(workflow.TenantId, executionContextString);
+        }
 
         return new ExecutionContext(workflow!.TenantId);
     }
