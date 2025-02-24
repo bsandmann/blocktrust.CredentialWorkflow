@@ -10,5 +10,7 @@ public enum EActionType
     VerifyAnoncredCredential,
     DIDComm,
     Http,
-    Email
+    Email,
+    W3cValidation,
+    CustomValidation
 }
