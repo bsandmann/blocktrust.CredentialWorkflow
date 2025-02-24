@@ -338,14 +338,21 @@
     private IEnumerable<string>? GetTriggerParameters()
     {
         var trigger = FlowItems.FirstOrDefault(x => x is Trigger) as Trigger;
-        if (trigger?.Input is TriggerInputHttpRequest incomingRequest)
+        if (trigger == null)
+            return null;
+
+        if (trigger.Input is TriggerInputHttpRequest incomingRequest)
         {
             return incomingRequest.Parameters.Keys;
+        }
+        else if (trigger.Input is TriggerInputForm formTrigger)
+        {
+            return formTrigger.Parameters.Keys;
         }
 
         return null;
     }
-
+    
     private async Task HandleError(string message)
     {
         _errorMessage = message;
