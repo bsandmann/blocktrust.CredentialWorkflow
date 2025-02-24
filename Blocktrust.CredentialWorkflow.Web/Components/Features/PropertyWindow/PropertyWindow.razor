@@ -10,135 +10,137 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.HttpRequestsTemplates
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
 
-<div class="h-full bg-white p-4 rounded-lg shadow-mdd">
-    @if (SelectedItem == null)
-    {
-        <h3 class="text-lg font-medium text-gray-800 mb-6">Add Item</h3>
-        <!-- Triggers Section -->
-        <div class="mb-6">
-            <div class="flex items-center mb-3">
-                <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
-                <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
+<div class="h-full bg-white p-4 rounded-lg shadow-md flex flex-col">
+    <div class="flex-1 overflow-y-auto">
+        @if (SelectedItem == null)
+        {
+            <h3 class="text-lg font-medium text-gray-800 mb-6">Add Item</h3>
+            <!-- Triggers Section -->
+            <div class="mb-6">
+                <div class="flex items-center mb-3">
+                    <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
+                    <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
+                </div>
+                <div class="space-y-2 ml-8">
+                    <!-- Incoming Requests Group -->
+                    <MenuGroup Label="Incoming HTTP requests" Icon="http" IsExpanded="@_isIncomingRequestsExpanded"
+                               OnToggle="@(() => ToggleGroup("incomingRequests"))">
+                        <MenuButton Icon="description" Label="HTTP request for Credential Issuance"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-issuance"))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="verified" Label="HTTP request for Credential Verification"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-verification"))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="api" Label="Custom HTTP request"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                    <!-- Timer Triggers Group -->
+                    <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@_isTimerTriggersExpanded"
+                               OnToggle="@(() => ToggleGroup("timerTriggers"))">
+                        <MenuButton Icon="update" Label="Recurring timer"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                    <!-- Manual Triggers Group -->
+                    <MenuGroup Label="Manual triggers" Icon="touch_app" IsExpanded="@_isManualTriggersExpanded"
+                               OnToggle="@(() => ToggleGroup("manualTriggers"))">
+                        <MenuButton Icon="account_balance_wallet" Label="Wallet Interaction"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.WalletInteraction, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="play_circle" Label="Manual triggering"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="feed" Label="Form"
+                                    OnClick="@(action => HandleItemClick(ETriggerType.Form, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                </div>
             </div>
-            <div class="space-y-2 ml-8">
-                <!-- Incoming Requests Group -->
-                <MenuGroup Label="Incoming HTTP requests" Icon="http" IsExpanded="@_isIncomingRequestsExpanded"
-                           OnToggle="@(() => ToggleGroup("incomingRequests"))">
-                    <MenuButton Icon="description" Label="HTTP request for Credential Issuance"
-                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-issuance"))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="verified" Label="HTTP request for Credential Verification"
-                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-verification"))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="api" Label="Custom HTTP request"
-                                OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-                <!-- Timer Triggers Group -->
-                <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@_isTimerTriggersExpanded"
-                           OnToggle="@(() => ToggleGroup("timerTriggers"))">
-                    <MenuButton Icon="update" Label="Recurring timer"
-                                OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-                <!-- Manual Triggers Group -->
-                <MenuGroup Label="Manual triggers" Icon="touch_app" IsExpanded="@_isManualTriggersExpanded"
-                           OnToggle="@(() => ToggleGroup("manualTriggers"))">
-                    <MenuButton Icon="account_balance_wallet" Label="Wallet Interaction"
-                                OnClick="@(action => HandleItemClick(ETriggerType.WalletInteraction, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="play_circle" Label="Manual triggering"
-                                OnClick="@(action => HandleItemClick(ETriggerType.ManualTrigger, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="feed" Label="Form"
-                                OnClick="@(action => HandleItemClick(ETriggerType.Form, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
+            <!-- Actions Section -->
+            <div class="mb-6">
+                <div class="flex items-center mb-3">
+                    <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
+                    <h4 class="text-sm font-medium text-gray-700">Actions</h4>
+                </div>
+                <div class="space-y-2 ml-8">
+                    <!-- Issue Credential Group -->
+                    <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@_isIssueCredentialExpanded"
+                               OnToggle="@(() => ToggleGroup("issueCredential"))">
+                        <MenuButton Icon="badge" Label="W3C VC"
+                                    OnClick="@(action => HandleItemClick(EActionType.IssueW3CCredential, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="verified_user" Label="W3C SD-VC"
+                                    OnClick="@(action => HandleItemClick(EActionType.IssueW3CSdCredential, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="fingerprint" Label="Anoncred"
+                                    OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                    <!-- Verify Credential Group -->
+                    <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded"
+                               OnToggle="@(() => ToggleGroup("verifyCredential"))">
+                        <MenuButton Icon="verified" Label="Verify W3C VC"
+                                    OnClick="@(action => HandleItemClick(EActionType.VerifyW3CCredential, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="verified_user" Label="Verify W3C SD-VC"
+                                    OnClick="@(action => HandleItemClick(EActionType.VerifyW3CSdCredential, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="fingerprint" Label="Verify Anoncred"
+                                    OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                    <!-- Validation Group -->
+                    <MenuGroup Label="Validation" Icon="rule" IsExpanded="@_isValidationExpanded"
+                               OnToggle="@(() => ToggleGroup("validation"))">
+                        <MenuButton Icon="verified" Label="W3C Validation"
+                                    OnClick="@(action => HandleItemClick(EActionType.W3cValidation, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="checklist" Label="Custom Validation"
+                                    OnClick="@(action => HandleItemClick(EActionType.CustomValidation, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                    <!-- Outgoing Request Group -->
+                    <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded"
+                               OnToggle="@(() => ToggleGroup("outgoingRequest"))">
+                        <MenuButton Icon="message" Label="DIDComm"
+                                    OnClick="@(action => HandleItemClick(EActionType.DIDComm, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="http" Label="HTTP Request"
+                                    OnClick="@(action => HandleItemClick(EActionType.Http, action))"
+                                    ShowAddButton="true"/>
+                        <MenuButton Icon="mail" Label="Email"
+                                    OnClick="@(action => HandleItemClick(EActionType.Email, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
+                </div>
             </div>
-        </div>
-        <!-- Actions Section -->
-        <div class="mb-6">
-            <div class="flex items-center mb-3">
-                <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
-                <h4 class="text-sm font-medium text-gray-700">Actions</h4>
+        }
+        else
+        {
+            <PropertyEditor
+                Item="@SelectedItem"
+                OnBack="@(() => SelectItem(null))"
+                OnChange="@OnChange"
+                TriggerParameters="@GetTriggerParameters()"
+                FlowItems="FlowItems"
+                WorkflowId="@workflowId"/>
+        }
+        @if (_showError)
+        {
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg p-6 max-w-md">
+                    <h3 class="text-xl font-bold mb-4">Warning</h3>
+                    <p class="text-gray-700 mb-6">@_errorMessage</p>
+                    <button
+                        class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
+                        @onclick="CloseError">
+                        OK
+                    </button>
+                </div>
             </div>
-            <div class="space-y-2 ml-8">
-                <!-- Issue Credential Group -->
-                <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@_isIssueCredentialExpanded"
-                           OnToggle="@(() => ToggleGroup("issueCredential"))">
-                    <MenuButton Icon="badge" Label="W3C VC"
-                                OnClick="@(action => HandleItemClick(EActionType.IssueW3CCredential, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="verified_user" Label="W3C SD-VC"
-                                OnClick="@(action => HandleItemClick(EActionType.IssueW3CSdCredential, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="fingerprint" Label="Anoncred"
-                                OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-                <!-- Verify Credential Group -->
-                <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded"
-                           OnToggle="@(() => ToggleGroup("verifyCredential"))">
-                    <MenuButton Icon="verified" Label="Verify W3C VC"
-                                OnClick="@(action => HandleItemClick(EActionType.VerifyW3CCredential, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="verified_user" Label="Verify W3C SD-VC"
-                                OnClick="@(action => HandleItemClick(EActionType.VerifyW3CSdCredential, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="fingerprint" Label="Verify Anoncred"
-                                OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-                <!-- Validation Group -->
-                <MenuGroup Label="Validation" Icon="rule" IsExpanded="@_isValidationExpanded"
-                           OnToggle="@(() => ToggleGroup("validation"))">
-                    <MenuButton Icon="verified" Label="W3C Validation"
-                                OnClick="@(action => HandleItemClick(EActionType.W3cValidation, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="checklist" Label="Custom Validation"
-                                OnClick="@(action => HandleItemClick(EActionType.CustomValidation, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-                <!-- Outgoing Request Group -->
-                <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded"
-                           OnToggle="@(() => ToggleGroup("outgoingRequest"))">
-                    <MenuButton Icon="message" Label="DIDComm"
-                                OnClick="@(action => HandleItemClick(EActionType.DIDComm, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="http" Label="HTTP Request"
-                                OnClick="@(action => HandleItemClick(EActionType.Http, action))"
-                                ShowAddButton="true"/>
-                    <MenuButton Icon="mail" Label="Email"
-                                OnClick="@(action => HandleItemClick(EActionType.Email, action))"
-                                ShowAddButton="true"/>
-                </MenuGroup>
-            </div>
-        </div>
-    }
-    else
-    {
-        <PropertyEditor
-            Item="@SelectedItem"
-            OnBack="@(() => SelectItem(null))"
-            OnChange="@OnChange"
-            TriggerParameters="@GetTriggerParameters()"
-            FlowItems="FlowItems"
-            WorkflowId="@workflowId"/>
-    }
-    @if (_showError)
-    {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 max-w-md">
-                <h3 class="text-xl font-bold mb-4">Warning</h3>
-                <p class="text-gray-700 mb-6">@_errorMessage</p>
-                <button
-                    class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
-                    @onclick="CloseError">
-                    OK
-                </button>
-            </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @code {
@@ -327,7 +329,7 @@
                     ValidationRules = new List<CustomValidationRule>(),
                     FailureAction = "Stop"
                 },
-EActionType.VerifyW3CCredential => new VerifyW3cCredential
+                EActionType.VerifyW3CCredential => new VerifyW3cCredential
                 {
                     Id = Guid.NewGuid(),
                     CheckSignature = true,
@@ -438,4 +440,5 @@ EActionType.VerifyW3CCredential => new VerifyW3cCredential
             Input = trigger
         };
     }
+
 }

@@ -5,225 +5,242 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
-<div class="h-full w-full  bg-white p-4 rounded-lg shadow-md">
-    <div class="flex flex-col items-center">
-        @if (showToast)
-        {
-            <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
-                @toastMessage
-            </div>
-        }
+<div class="h-full w-full bg-white p-4 rounded-lg shadow-md flex flex-col">
+    <div class="flex-1 overflow-y-auto">
+        <div class="flex flex-col items-center">
+            @if (showToast)
+            {
+                <div
+                    class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+                    @toastMessage
+                </div>
+            }
 
-        @for (var i = 0; i < flowItems.Count; i++)
-        {
-            var item = flowItems[i];
-            var isLast = i == flowItems.Count - 1;
+            @for (var i = 0; i < flowItems.Count; i++)
+            {
+                var item = flowItems[i];
+                var isLast = i == flowItems.Count - 1;
 
-            <div class="flex flex-col items-center">
-                <div class="relative">
-                    <div class="w-80 bg-white hover:bg-gray-50 shadow-md rounded-lg p-3 cursor-pointer text-sm transition-all duration-200 @(item == SelectedItem ? "border-2 border-blue-500" : "border border-gray-200") group"
-                         @onclick="() => SelectItem(item)">
-                        
-                        <!-- Base Content - Always Visible -->
-                        <div class="relative z-10">
-                            @if (item is Trigger trigger)
-                            {
-                                <div class="flex items-center mb-2">
-                                    <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">Trigger</span>
-                                </div>
-                                <h3 class="text-base font-medium text-gray-900">@WorkflowNaming.GetFriendlyName(trigger.Type.ToString())</h3>
-                                
-                                @if (trigger.Input is TriggerInputHttpRequest incomingRequest)
+                <div class="flex flex-col items-center">
+                    <div class="relative">
+                        <div
+                            class="w-80 bg-white hover:bg-gray-50 shadow-md rounded-lg p-3 cursor-pointer text-sm transition-all duration-200 @(item == SelectedItem ? "border-2 border-blue-500" : "border border-gray-200") group"
+                            @onclick="() => SelectItem(item)">
+
+                            <!-- Base Content - Always Visible -->
+                            <div class="relative z-10">
+                                @if (item is Trigger trigger)
                                 {
-                                    <p class="text-xs text-gray-600 mt-1">
-                                        @incomingRequest.Method
-                                    </p>
-                                }
-                                else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
-                                {
-                                    <p class="text-xs text-gray-600 mt-1">
-                                        Every @recurringTimer.CronExpression
-                                    </p>
-                                }
-                            }
-                            else if (item is Action action)
-                            {
-                                <div class="flex items-center mb-2">
-                                    <span class="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">Action</span>
-                                </div>
-                                <h3 class="text-base font-medium text-gray-900">@WorkflowNaming.GetFriendlyName(action.Type.ToString())</h3>
-
-                                @switch (action.Input)
-                                {
-                                    case IssueW3cCredential issueW3CCredential:
-                                        <p class="text-xs text-gray-600 mt-1">
-                                            @issueW3CCredential.Claims.Count claims configured
-                                        </p>
-                                        break;
-                                    case VerifyW3cCredential _:
-                                    case VerifyW3cSdCredential _:
-                                    case VerifyAnoncredCredential _:
-                                        <p class="text-xs text-gray-600 mt-1">
-                                            VerifyCredentials checks configured
-                                        </p>
-                                        break;
-                                }
-                            }
-                        </div>
-
-                        <!-- Hover Content - Only Visible on Hover -->
-                        <div class="absolute left-0 top-0 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
-                            <button class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded transition-colors duration-200" 
-                                    @onclick:stopPropagation="true" 
-                                    @onclick="async () => await RemoveItem(item)">
-                                <span class="material-symbols-outlined text-sm">delete</span>
-                            </button>
-
-                            @if (item is Trigger triggerItem)
-                            {
-                                <div class="flex items-center mb-2">
-                                    <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">Trigger</span>
-                                </div>
-                                <h3 class="text-base font-medium text-gray-900 mb-2">@WorkflowNaming.GetFriendlyName(triggerItem.Type.ToString())</h3>
-
-                                @if (triggerItem.Input is TriggerInputHttpRequest incomingRequest)
-                                {
-                                    <div class="space-y-2">
-                                        <div>
-                                            <p class="text-xs text-gray-600">
-                                                <span class="font-medium text-gray-700">Method:</span> @incomingRequest.Method
-                                            </p>
-                                        </div>
-
-                                        @if (incomingRequest.Parameters.Any())
-                                        {
-                                            <div class="mt-2">
-                                                <p class="text-xs font-medium text-gray-700 mb-1">Parameters</p>
-                                                <div class="bg-gray-50 rounded-md p-2">
-                                                    @foreach (var param in incomingRequest.Parameters)
-                                                    {
-                                                        <div class="flex items-center justify-between text-xs">
-                                                            <span class="text-gray-700">@param.Key</span>
-                                                            <div class="flex items-center">
-                                                                <span class="text-gray-500">@param.Value.Type</span>
-                                                                @if (param.Value.Required)
-                                                                {
-                                                                    <span class="ml-1 text-red-500">*</span>
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
+                                    <div class="flex items-center mb-2">
+                                        <span
+                                            class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">Trigger</span>
                                     </div>
-                                }
-                                else if (triggerItem.Input is TriggerInputRecurringTimer recurringTimer)
-                                {
-                                    <p class="text-xs text-gray-600">
-                                        <span class="font-medium text-gray-700">Interval:</span> @recurringTimer.CronExpression
-                                    </p>
-                                }
-                            }
-                            else if (item is Action actionItem)
-                            {
-                                <div class="flex items-center mb-2">
-                                    <span class="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">Action</span>
-                                </div>
-                                <h3 class="text-base font-medium text-gray-900 mb-2">@WorkflowNaming.GetFriendlyName(actionItem.Type.ToString())</h3>
+                                    <h3 class="text-base font-medium text-gray-900">@WorkflowNaming.GetFriendlyName(trigger.Type.ToString())</h3>
 
-                                @switch (actionItem.Input)
+                                    @if (trigger.Input is TriggerInputHttpRequest incomingRequest)
+                                    {
+                                        <p class="text-xs text-gray-600 mt-1">
+                                            @incomingRequest.Method
+                                        </p>
+                                    }
+                                    else if (trigger.Input is TriggerInputRecurringTimer recurringTimer)
+                                    {
+                                        <p class="text-xs text-gray-600 mt-1">
+                                            Every @recurringTimer.CronExpression
+                                        </p>
+                                    }
+                                }
+                                else if (item is Action action)
                                 {
-                                    case IssueW3cCredential issueW3CCredential:
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">Action</span>
+                                    </div>
+                                    <h3 class="text-base font-medium text-gray-900">@WorkflowNaming.GetFriendlyName(action.Type.ToString())</h3>
+
+                                    @switch (action.Input)
+                                    {
+                                        case IssueW3cCredential issueW3CCredential:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                @issueW3CCredential.Claims.Count claims configured
+                                            </p>
+                                            break;
+                                        case VerifyW3cCredential _:
+                                        case VerifyW3cSdCredential _:
+                                        case VerifyAnoncredCredential _:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                VerifyCredentials checks configured
+                                            </p>
+                                            break;
+                                    }
+                                }
+                            </div>
+
+                            <!-- Hover Content - Only Visible on Hover -->
+                            <div
+                                class="absolute left-0 top-0 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
+                                <button
+                                    class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded transition-colors duration-200"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="async () => await RemoveItem(item)">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
+
+                                @if (item is Trigger triggerItem)
+                                {
+                                    <div class="flex items-center mb-2">
+                                        <span
+                                            class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">Trigger</span>
+                                    </div>
+                                    <h3 class="text-base font-medium text-gray-900 mb-2">@WorkflowNaming.GetFriendlyName(triggerItem.Type.ToString())</h3>
+
+                                    @if (triggerItem.Input is TriggerInputHttpRequest incomingRequest)
+                                    {
                                         <div class="space-y-2">
                                             <div>
                                                 <p class="text-xs text-gray-600">
-                                                    <span class="font-medium text-gray-700">Subject DID Source:</span> @issueW3CCredential.SubjectDid.Source
-                                                </p>
-                                                <p class="text-xs text-gray-600">
-                                                    <span class="font-medium text-gray-700">Issuer DID:</span> @issueW3CCredential.IssuerDid.Path
+                                                    <span
+                                                        class="font-medium text-gray-700">Method:</span> @incomingRequest.Method
                                                 </p>
                                             </div>
 
-                                            @if (issueW3CCredential.Claims.Any())
+                                            @if (incomingRequest.Parameters.Any())
                                             {
                                                 <div class="mt-2">
-                                                    <p class="text-xs font-medium text-gray-700 mb-1">Claims</p>
-                                                    <div class="bg-gray-50 rounded-md p-2 space-y-1">
-                                                        @foreach (var claim in issueW3CCredential.Claims)
+                                                    <p class="text-xs font-medium text-gray-700 mb-1">Parameters</p>
+                                                    <div class="bg-gray-50 rounded-md p-2">
+                                                        @foreach (var param in incomingRequest.Parameters)
                                                         {
                                                             <div class="flex items-center justify-between text-xs">
-                                                                <span class="text-gray-700">@claim.Key</span>
-                                                                <span class="text-gray-500">@GetClaimValue(claim.Value)</span>
+                                                                <span class="text-gray-700">@param.Key</span>
+                                                                <div class="flex items-center">
+                                                                    <span class="text-gray-500">@param.Value.Type</span>
+                                                                    @if (param.Value.Required)
+                                                                    {
+                                                                        <span class="ml-1 text-red-500">*</span>
+                                                                    }
+                                                                </div>
                                                             </div>
                                                         }
                                                     </div>
                                                 </div>
                                             }
                                         </div>
-                                        break;
+                                    }
+                                    else if (triggerItem.Input is TriggerInputRecurringTimer recurringTimer)
+                                    {
+                                        <p class="text-xs text-gray-600">
+                                            <span
+                                                class="font-medium text-gray-700">Interval:</span> @recurringTimer.CronExpression
+                                        </p>
+                                    }
+                                }
+                                else if (item is Action actionItem)
+                                {
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">Action</span>
+                                    </div>
+                                    <h3 class="text-base font-medium text-gray-900 mb-2">@WorkflowNaming.GetFriendlyName(actionItem.Type.ToString())</h3>
 
-                                    case VerifyW3cCredential vc:
-                                    case VerifyW3cSdCredential vsc:
-                                    case VerifyAnoncredCredential vac:
-                                        <div class="space-y-1">
-                                            <p class="text-xs font-medium text-gray-700">Active VerifyCredentials Checks</p>
-                                            <div class="flex flex-wrap gap-1">
-                                                @{
-                                                    var checks = actionItem.Input switch
-                                                    {
-                                                        VerifyW3cCredential v => GetActiveChecks(v),
-                                                        VerifyW3cSdCredential v => GetActiveChecks(v),
-                                                        VerifyAnoncredCredential v => GetActiveChecks(v),
-                                                        _ => new List<string>()
-                                                    };
-                                                    
-                                                    foreach (var check in checks)
-                                                    {
-                                                        <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">@check</span>
-                                                    }
+                                    @switch (actionItem.Input)
+                                    {
+                                        case IssueW3cCredential issueW3CCredential:
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span
+                                                            class="font-medium text-gray-700">Subject DID Source:</span> @issueW3CCredential.SubjectDid.Source
+                                                    </p>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span
+                                                            class="font-medium text-gray-700">Issuer DID:</span> @issueW3CCredential.IssuerDid.Path
+                                                    </p>
+                                                </div>
+
+                                                @if (issueW3CCredential.Claims.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Claims</p>
+                                                        <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                                            @foreach (var claim in issueW3CCredential.Claims)
+                                                            {
+                                                                <div class="flex items-center justify-between text-xs">
+                                                                    <span class="text-gray-700">@claim.Key</span>
+                                                                    <span
+                                                                        class="text-gray-500">@GetClaimValue(claim.Value)</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 }
                                             </div>
-                                        </div>
-                                        break;
+                                            break;
+
+                                        case VerifyW3cCredential vc:
+                                        case VerifyW3cSdCredential vsc:
+                                        case VerifyAnoncredCredential vac:
+                                            <div class="space-y-1">
+                                                <p class="text-xs font-medium text-gray-700">Active VerifyCredentials
+                                                    Checks</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @{
+                                                        var checks = actionItem.Input switch
+                                                        {
+                                                            VerifyW3cCredential v => GetActiveChecks(v),
+                                                            VerifyW3cSdCredential v => GetActiveChecks(v),
+                                                            VerifyAnoncredCredential v => GetActiveChecks(v),
+                                                            _ => new List<string>()
+                                                        };
+
+                                                        foreach (var check in checks)
+                                                        {
+                                                            <span
+                                                                class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">@check</span>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                            break;
+                                    }
                                 }
-                            }
+                            </div>
                         </div>
                     </div>
+
+                    @if (!isLast)
+                    {
+                        <div class="h-8 w-0.5 bg-slate-200"></div>
+                    }
                 </div>
+            }
 
-                @if (!isLast)
-                {
-                    <div class="h-8 w-0.5 bg-slate-200"></div>
-                }
+            @if (flowItems.Any())
+            {
+                <div class="h-8 w-0.5 bg-slate-200"></div>
+            }
+
+            <div
+                class="w-80 bg-gray-50 shadow-md rounded-lg p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                @onclick="() => SelectItem(null)">
+                <span class="material-symbols-outlined text-3xl text-gray-600 mb-2">add_circle_outline</span>
+                <p class="text-base font-medium text-gray-700">Add Trigger or Action</p>
             </div>
-        }
+        </div>
 
-        @if (flowItems.Any())
+        @if (showError)
         {
-            <div class="h-8 w-0.5 bg-slate-200"></div>
-        }
-
-        <div class="w-80 bg-gray-50 shadow-md rounded-lg p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-             @onclick="() => SelectItem(null)">
-            <span class="material-symbols-outlined text-3xl text-gray-600 mb-2">add_circle_outline</span>
-            <p class="text-base font-medium text-gray-700">Add Trigger or Action</p>
-        </div>
-    </div>
-
-    @if (showError)
-    {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 max-w-md">
-                <h3 class="text-xl font-medium text-gray-900 mb-4">Error</h3>
-                <p class="text-gray-600 mb-6">@errorMessage</p>
-                <button class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 max-w-md">
+                    <h3 class="text-xl font-medium text-gray-900 mb-4">Error</h3>
+                    <p class="text-gray-600 mb-6">@errorMessage</p>
+                    <button
+                        class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded transition-colors duration-200"
                         @onclick="CloseError">
-                    OK
-                </button>
+                        OK
+                    </button>
+                </div>
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 
@@ -311,7 +328,8 @@
     }
 
     private List<string> GetActiveChecks(VerifyAnoncredCredential credential)
-    {var checks = new List<string>();
+    {
+        var checks = new List<string>();
         if (credential.CheckSignature) checks.Add("Signature");
         if (credential.CheckStatus) checks.Add("Status");
         if (credential.CheckSchema) checks.Add("Schema");
@@ -335,6 +353,7 @@
                 ShowError("Cannot remove trigger while actions exist. Please remove all actions first.");
                 return;
             }
+
             Workflow.ProcessFlow.Triggers.Clear();
             removed = true;
         }
@@ -345,6 +364,7 @@
                 ShowError("Only the last action can be removed. Please remove actions in reverse order.");
                 return;
             }
+
             Workflow.ProcessFlow.RemoveLastAction();
             removed = true;
         }
@@ -355,6 +375,7 @@
             {
                 await SelectItem(null);
             }
+
             await OnChange.InvokeAsync();
             UpdateFlowItems();
             await ShowToast(item is Trigger ? "Trigger removed successfully" : "Action removed successfully");
@@ -382,6 +403,7 @@
                 ShowError("Only one trigger is allowed per workflow. Please remove the existing trigger first.");
                 return;
             }
+
             Workflow.ProcessFlow.AddTrigger(trigger);
             added = true;
         }
@@ -392,6 +414,7 @@
                 ShowError("A trigger must be added before adding actions. Please add a trigger first.");
                 return;
             }
+
             Workflow.ProcessFlow.AddAction(action);
             added = true;
         }
@@ -403,4 +426,5 @@
             await ShowToast(item is Trigger ? "Trigger added successfully" : "Action added successfully");
         }
     }
+
 }
