@@ -1,5 +1,6 @@
 using Blocktrust.Common.Resolver;
 using Blocktrust.CredentialWorkflow.Core;
+using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
 using Blocktrust.CredentialWorkflow.Core.Entities.Identity;
 using Blocktrust.CredentialWorkflow.Core.Services;
@@ -59,6 +60,13 @@ builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 builder.Services.AddScoped<IFormService, FormService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+builder.Services.AddTransient<CustomValidationProcessor>();
+builder.Services.AddTransient<DIDCommActionProcessor>();
+builder.Services.AddTransient<EmailActionProcessor>();
+builder.Services.AddTransient<IssueW3CCredentialProcessor>();
+builder.Services.AddTransient<VerifyW3CCredentialProcessor>();
+builder.Services.AddTransient<W3cValidationProcessor>();
 
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(

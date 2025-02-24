@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.ValidateCredentials.W3cValidation;
 
-public class W3cValidationRequest : IRequest<Result<ValidationResult>>
+public class W3cValidationRequest : IRequest<Result<W3cValidationResponse>>
 {
     public string Credential { get; }
     public List<ValidationRule> Rules { get; }
@@ -13,23 +13,5 @@ public class W3cValidationRequest : IRequest<Result<ValidationResult>>
     {
         Credential = credential;
         Rules = rules;
-    }
-}
-
-public class ValidationResult
-{
-    public bool IsValid { get; set; }
-    public List<ValidationError> Errors { get; set; } = new();
-}
-
-public class ValidationError
-{
-    public string RuleType { get; set; }
-    public string Message { get; set; }
-
-    public ValidationError(string ruleType, string message)
-    {
-        RuleType = ruleType;
-        Message = message;
     }
 }

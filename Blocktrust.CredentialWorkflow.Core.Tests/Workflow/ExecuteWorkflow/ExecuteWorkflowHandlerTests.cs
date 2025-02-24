@@ -1,19 +1,13 @@
-﻿using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
-using FluentAssertions;
+﻿using FluentAssertions;
+using System.Collections.Generic;
+using Xunit;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Workflow.ExecuteWorkflow;
 
-public class ExecuteWorkflowHandlerTests
+using Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
+
+public class EmailTemplateProcessorTests
 {
-    private readonly ExecuteWorkflowHandler _handler;
-
-    // public ExecuteWorkflowHandlerTests()
-    // {
-    //     // Since we're only testing ProcessEmailTemplate which doesn't use _mediator,
-    //     // we can pass null as it won't be used in our tests
-    //     _handler = new ExecuteWorkflowHandler(null!);
-    // }
-
     [Fact]
     public void ProcessEmailTemplate_WithNullTemplate_ShouldReturnEmptyString()
     {
@@ -25,7 +19,7 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().BeEmpty();
@@ -42,7 +36,7 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().BeEmpty();
@@ -56,7 +50,7 @@ public class ExecuteWorkflowHandlerTests
         Dictionary<string, string>? parameters = null;
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be(template);
@@ -70,7 +64,7 @@ public class ExecuteWorkflowHandlerTests
         var parameters = new Dictionary<string, string>();
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be(template);
@@ -87,7 +81,7 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be("Hello John, welcome!");
@@ -105,7 +99,7 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be("Hello John, welcome to Acme Corp!");
@@ -122,7 +116,7 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be("Hello , welcome!");
@@ -140,11 +134,9 @@ public class ExecuteWorkflowHandlerTests
         };
 
         // Act
-        var result = _handler.ProcessEmailTemplate(template, parameters);
+        var result = EmailActionProcessor.ProcessEmailTemplate(template, parameters);
 
         // Assert
         result.Should().Be("Hello John, welcome to [company]!");
     }
-
-  
 }
