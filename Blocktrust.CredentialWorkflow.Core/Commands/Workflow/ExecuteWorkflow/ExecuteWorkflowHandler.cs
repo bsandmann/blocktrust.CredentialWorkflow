@@ -28,7 +28,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Blocktrust.Common.Resolver;
 using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs;
+using Blocktrust.CredentialWorkflow.Core.Commands.ValidateCredentials.CustomValidation;
+using Blocktrust.CredentialWorkflow.Core.Commands.ValidateCredentials.W3cValidation;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.SendEmailAction;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation;
 using Blocktrust.DIDComm.Message.Attachments;
 using Blocktrust.DIDComm.Message.Messages;
 using Blocktrust.Mediator.Client.Commands.ForwardMessage;
@@ -152,6 +155,41 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
                 case EActionType.DIDComm:
                 {
                     var result = await ProcessDIDCommAction(
+                        action,
+                        actionOutcome,
+                        workflowOutcomeId,
+                        executionContext,
+                        actionOutcomes,
+                        workflow,
+                        cancellationToken
+                    );
+                    if (result.IsFailed || result.Value.Equals(false))
+                    {
+                        return result;
+                    }
+                    break;
+                }
+                
+                case EActionType.W3cValidation:
+                {
+                    var result = await ProcessW3cValidationAction(
+                        action,
+                        actionOutcome,
+                        workflowOutcomeId,
+                        executionContext,
+                        actionOutcomes,
+                        workflow,
+                        cancellationToken
+                    );
+                    if (result.IsFailed || result.Value.Equals(false))
+                    {
+                        return result;
+                    }
+                    break;
+                }
+                case EActionType.CustomValidation:
+                {
+                    var result = await ProcessCustomValidationAction(
                         action,
                         actionOutcome,
                         workflowOutcomeId,
@@ -499,6 +537,97 @@ var body = ProcessEmailTemplate(input.Body, parameters);
         var successString = "Message sent successfully.";
         actionOutcome.FinishOutcomeWithSuccess(successString);
 
+        return Result.Ok(true);
+    }
+    
+    
+    
+    private async Task<Result<bool>> ProcessW3cValidationAction(
+    Action action,
+    ActionOutcome actionOutcome,
+    Guid workflowOutcomeId,
+    ExecutionContext executionContext,
+    List<ActionOutcome> actionOutcomes,
+    Domain.Workflow.Workflow workflow,
+    CancellationToken cancellationToken
+)
+{
+    var input = (W3cValidationAction)action.Input;
+
+    var credentialStr = await GetParameterFromExecutionContext(input.CredentialReference, executionContext, workflow, actionOutcomes, EActionType.W3cValidation);
+    if (string.IsNullOrWhiteSpace(credentialStr))
+    {
+        var errorMessage = "No credential found in the execution context to validate.";
+        return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+    }
+
+    var validationRequest = new W3cValidationRequest(credentialStr, input.ValidationRules);
+    var validationResult = await _mediator.Send(validationRequest, cancellationToken);
+    
+    if (validationResult.IsFailed)
+    {
+        var errorMessage = string.Join(", ", validationResult.Errors.Select(e => e.Message));
+        return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+    }
+
+    var result = validationResult.Value;
+    if (!result.IsValid)
+    {
+        var errorMessage = string.Join(", ", result.Errors.Select(e => $"{e.RuleType}: {e.Message}"));
+        
+        if (input.FailureAction == "Stop")
+        {
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+        // Handle Skip and Continue cases as needed
+    }
+
+    actionOutcome.FinishOutcomeWithSuccess(JsonSerializer.Serialize(result));
+    return Result.Ok(true);
+}
+
+    private async Task<Result<bool>> ProcessCustomValidationAction(
+        Action action,
+        ActionOutcome actionOutcome,
+        Guid workflowOutcomeId,
+        ExecutionContext executionContext,
+        List<ActionOutcome> actionOutcomes,
+        Domain.Workflow.Workflow workflow,
+        CancellationToken cancellationToken
+    )
+    {
+        var input = (CustomValidationAction)action.Input;
+
+        var dataStr = await GetParameterFromExecutionContext(input.DataReference, executionContext, workflow, actionOutcomes, EActionType.CustomValidation);
+        if (string.IsNullOrWhiteSpace(dataStr))
+        {
+            var errorMessage = "No data found in the execution context to validate.";
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var data = JsonSerializer.Deserialize<object>(dataStr);
+        var validationRequest = new CustomValidationRequest(data, input.ValidationRules);
+        var validationResult = await _mediator.Send(validationRequest, cancellationToken);
+
+        if (validationResult.IsFailed)
+        {
+            var errorMessage = string.Join(", ", validationResult.Errors.Select(e => e.Message));
+            return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+        }
+
+        var result = validationResult.Value;
+        if (!result.IsValid)
+        {
+            var errorMessage = string.Join(", ", result.Errors.Select(e => $"{e.RuleName}: {e.Message}"));
+
+            if (input.FailureAction == "Stop")
+            {
+                return await FinishActionsWithFailure(workflowOutcomeId, actionOutcome, errorMessage, actionOutcomes, cancellationToken);
+            }
+            // Handle Skip and Continue cases as needed
+        }
+
+        actionOutcome.FinishOutcomeWithSuccess(JsonSerializer.Serialize(result));
         return Result.Ok(true);
     }
 

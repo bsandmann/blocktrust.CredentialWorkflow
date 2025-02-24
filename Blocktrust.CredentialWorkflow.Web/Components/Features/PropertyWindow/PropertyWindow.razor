@@ -5,6 +5,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers.HttpRequestsTemplates
 @using Blocktrust.CredentialWorkflow.Core.Domain.Workflow
@@ -13,14 +14,12 @@
     @if (SelectedItem == null)
     {
         <h3 class="text-lg font-medium text-gray-800 mb-6">Add Item</h3>
-
         <!-- Triggers Section -->
         <div class="mb-6">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">touch_app</span>
                 <h4 class="text-sm font-medium text-gray-700">Triggers</h4>
             </div>
-
             <div class="space-y-2 ml-8">
                 <!-- Incoming Requests Group -->
                 <MenuGroup Label="Incoming HTTP requests" Icon="http" IsExpanded="@_isIncomingRequestsExpanded"
@@ -28,14 +27,13 @@
                     <MenuButton Icon="description" Label="HTTP request for Credential Issuance"
                                 OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-issuance"))"
                                 ShowAddButton="true"/>
-                    <MenuButton Icon="verified" Label="HTTP request for Credential VerifyCredentials"
+                    <MenuButton Icon="verified" Label="HTTP request for Credential Verification"
                                 OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action, "credential-verification"))"
                                 ShowAddButton="true"/>
                     <MenuButton Icon="api" Label="Custom HTTP request"
                                 OnClick="@(action => HandleItemClick(ETriggerType.HttpRequest, action))"
                                 ShowAddButton="true"/>
                 </MenuGroup>
-
                 <!-- Timer Triggers Group -->
                 <MenuGroup Label="Timer triggers" Icon="schedule" IsExpanded="@_isTimerTriggersExpanded"
                            OnToggle="@(() => ToggleGroup("timerTriggers"))">
@@ -43,7 +41,6 @@
                                 OnClick="@(action => HandleItemClick(ETriggerType.RecurringTimer, action))"
                                 ShowAddButton="true"/>
                 </MenuGroup>
-
                 <!-- Manual Triggers Group -->
                 <MenuGroup Label="Manual triggers" Icon="touch_app" IsExpanded="@_isManualTriggersExpanded"
                            OnToggle="@(() => ToggleGroup("manualTriggers"))">
@@ -59,14 +56,12 @@
                 </MenuGroup>
             </div>
         </div>
-
         <!-- Actions Section -->
         <div class="mb-6">
             <div class="flex items-center mb-3">
                 <span class="material-symbols-outlined text-gray-600 mr-2">smart_button</span>
                 <h4 class="text-sm font-medium text-gray-700">Actions</h4>
             </div>
-
             <div class="space-y-2 ml-8">
                 <!-- Issue Credential Group -->
                 <MenuGroup Label="Issue credentials" Icon="verified" IsExpanded="@_isIssueCredentialExpanded"
@@ -81,7 +76,6 @@
                                 OnClick="@(action => HandleItemClick(EActionType.IssueAnoncredCredential, action))"
                                 ShowAddButton="true"/>
                 </MenuGroup>
-
                 <!-- Verify Credential Group -->
                 <MenuGroup Label="Verify credentials" Icon="fact_check" IsExpanded="@_isVerifyCredentialExpanded"
                            OnToggle="@(() => ToggleGroup("verifyCredential"))">
@@ -95,7 +89,16 @@
                                 OnClick="@(action => HandleItemClick(EActionType.VerifyAnoncredCredential, action))"
                                 ShowAddButton="true"/>
                 </MenuGroup>
-
+                <!-- Validation Group -->
+                <MenuGroup Label="Validation" Icon="rule" IsExpanded="@_isValidationExpanded"
+                           OnToggle="@(() => ToggleGroup("validation"))">
+                    <MenuButton Icon="verified" Label="W3C Validation"
+                                OnClick="@(action => HandleItemClick(EActionType.W3cValidation, action))"
+                                ShowAddButton="true"/>
+                    <MenuButton Icon="checklist" Label="Custom Validation"
+                                OnClick="@(action => HandleItemClick(EActionType.CustomValidation, action))"
+                                ShowAddButton="true"/>
+                </MenuGroup>
                 <!-- Outgoing Request Group -->
                 <MenuGroup Label="Communication" Icon="send" IsExpanded="@_isOutgoingRequestExpanded"
                            OnToggle="@(() => ToggleGroup("outgoingRequest"))">
@@ -120,9 +123,8 @@
             OnChange="@OnChange"
             TriggerParameters="@GetTriggerParameters()"
             FlowItems="FlowItems"
-             WorkflowId="@workflowId"/>
+            WorkflowId="@workflowId"/>
     }
-
     @if (_showError)
     {
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -153,10 +155,8 @@
     private bool _isManualTriggersExpanded;
     private bool _isIssueCredentialExpanded;
     private bool _isVerifyCredentialExpanded;
+    private bool _isValidationExpanded;
     private bool _isOutgoingRequestExpanded;
-
-    private bool HasActions => FlowItems.Any(x => x is WorkflowAction);
-    private bool HasOutcome => FlowItems.Any(x => x is WorkflowOutcome);
 
     private void ToggleGroup(string group)
     {
@@ -177,13 +177,67 @@
             case "verifyCredential":
                 _isVerifyCredentialExpanded = !_isVerifyCredentialExpanded;
                 break;
+            case "validation":
+                _isValidationExpanded = !_isValidationExpanded;
+                break;
             case "outgoingRequest":
                 _isOutgoingRequestExpanded = !_isOutgoingRequestExpanded;
                 break;
         }
     }
 
-    private object CreateNewItem(object itemType, string template)
+    private IEnumerable<string>? GetTriggerParameters()
+    {
+        var trigger = FlowItems.FirstOrDefault(x => x is Trigger) as Trigger;
+        if (trigger == null)
+            return null;
+
+        if (trigger.Input is TriggerInputHttpRequest incomingRequest)
+        {
+            return incomingRequest.Parameters.Keys;
+        }
+        else if (trigger.Input is TriggerInputForm formTrigger)
+        {
+            return formTrigger.Parameters.Keys;
+        }
+
+        return null;
+    }
+
+    private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action, string? template = null)
+    {
+        var newItem = CreateNewItem(itemType, template);
+        if (newItem != null)
+        {
+            await OnItemCreated.InvokeAsync(newItem);
+            if (action == MenuButton.MenuButtonAction.Configure)
+            {
+                await SelectItem(newItem);
+            }
+        }
+    }
+
+    private async Task SelectItem(object? item)
+    {
+        SelectedItem = item;
+        StateHasChanged();
+    }
+
+    private void ShowError(string message)
+    {
+        _errorMessage = message;
+        _showError = true;
+        StateHasChanged();
+    }
+
+    private void CloseError()
+    {
+        _errorMessage = null;
+        _showError = false;
+        StateHasChanged();
+    }
+
+    private object CreateNewItem(object itemType, string? template = null)
     {
         try
         {
@@ -196,7 +250,7 @@
         }
         catch (Exception ex)
         {
-            HandleError(ex.Message);
+            ShowError(ex.Message);
             throw;
         }
     }
@@ -217,7 +271,7 @@
                         Source = ParameterSource.TriggerInput,
                         Path = "peerDid"
                     },
-                    SenderPeerDid =new ParameterReference()
+                    SenderPeerDid = new ParameterReference
                     {
                         Source = ParameterSource.AppSettings,
                         Path = "DefaultSenderDid"
@@ -252,38 +306,28 @@
                     },
                     Claims = new Dictionary<string, ClaimValue>()
                 },
-                EActionType.IssueW3CSdCredential => new IssueW3CSdCredential
+                EActionType.W3cValidation => new W3cValidationAction
                 {
                     Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
+                    CredentialReference = new ParameterReference
                     {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid"
+                        Source = ParameterSource.TriggerInput
                     },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid"
-                    },
-                    Claims = new Dictionary<string, ClaimValue>()
+                    ValidationRules = new List<ValidationRule>(),
+                    FailureAction = "Stop",
+                    ErrorMessageTemplate = string.Empty
                 },
-                EActionType.IssueAnoncredCredential => new IssueAnoncredCredential
+                EActionType.CustomValidation => new CustomValidationAction
                 {
                     Id = Guid.NewGuid(),
-                    SubjectDid = new ParameterReference
+                    DataReference = new ParameterReference
                     {
-                        Source = ParameterSource.TriggerInput,
-                        Path = "subjectDid"
+                        Source = ParameterSource.TriggerInput
                     },
-                    IssuerDid = new ParameterReference
-                    {
-                        Source = ParameterSource.AppSettings,
-                        Path = "DefaultIssuerDid"
-                    },
-                    CredentialDefinitionId = "",
-                    Attributes = new Dictionary<string, ClaimValue>()
+                    ValidationRules = new List<CustomValidationRule>(),
+                    FailureAction = "Stop"
                 },
-                EActionType.VerifyW3CCredential => new VerifyW3cCredential
+EActionType.VerifyW3CCredential => new VerifyW3cCredential
                 {
                     Id = Guid.NewGuid(),
                     CheckSignature = true,
@@ -314,57 +358,6 @@
             },
             RunAfter = new List<Guid>()
         };
-    }
-
-    private async Task HandleItemClick(object itemType, MenuButton.MenuButtonAction action, string? template = null)
-    {
-        var newItem = CreateNewItem(itemType, template);
-        if (newItem != null)
-        {
-            await OnItemCreated.InvokeAsync(newItem);
-            if (action == MenuButton.MenuButtonAction.Configure)
-            {
-                await SelectItem(newItem);
-            }
-        }
-    }
-
-    private async Task SelectItem(object? item)
-    {
-        SelectedItem = item;
-        StateHasChanged();
-    }
-
-    private IEnumerable<string>? GetTriggerParameters()
-    {
-        var trigger = FlowItems.FirstOrDefault(x => x is Trigger) as Trigger;
-        if (trigger == null)
-            return null;
-
-        if (trigger.Input is TriggerInputHttpRequest incomingRequest)
-        {
-            return incomingRequest.Parameters.Keys;
-        }
-        else if (trigger.Input is TriggerInputForm formTrigger)
-        {
-            return formTrigger.Parameters.Keys;
-        }
-
-        return null;
-    }
-    
-    private async Task HandleError(string message)
-    {
-        _errorMessage = message;
-        _showError = true;
-        StateHasChanged();
-    }
-
-    private void CloseError()
-    {
-        _errorMessage = null;
-        _showError = false;
-        StateHasChanged();
     }
 
     private Trigger CreateNewTrigger(ETriggerType triggerType, string? template = null)
@@ -439,12 +432,10 @@
             throw new ArgumentException($"Trigger type {triggerType} is not implemented.");
         }
 
-
         return new Trigger
         {
             Type = triggerType,
             Input = trigger
         };
     }
-
 }
