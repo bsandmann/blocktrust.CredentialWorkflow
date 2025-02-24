@@ -29,7 +29,7 @@
 
 @if (AppStateService.IsInitialized)
 {
-    <div class="min-h-screen">
+    <div class="flex flex-col h-full">
         <!-- Top bar -->
         <div class="bg-gray-100 p-4 flex items-center justify-end flex-row border-b-2 border-slate-200">
             @if (currentWorkflow is not null)
@@ -110,7 +110,7 @@
         }
 
         <!-- Main content area -->
-        <div class="flex flex-row">
+        <div class="flex flex-row flex-1">
           
             <!-- Workflow Designer Area -->
             <div class="flex-grow bg-white p-4">
