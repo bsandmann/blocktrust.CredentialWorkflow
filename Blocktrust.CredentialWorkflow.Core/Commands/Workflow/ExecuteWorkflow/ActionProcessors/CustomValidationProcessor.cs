@@ -1,12 +1,12 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
-
 using System.Text.Json;
-using System.Threading.Tasks;
 using Blocktrust.CredentialWorkflow.Core.Commands.ValidateCredentials.CustomValidation;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation;
 using FluentResults;
 using MediatR;
+using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 
 public class CustomValidationProcessor : IActionProcessor
 {

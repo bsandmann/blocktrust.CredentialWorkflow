@@ -1,15 +1,13 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetIssuingKeys;
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using MediatR;
-using ExecutionContext = Domain.Common.ExecutionContext;
+using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.ExecutionContext;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
+
+using ExecutionContext = ExecutionContext;
 
 public static class ParameterResolver
 {

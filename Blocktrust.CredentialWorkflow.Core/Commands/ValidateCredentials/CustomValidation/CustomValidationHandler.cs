@@ -31,7 +31,7 @@ public class CustomValidationHandler : IRequestHandler<CustomValidationRequest, 
                     {
                         result.Errors.Add(new CustomValidationError(
                             rule.Name,
-                            rule.ErrorMessage ?? $"Validation rule '{rule.Name}' failed"
+                            rule.ErrorMessage
                         ));
                     }
                 }

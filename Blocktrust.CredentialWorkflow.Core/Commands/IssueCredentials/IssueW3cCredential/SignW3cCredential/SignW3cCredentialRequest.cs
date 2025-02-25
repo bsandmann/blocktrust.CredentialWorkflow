@@ -1,8 +1,8 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
-
-using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
+﻿using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
 using FluentResults;
 using MediatR;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 
 public class SignW3cCredentialRequest : IRequest<Result<string>>
 {

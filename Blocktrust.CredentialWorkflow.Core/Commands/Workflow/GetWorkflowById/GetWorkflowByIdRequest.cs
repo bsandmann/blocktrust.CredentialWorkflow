@@ -1,6 +1,5 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById;
 
-using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 using Domain.Workflow;
 using FluentResults;
 using MediatR;

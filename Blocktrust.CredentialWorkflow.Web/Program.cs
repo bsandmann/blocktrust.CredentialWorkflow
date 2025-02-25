@@ -40,9 +40,8 @@ builder.Services.AddScoped<WorkflowChangeTrackerService>();
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 
 // Add Core Services
-builder.Services.AddScoped<ICredentialService, CredentialService>();
-builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
-builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+
+// builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
 
 builder.Services.AddScoped<CredentialParser>();
 builder.Services.AddScoped<ExtractPrismPubKeyFromLongFormDid>();

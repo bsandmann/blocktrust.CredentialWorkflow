@@ -1,15 +1,14 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
-
-using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.SendEmailAction;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using FluentResults;
 using MediatR;
-using Action = Domain.ProcessFlow.Actions.Action;
+using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
+
+using Action = Action;
 
 public class EmailActionProcessor : IActionProcessor
 {

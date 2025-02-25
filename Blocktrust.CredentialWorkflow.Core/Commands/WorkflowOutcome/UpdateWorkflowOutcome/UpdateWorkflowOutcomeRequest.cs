@@ -1,11 +1,10 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.UpdateWorkflowOutcome;
-
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
-using Domain.Workflow;
 using FluentResults;
 using MediatR;
 
-public class UpdateWorkflowOutcomeRequest : IRequest<Result<WorkflowOutcome>>
+namespace Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.UpdateWorkflowOutcome;
+
+public class UpdateWorkflowOutcomeRequest : IRequest<Result<Domain.Workflow.WorkflowOutcome>>
 {
     public UpdateWorkflowOutcomeRequest(Guid workflowOutcomeId, EWorkflowOutcomeState workflowOutcomeState, string? outcomeJson, string? errorMessage)
     {

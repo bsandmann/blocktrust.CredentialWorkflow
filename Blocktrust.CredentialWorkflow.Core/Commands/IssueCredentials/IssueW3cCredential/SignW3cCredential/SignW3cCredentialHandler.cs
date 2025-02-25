@@ -1,13 +1,12 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blocktrust.CredentialWorkflow.Core.Crypto;
+using Blocktrust.CredentialWorkflow.Core.Domain.Credential;
 using Blocktrust.CredentialWorkflow.Core.Prism;
-using Domain.Credential;
 using FluentResults;
 using MediatR;
-using VerifiableCredential.Common.Converters;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 
 public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest, Result<string>>
 {
@@ -17,7 +16,6 @@ public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        // Converters = { new TypeConverter() }
     };
 
     public SignW3cCredentialHandler(IEcService ecService)
@@ -38,7 +36,7 @@ public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest
             var headerJson = JsonSerializer.Serialize(header, SerializerOptions);
             var headerBase64 = PrismEncoding.ByteArrayToBase64(PrismEncoding.Utf8StringToByteArray(headerJson));
 
-            Credential cleanCredential = new Credential()
+            Credential cleanCredential = new Credential
             {
                 CredentialContext = request.Credential.CredentialContext,
                 Type = request.Credential.Type,

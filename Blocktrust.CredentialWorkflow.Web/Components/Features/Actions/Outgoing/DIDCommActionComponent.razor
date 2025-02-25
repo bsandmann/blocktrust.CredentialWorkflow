@@ -202,10 +202,8 @@
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
 
-    // New: needed if referencing previous actions for "ActionOutcome"
     [Parameter] public IEnumerable<object>? FlowItems { get; set; }
 
-    // Holds the list of PeerDIDs retrieved via GetPeerDIDsRequest
     private List<PeerDIDModel> PeerDIDs { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -213,7 +211,6 @@
         var tenant = AppStateService.Tenant;
         var tenantId = tenant.TenantId;
 
-        // Fetch the list of PeerDIDs for this tenant
         var result = await Mediator.Send(new GetPeerDIDsRequest(tenantId));
         if (result.IsSuccess)
         {
@@ -221,7 +218,7 @@
         }
         else
         {
-            // Handle error if needed, e.g., show a toast or fallback
+            // Handle error if needed, e.g.,  a toast or fallback
         }
     }
 
@@ -272,10 +269,9 @@
         await OnChange.InvokeAsync();
     }
 
-    // New: For the “CredentialIssuance” block
     private async Task OnCredentialSourceChanged()
     {
-        // Additional logic if necessary. For now, simply notify of changes.
+        // notify of changes.
         await OnValueChanged();
     }
 
@@ -284,7 +280,6 @@
         if (Guid.TryParse(e.Value?.ToString(), out var guid))
         {
             ActionInput.CredentialReference.ActionId = guid;
-            // Clear the Path if picking a new Action
             ActionInput.CredentialReference.Path = string.Empty;
         }
         else

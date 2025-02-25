@@ -1,37 +1,34 @@
-using Blocktrust.CredentialWorkflow.Core.Entities.DIDComm;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs
+namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs;
+
+using Domain.PeerDID;
+
+public class GetPeerDIDsHandler : IRequestHandler<GetPeerDIDsRequest, Result<List<PeerDIDModel>>>
 {
-    using Domain.PeerDID;
+    private readonly DataContext _context;
 
-    public class GetPeerDIDsHandler : IRequestHandler<GetPeerDIDsRequest, Result<List<PeerDIDModel>>>
+    public GetPeerDIDsHandler(DataContext context)
     {
-        private readonly DataContext _context;
+        _context = context;
+    }
 
-        public GetPeerDIDsHandler(DataContext context)
+    public async Task<Result<List<PeerDIDModel>>> Handle(GetPeerDIDsRequest request, CancellationToken cancellationToken)
+    {
+        _context.ChangeTracker.Clear();
+
+        var peerDIDEntities = await _context.PeerDIDEntities
+            .Where(p => p.TenantEntityId == request.TenantId)
+            .ToListAsync(cancellationToken);
+
+        if (peerDIDEntities is null || peerDIDEntities.Count == 0)
         {
-            _context = context;
+            return Result.Ok(new List<PeerDIDModel>());
         }
 
-        public async Task<Result<List<PeerDIDModel>>> Handle(GetPeerDIDsRequest request, CancellationToken cancellationToken)
-        {
-            _context.ChangeTracker.Clear();
-
-            var peerDIDEntities = await _context.PeerDIDEntities
-                .Where(p => p.TenantEntityId == request.TenantId)
-                .ToListAsync(cancellationToken);
-
-            // If none found, we can return an empty list as a success
-            if (peerDIDEntities is null || peerDIDEntities.Count == 0)
-            {
-                return Result.Ok(new List<PeerDIDModel>());
-            }
-
-            var peerDIDs = peerDIDEntities.Select(p => p.ToModel()).ToList();
-            return Result.Ok(peerDIDs);
-        }
+        var peerDIDs = peerDIDEntities.Select(p => p.ToModel()).ToList();
+        return Result.Ok(peerDIDs);
     }
 }

@@ -1,35 +1,34 @@
-namespace Blocktrust.CredentialWorkflow.Core.Entities.DIDComm
+namespace Blocktrust.CredentialWorkflow.Core.Entities.DIDComm;
+
+using System.ComponentModel.DataAnnotations;
+using Domain.PeerDID;
+using Microsoft.EntityFrameworkCore;
+
+public class PeerDIDEntity
 {
-    using System.ComponentModel.DataAnnotations;
-    using Domain.PeerDID;
-    using Microsoft.EntityFrameworkCore;
+    public Guid PeerDIDEntityId { get; set; }
 
-    public class PeerDIDEntity
+    [Unicode(true)]
+    [MaxLength(200)]
+    public string Name { get; set; }
+
+    [Unicode(true)]
+    [MaxLength(5000)]
+    public string PeerDID { get; set; }
+
+    public Guid TenantEntityId { get; set; }
+    public DateTime CreatedUtc { get; init; }
+
+    // Map this entity to the domain model
+    public PeerDIDModel ToModel()
     {
-        public Guid PeerDIDEntityId { get; set; }
-
-        [Unicode(true)]
-        [MaxLength(200)]
-        public string Name { get; set; }
-
-        [Unicode(true)]
-        [MaxLength(5000)]
-        public string PeerDID { get; set; }
-
-        public Guid TenantEntityId { get; set; }
-        public DateTime CreatedUtc { get; init; }
-
-        // Map this entity to the domain model
-        public PeerDIDModel ToModel()
+        return new PeerDIDModel
         {
-            return new PeerDIDModel
-            {
-                PeerDIDEntityId = PeerDIDEntityId,
-                Name = Name,
-                PeerDID = PeerDID,
-                TenantEntityId = TenantEntityId,
-                CreatedUtc = CreatedUtc
-            };
-        }
+            PeerDIDEntityId = PeerDIDEntityId,
+            Name = Name,
+            PeerDID = PeerDID,
+            TenantEntityId = TenantEntityId,
+            CreatedUtc = CreatedUtc
+        };
     }
 }

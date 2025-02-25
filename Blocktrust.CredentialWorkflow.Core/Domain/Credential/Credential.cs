@@ -14,7 +14,7 @@ public record Credential : VerifiableCredential.VerifiableCredential
     // Constructor that takes base class
     public Credential(VerifiableCredential.VerifiableCredential baseCredential)
     {
-        // Copy all properties from base credential
+        // properties from base credential
         CredentialContext = baseCredential.CredentialContext;
         Type = baseCredential.Type;
         CredentialSubjects = baseCredential.CredentialSubjects;
@@ -33,7 +33,7 @@ public record Credential : VerifiableCredential.VerifiableCredential
         AdditionalData = baseCredential.AdditionalData;
         JwtParsingArtefact = baseCredential.JwtParsingArtefact;
         SerializationOption = baseCredential.SerializationOption;
-        // Note: copying read-only fields where needed
+        //  copying read-only fields where needed
         DataModelType = baseCredential.DataModelType;
     }
 }
