@@ -19,5 +19,5 @@ public class VerifyW3cSdCredential : ActionInput
     [JsonPropertyName("checkExpiry")]
     public bool CheckExpiry { get; set; } = true;
 
-    // SD-VC specific properties can be added later
+    // SD-VC specific properties
 }

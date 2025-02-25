@@ -1,15 +1,14 @@
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.DeletePeerDID
-{
-    public class DeletePeerDIDRequest : IRequest<Result>
-    {
-        public DeletePeerDIDRequest(Guid peerDIDEntityId)
-        {
-            PeerDIDEntityId = peerDIDEntityId;
-        }
+namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.DeletePeerDID;
 
-        public Guid PeerDIDEntityId { get; }
+public class DeletePeerDIDRequest : IRequest<Result>
+{
+    public DeletePeerDIDRequest(Guid peerDIDEntityId)
+    {
+        PeerDIDEntityId = peerDIDEntityId;
     }
+
+    public Guid PeerDIDEntityId { get; }
 }

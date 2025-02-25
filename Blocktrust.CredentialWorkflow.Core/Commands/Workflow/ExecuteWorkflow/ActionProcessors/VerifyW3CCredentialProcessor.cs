@@ -1,12 +1,13 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
-
-using System.Threading.Tasks;
 using Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.VerifyW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using FluentResults;
 using MediatR;
-using Action = Domain.ProcessFlow.Actions.Action;
+using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
+
+using Action = Action;
 
 public class VerifyW3CCredentialProcessor : IActionProcessor
 {

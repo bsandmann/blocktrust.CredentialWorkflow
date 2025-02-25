@@ -1,10 +1,10 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
-
 using Blocktrust.Common.Models.DidDoc;
 using Blocktrust.Common.Models.Secrets;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
 
 public class GetPeerDIDSecretsHandler : IRequestHandler<GetPeerDIDSecretsRequest, Result<List<Secret>>>
 {
@@ -17,7 +17,7 @@ public class GetPeerDIDSecretsHandler : IRequestHandler<GetPeerDIDSecretsRequest
     /// <param name="context"></param>
     public GetPeerDIDSecretsHandler(DataContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <summary>

@@ -1,9 +1,6 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow;
 
-using Domain.Common;
-using Domain.ProcessFlow.Actions;
 using Domain.Workflow;
-using Entities.Outcome;
 using FluentResults;
 using MediatR;
 

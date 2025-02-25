@@ -1,10 +1,10 @@
-namespace Blocktrust.CredentialWorkflow.Core.Services.DIDComm;
-
 using Blocktrust.Common.Models.Secrets;
 using Blocktrust.Common.Resolver;
-using Commands.DIDComm.GetPeerDIDSecrets;
-using Commands.DIDComm.SavePeerDIDSecrets;
+using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
+using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.SavePeerDIDSecrets;
 using MediatR;
+
+namespace Blocktrust.CredentialWorkflow.Core.Services.DIDComm;
 
 public class PeerDIDSecretResolver : ISecretResolver
 {
@@ -17,7 +17,7 @@ public class PeerDIDSecretResolver : ISecretResolver
 
     public async Task<Secret?> FindKey(string kid)
     {
-        var secretResults = await _mediator.Send(new GetPeerDIDSecretsRequest(new List<string>() { kid }));
+        var secretResults = await _mediator.Send(new GetPeerDIDSecretsRequest(new List<string> { kid }));
         if (secretResults.IsFailed)
         {
             return null;

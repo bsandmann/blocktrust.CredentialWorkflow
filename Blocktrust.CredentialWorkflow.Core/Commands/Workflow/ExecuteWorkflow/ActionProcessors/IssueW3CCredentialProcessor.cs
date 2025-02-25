@@ -1,16 +1,16 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
-
-using System;
-using System.Threading.Tasks;
+using Blocktrust.Common.Converter;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.CreateW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.IssueCredentials.IssueW3cCredential.SignW3cCredential;
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetPrivateIssuingKeyByDid;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
-using Common.Converter;
 using FluentResults;
 using MediatR;
-using Action = Domain.ProcessFlow.Actions.Action;
+using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
+
+using Action = Action;
 
 public class IssueW3CCredentialProcessor : IActionProcessor
 {

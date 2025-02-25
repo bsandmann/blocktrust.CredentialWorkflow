@@ -1,5 +1,3 @@
-using Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDs;
-using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.DIDComm.Message.Attachments;
@@ -12,11 +10,7 @@ using Blocktrust.PeerDID.PeerDIDCreateResolve;
 using Blocktrust.PeerDID.Types;
 using FluentResults;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 

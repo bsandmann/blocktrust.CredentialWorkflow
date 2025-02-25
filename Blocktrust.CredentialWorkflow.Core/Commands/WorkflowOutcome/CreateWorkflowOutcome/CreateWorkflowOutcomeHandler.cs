@@ -1,10 +1,10 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
-
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.CreateWorkflowOutcome;
 
 public class CreateWorkflowOutcomeHandler : IRequestHandler<CreateWorkflowOutcomeRequest, Result<Guid>>
 {
@@ -27,7 +27,7 @@ public class CreateWorkflowOutcomeHandler : IRequestHandler<CreateWorkflowOutcom
             return Result.Fail<Guid>("The workflow does not exist in the database. The outcome cannot be created.");
         }
 
-        var outcomeEntity = new WorkflowOutcomeEntity()
+        var outcomeEntity = new WorkflowOutcomeEntity
         {
             WorkflowOutcomeState = EWorkflowOutcomeState.NotStarted,
             WorkflowEntityId = workflow.WorkflowEntityId,

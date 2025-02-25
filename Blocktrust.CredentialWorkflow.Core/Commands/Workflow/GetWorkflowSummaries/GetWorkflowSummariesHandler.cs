@@ -2,7 +2,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowSummar
 
 using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 using FluentResults;
-using GetWorkflows;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,8 +1,8 @@
-namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
-
 using Blocktrust.Common.Models.Secrets;
 using FluentResults;
 using MediatR;
+
+namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDIDSecrets;
 
 public class GetPeerDIDSecretsRequest : IRequest<Result<List<Secret>>>
 {

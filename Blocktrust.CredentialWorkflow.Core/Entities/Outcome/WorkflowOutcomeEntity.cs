@@ -1,10 +1,8 @@
-using Blocktrust.CredentialWorkflow.Core.Domain.Common;
 using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
 using Blocktrust.CredentialWorkflow.Core.Entities.Workflow;
 
 namespace Blocktrust.CredentialWorkflow.Core.Entities.Outcome;
 
-using Domain.ProcessFlow.Actions;
 using Domain.Workflow;
 
 public class WorkflowOutcomeEntity

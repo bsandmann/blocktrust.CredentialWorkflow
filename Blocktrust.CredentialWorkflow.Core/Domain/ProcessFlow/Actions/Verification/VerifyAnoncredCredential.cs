@@ -19,5 +19,5 @@ public class VerifyAnoncredCredential : ActionInput
     [JsonPropertyName("checkExpiry")]
     public bool CheckExpiry { get; set; } = true;
 
-    // Anoncred specific properties can be added later
+    // Anoncred specific properties 
 }

@@ -1,17 +1,16 @@
 using FluentResults;
 using MediatR;
 
-namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDidById
+namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.GetPeerDidById;
+
+using Domain.PeerDID;
+
+public class GetPeerDidByIdRequest : IRequest<Result<PeerDIDModel>>
 {
-    using Domain.PeerDID;
+    public Guid PeerDidEntityId { get; }
 
-    public class GetPeerDidByIdRequest : IRequest<Result<PeerDIDModel>>
+    public GetPeerDidByIdRequest(Guid peerDidEntityId)
     {
-        public Guid PeerDidEntityId { get; }
-
-        public GetPeerDidByIdRequest(Guid peerDidEntityId)
-        {
-            PeerDidEntityId = peerDidEntityId;
-        }
+        PeerDidEntityId = peerDidEntityId;
     }
 }

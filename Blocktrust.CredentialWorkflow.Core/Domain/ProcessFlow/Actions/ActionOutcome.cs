@@ -1,7 +1,5 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
-using Blocktrust.CredentialWorkflow.Core.Domain.Enums;
-
 public class ActionOutcome
 {
     public ActionOutcome(Guid actionId)
