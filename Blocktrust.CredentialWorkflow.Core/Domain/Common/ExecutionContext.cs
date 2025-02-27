@@ -17,7 +17,7 @@ public class ExecutionContext
     public Guid TenantId { get; set; }
 
     // Private constructor forces usage of the static factory method.
-    internal ExecutionContext(Guid tenantId, IReadOnlyDictionary<string, string>? inputContext = null)
+    public ExecutionContext(Guid tenantId, IReadOnlyDictionary<string, string>? inputContext = null)
     {
         TenantId = tenantId;
         InputContext = inputContext;
