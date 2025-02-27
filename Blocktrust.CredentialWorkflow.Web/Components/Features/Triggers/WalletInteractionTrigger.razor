@@ -1,79 +1,331 @@
-@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Enums
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using System.Text.RegularExpressions
+@inject NavigationManager NavigationManager
+@inject ClipboardService ClipboardService
 
-<div class="p-4 text-sm">
-    <div class="space-y-3">
-        <div class="p-2 border rounded-md">
-            <label class="block text-xs font-medium text-gray-700 mb-1">Wallet Action</label>
-            <select class="w-full rounded border px-2 py-1 text-xs"
-                    @bind="TriggerInput.WalletAction"
-                    @bind:after="OnValueChanged">
-                <option value="connect">Connect</option>
-                <option value="sign">Sign</option>
-                <option value="share">Share Credential</option>
+<div class="p-4 text-sm max-w-2xl">
+    @if (showToast)
+    {
+        <div class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500">
+            @toastMessage
+        </div>
+    }
+
+    <div class="space-y-4">
+        <!-- DIDComm Endpoint URL Section -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <div class="font-medium text-gray-900">DIDComm Endpoint URL</div>
+                <button @onclick="() => CopyToClipboard(DidCommUrl)"
+                        class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                    <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                    Copy URL
+                </button>
+            </div>
+            <div class="font-mono text-sm text-gray-600 break-all">
+                @DidCommUrl
+            </div>
+        </div>
+
+        <!-- Message Type Selection -->
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">DIDComm Message Type</label>
+            <select class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                    @bind="TriggerInput.MessageType"
+                    @bind:after="OnMessageTypeChanged">
+                <option value="BasicMessage">Basic Message</option>
+                <option value="CredentialPresentation">Credential Presentation</option>
             </select>
         </div>
 
-        <!-- Required Parameters Section -->
-        <div class="p-2 border rounded-md">
-            <div class="flex justify-between items-center mb-2">
-                <label class="block text-xs font-medium text-gray-700">Required Parameters</label>
-                <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+        <!-- Parameters Section - Only show if BasicMessage is selected -->
+        @if (TriggerInput.MessageType == "BasicMessage")
+        {
+            <div class="pt-3 border-t">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-sm font-medium">Parameters</h4>
+                    <button @onclick="() => CopyToClipboard(JsonSchema)"
+                            class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                        <span class="material-symbols-outlined text-sm mr-1">description</span>
+                        Copy Schema
+                    </button>
+                </div>
+
+                <!-- Parameters List -->
+                <div class="space-y-3">
+                    @foreach (var param in parameters)
+                    {
+                        <div class="bg-white border rounded-lg p-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                @if (param.IsEditing)
+                                {
+                                    <input type="text"
+                                           class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
+                                           placeholder="Parameter name"
+                                           @bind="param.Name"
+                                           @bind:event="oninput"
+                                           @onchange="async () => await HandleParameterChange(param)" />
+                                    <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
+                                            @bind="param.Type"
+                                            @bind:event="oninput"
+                                            @onchange="async () => await HandleParameterChange(param)">
+                                        <option value="string">string</option>
+                                    </select>
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => CancelEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <div class="flex-1 py-1 px-2 text-sm">@param.Name</div>
+                                    <div class="w-28 py-1 px-2 text-sm text-gray-600">@param.Type</div>
+                                    <div class="flex gap-1">
+                                        <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                                @onclick="() => StartEdit(param)">
+                                            <span class="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button class="p-1 text-red-500 hover:text-red-700 rounded"
+                                                @onclick="async () => await RemoveParameter(param)">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (param.IsEditing)
+                            {
+                                <input type="text"
+                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm mt-2"
+                                       placeholder="Parameter description (optional)"
+                                       @bind="param.Description"
+                                       @bind:event="oninput"
+                                       @onchange="async () => await HandleParameterChange(param)" />
+                            }
+                            else if (!string.IsNullOrEmpty(param.Description))
+                            {
+                                <div class="text-xs text-gray-500 mt-1">@param.Description</div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(param.ValidationMessage))
+                            {
+                                <div class="text-xs text-red-500 mt-1">@param.ValidationMessage</div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Add Parameter Button -->
+                <button class="w-full mt-3 bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center"
                         @onclick="AddParameter">
+                    <span class="material-symbols-outlined text-sm mr-1">add</span>
                     Add Parameter
                 </button>
             </div>
-            @foreach (var param in TriggerInput.RequiredParameters)
-            {
-                <div class="flex items-center space-x-2 mt-2">
-                    <input type="text" 
-                           class="flex-1 rounded border px-2 py-1 text-xs"
-                           value="@param.Key"
-                           @onchange="@(e => UpdateParameterKey(param.Key, e.Value?.ToString() ?? string.Empty))" />
-                    <button class="text-red-500 hover:text-red-700"
-                            @onclick="() => RemoveParameter(param.Key)">
-                        <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                </div>
-            }
-        </div>
+        }
     </div>
 </div>
 
 @code {
     [Parameter] public TriggerInputWalletInteraction TriggerInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
 
-    private async Task OnValueChanged()
+    private string? toastMessage;
+    private bool showToast;
+    private List<Parameter> parameters = new();
+    private string DidCommUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}/didcomm";
+    private bool isInitialized = false;
+
+    protected override void OnInitialized()
     {
-        await OnChange.InvokeAsync();
+        if (!isInitialized)
+        {
+            LoadParameters();
+            isInitialized = true;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!isInitialized)
+        {
+            LoadParameters();
+            isInitialized = true;
+        }
+    }
+
+    private void LoadParameters()
+    {
+        if (TriggerInput?.RequiredParameters == null) return;
+
+        parameters = TriggerInput.RequiredParameters.Select(p => new Parameter
+        {
+            Name = p.Key,
+            Type = p.Value.Type.ToString().ToLower(),
+            Description = p.Value.Description ?? "",
+            IsEditing = false,
+            OriginalName = p.Key
+        }).ToList();
+    }
+
+    private async Task OnMessageTypeChanged()
+    {
+        // If message type changed to CredentialPresentation, clear parameters
+        if (TriggerInput.MessageType == "CredentialPresentation")
+        {
+            parameters.Clear();
+            TriggerInput.RequiredParameters.Clear();
+        }
+        
+        await UpdateTriggerParameters();
     }
 
     private async Task AddParameter()
     {
-        var paramName = $"param{TriggerInput.RequiredParameters.Count + 1}";
-        TriggerInput.RequiredParameters[paramName] = new ParameterDefinition
+        var newParam = new Parameter
         {
-            Type = ParameterType.String,
-            Required = true
+            IsEditing = true,
+            Type = "string",
+            Name = ""
         };
-        await OnChange.InvokeAsync();
+        parameters.Add(newParam);
+        await UpdateTriggerParameters();
     }
 
-    private async Task UpdateParameterKey(string oldKey, string newKey)
+    private void StartEdit(Parameter param)
     {
-        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        param.IsEditing = true;
+        param.OriginalName = param.Name;
+        StateHasChanged();
+    }
+
+    private async Task HandleParameterChange(Parameter param)
+    {
+        if (ValidateParameter(param))
         {
-            var value = TriggerInput.RequiredParameters[oldKey];
-            TriggerInput.RequiredParameters.Remove(oldKey);
-            TriggerInput.RequiredParameters[newKey] = value;
+            param.IsEditing = true;
+            param.ValidationMessage = null;
+            UpdateTriggerParameters();
             await OnChange.InvokeAsync();
         }
     }
 
-    private async Task RemoveParameter(string key)
+    private void CancelEdit(Parameter param)
     {
-        TriggerInput.RequiredParameters.Remove(key);
+        if (string.IsNullOrEmpty(param.OriginalName))
+        {
+            parameters.Remove(param);
+        }
+        else
+        {
+            param.Name = param.OriginalName;
+            param.IsEditing = false;
+        }
+        UpdateTriggerParameters();
+    }
+
+    private bool ValidateParameter(Parameter param)
+    {
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+
+        if (string.IsNullOrWhiteSpace(param.Name))
+        {
+            param.ValidationMessage = "Parameter name cannot be empty";
+            return false;
+        }
+
+        if (!nameValidationRegex.IsMatch(param.Name))
+        {
+            param.ValidationMessage = "Parameter name must start with a letter and contain only letters and numbers";
+            return false;
+        }
+
+        if (parameters.Any(p => p != param && p.Name == param.Name))
+        {
+            param.ValidationMessage = "Parameter name must be unique";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task RemoveParameter(Parameter param)
+    {
+        parameters.Remove(param);
+        UpdateTriggerParameters();
         await OnChange.InvokeAsync();
+    }
+
+    private async Task UpdateTriggerParameters()
+    {
+        TriggerInput.RequiredParameters.Clear();
+        
+        // Only add parameters if the message type is BasicMessage
+        if (TriggerInput.MessageType == "BasicMessage")
+        {
+            foreach (var param in parameters.Where(p => !string.IsNullOrEmpty(p.Name)))
+            {
+                TriggerInput.RequiredParameters[param.Name] = new ParameterDefinition
+                {
+                    Type = Enum.Parse<ParameterType>(param.Type, true),
+                    Description = param.Description,
+                    Required = true
+                };
+            }
+        }
+        
+        await OnChange.InvokeAsync();
+    }
+
+    private string JsonSchema
+    {
+        get
+        {
+            var schema = new
+            {
+                type = "object",
+                required = parameters.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList(),
+                properties = parameters
+                    .Where(p => !string.IsNullOrEmpty(p.Name))
+                    .ToDictionary(
+                        p => p.Name,
+                        p => new
+                        {
+                            type = p.Type,
+                            description = p.Description ?? $"Parameter: {p.Name}"
+                        }
+                    )
+            };
+
+            return System.Text.Json.JsonSerializer.Serialize(schema, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await ClipboardService.CopyTextToClipboard(text);
+        toastMessage = "Copied to clipboard!";
+        showToast = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        showToast = false;
+        StateHasChanged();
+    }
+
+    private class Parameter
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string Description { get; set; } = "";
+        public bool IsEditing { get; set; }
+        public string? ValidationMessage { get; set; }
+        public string? OriginalName { get; set; }
     }
 }

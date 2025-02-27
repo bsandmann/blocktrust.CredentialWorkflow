@@ -1,0 +1,242 @@
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using System.Text.RegularExpressions
+
+<div class="p-4 text-sm max-w-2xl">
+    <div class="space-y-4">
+        <!-- Description Field -->
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+                class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                rows="3"
+                placeholder="Enter a description for this manual trigger..."
+                @bind="TriggerInput.Description"
+                @bind:after="OnValueChanged">
+            </textarea>
+        </div>
+
+        <!-- Required Parameters Section -->
+        <div class="pt-3 border-t">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-sm font-medium">Required Parameters</h4>
+                <button class="w-auto bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded-md transition-colors duration-200 flex items-center justify-center"
+                        @onclick="AddParameter">
+                    <span class="material-symbols-outlined text-sm mr-1">add</span>
+                    Add Parameter
+                </button>
+            </div>
+
+            <!-- Parameters List -->
+            <div class="space-y-3">
+                @foreach (var param in parameters)
+                {
+                    <div class="bg-white border rounded-lg p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            @if (param.IsEditing)
+                            {
+                                <input type="text"
+                                       class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
+                                       placeholder="Parameter name"
+                                       @bind="param.Name"
+                                       @bind:event="oninput"
+                                       @onchange="async () => await HandleParameterChange(param)" />
+                                <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
+                                        @bind="param.Type"
+                                        @bind:event="oninput"
+                                        @onchange="async () => await HandleParameterChange(param)">
+                                    <option value="string">string</option>
+                                    <option value="number">number</option>
+                                    <option value="boolean">boolean</option>
+                                </select>
+                                <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                        @onclick="() => CancelEdit(param)">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="flex-1 py-1 px-2 text-sm">@param.Name</div>
+                                <div class="w-28 py-1 px-2 text-sm text-gray-600">@param.Type</div>
+                                <div class="flex gap-1">
+                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
+                                            @onclick="() => StartEdit(param)">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button class="p-1 text-red-500 hover:text-red-700 rounded"
+                                            @onclick="async () => await RemoveParameter(param)">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        @if (param.IsEditing)
+                        {
+                            <input type="text"
+                                   class="w-full rounded border-gray-300 px-2 py-1 text-sm mt-2"
+                                   placeholder="Parameter description (optional)"
+                                   @bind="param.Description"
+                                   @bind:event="oninput"
+                                   @onchange="async () => await HandleParameterChange(param)" />
+                        }
+                        else if (!string.IsNullOrEmpty(param.Description))
+                        {
+                            <div class="text-xs text-gray-500 mt-1">@param.Description</div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(param.ValidationMessage))
+                        {
+                            <div class="text-xs text-red-500 mt-1">@param.ValidationMessage</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public TriggerInputManual TriggerInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public Guid WorkflowId { get; set; }
+
+    private List<Parameter> parameters = new();
+    private bool isInitialized = false;
+
+    protected override void OnInitialized()
+    {
+        if (!isInitialized)
+        {
+            LoadParameters();
+            isInitialized = true;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!isInitialized)
+        {
+            LoadParameters();
+            isInitialized = true;
+        }
+    }
+
+    private void LoadParameters()
+    {
+        if (TriggerInput?.RequiredParameters == null) return;
+
+        parameters = TriggerInput.RequiredParameters.Select(p => new Parameter
+        {
+            Name = p.Key,
+            Type = p.Value.Type.ToString().ToLower(),
+            Description = p.Value.Description ?? "",
+            IsEditing = false,
+            OriginalName = p.Key
+        }).ToList();
+    }
+
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task AddParameter()
+    {
+        var newParam = new Parameter
+        {
+            IsEditing = true,
+            Type = "string",
+            Name = ""
+        };
+        parameters.Add(newParam);
+        await UpdateTriggerParameters();
+    }
+
+    private void StartEdit(Parameter param)
+    {
+        param.IsEditing = true;
+        param.OriginalName = param.Name;
+        StateHasChanged();
+    }
+
+    private async Task HandleParameterChange(Parameter param)
+    {
+        if (ValidateParameter(param))
+        {
+            param.IsEditing = false;
+            param.ValidationMessage = null;
+            await UpdateTriggerParameters();
+        }
+    }
+
+    private void CancelEdit(Parameter param)
+    {
+        if (string.IsNullOrEmpty(param.OriginalName))
+        {
+            parameters.Remove(param);
+        }
+        else
+        {
+            param.Name = param.OriginalName;
+            param.IsEditing = false;
+        }
+        UpdateTriggerParameters();
+    }
+
+    private bool ValidateParameter(Parameter param)
+    {
+        var nameValidationRegex = new Regex("^[a-zA-Z][a-zA-Z0-9]*$");
+
+        if (string.IsNullOrWhiteSpace(param.Name))
+        {
+            param.ValidationMessage = "Parameter name cannot be empty";
+            return false;
+        }
+
+        if (!nameValidationRegex.IsMatch(param.Name))
+        {
+            param.ValidationMessage = "Parameter name must start with a letter and contain only letters and numbers";
+            return false;
+        }
+
+        if (parameters.Any(p => p != param && p.Name == param.Name))
+        {
+            param.ValidationMessage = "Parameter name must be unique";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task RemoveParameter(Parameter param)
+    {
+        parameters.Remove(param);
+        await UpdateTriggerParameters();
+    }
+
+    private async Task UpdateTriggerParameters()
+    {
+        TriggerInput.RequiredParameters.Clear();
+        foreach (var param in parameters.Where(p => !string.IsNullOrEmpty(p.Name)))
+        {
+            TriggerInput.RequiredParameters[param.Name] = new ParameterDefinition
+            {
+                Type = Enum.Parse<ParameterType>(param.Type, true),
+                Description = param.Description,
+                Required = true
+            };
+        }
+        await OnChange.InvokeAsync();
+    }
+
+    private class Parameter
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "string";
+        public string Description { get; set; } = "";
+        public bool IsEditing { get; set; }
+        public string? ValidationMessage { get; set; }
+        public string? OriginalName { get; set; }
+    }
+}

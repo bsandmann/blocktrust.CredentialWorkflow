@@ -46,7 +46,8 @@
                 {
                     <WalletInteractionTrigger
                         TriggerInput="walletInteraction"
-                        OnChange="OnChange"/>
+                        OnChange="OnChange"
+                        WorkflowId="@WorkflowId"/>
                 }
                 break;
             case ETriggerType.ManualTrigger:
@@ -54,7 +55,8 @@
                 {
                     <ManualTrigger
                         TriggerInput="manualTrigger"
-                        OnChange="OnChange"/>
+                        OnChange="OnChange"
+                        WorkflowId="@WorkflowId"/>
                 }
                 break;
             case ETriggerType.Form:
