@@ -2,9 +2,13 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Web.Services
+@using Blocktrust.Mediator.Common.Commands.CreatePeerDid
+@using MediatR
 @using System.Text.RegularExpressions
 @inject NavigationManager NavigationManager
 @inject ClipboardService ClipboardService
+@inject IMediator Mediator
+@inject IHttpContextAccessor HttpContextAccessor
 
 <div class="p-4 text-sm max-w-2xl">
     @if (showToast)
@@ -27,6 +31,38 @@
             </div>
             <div class="font-mono text-sm text-gray-600 break-all">
                 @DidCommUrl
+            </div>
+        </div>
+        
+        <!-- PeerDID Section -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <div class="font-medium text-gray-900">PeerDID</div>
+                @if (string.IsNullOrEmpty(TriggerInput.PeerDid))
+                {
+                    <button @onclick="CreatePeerDid"
+                            class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded-md transition-colors duration-200">
+                        Generate New PeerDID
+                    </button>
+                }
+                else
+                {
+                    <button @onclick="() => CopyToClipboard(TriggerInput.PeerDid)"
+                            class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                        <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                        Copy PeerDID
+                    </button>
+                }
+            </div>
+            <div class="font-mono text-sm text-gray-600 break-all">
+                @if (string.IsNullOrEmpty(TriggerInput.PeerDid))
+                {
+                    <span class="text-gray-500 italic">No PeerDID generated yet</span>
+                }
+                else
+                {
+                    @TriggerInput.PeerDid
+                }
             </div>
         </div>
 
@@ -124,6 +160,19 @@
                     <span class="material-symbols-outlined text-sm mr-1">add</span>
                     Add Parameter
                 </button>
+                
+                <!-- Basic Message Format Example -->
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium text-gray-900">Basic Message Format Example</div>
+                        <button @onclick="() => CopyToClipboard(BasicMessageExample)"
+                                class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                            <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                            Copy Example
+                        </button>
+                    </div>
+                    <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded">@BasicMessageExample</pre>
+                </div>
             </div>
         }
     </div>
@@ -139,12 +188,44 @@
     private List<Parameter> parameters = new();
     private string DidCommUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}/didcomm";
     private bool isInitialized = false;
+    
+    // Dynamically generate the Basic Message Example based on defined parameters
+    private string BasicMessageExample
+    {
+        get
+        {
+            var validParams = parameters.Where(p => !string.IsNullOrEmpty(p.Name)).ToList();
+            
+            if (!validParams.Any())
+            {
+                return "{\n  \"message\": \"Hello World!\"\n}";
+            }
+            
+            var example = new Dictionary<string, string>();
+            foreach (var param in validParams)
+            {
+                example[param.Name] = $"value_{param.Name}";
+            }
+            
+            return System.Text.Json.JsonSerializer.Serialize(example, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+    }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (!isInitialized)
         {
             LoadParameters();
+            
+            // If PeerDID is not set, generate one automatically when the component is initialized
+            if (string.IsNullOrEmpty(TriggerInput.PeerDid))
+            {
+                await CreatePeerDid();
+            }
+            
             isInitialized = true;
         }
     }
@@ -317,6 +398,48 @@
         await Task.Delay(2000);
         showToast = false;
         StateHasChanged();
+    }
+    
+    private async Task CreatePeerDid()
+    {
+        try
+        {
+            var hostUrl = NavigationManager.BaseUri.TrimEnd('/');
+            
+            // Create a new PeerDID
+            var createPeerDidRequest = new CreatePeerDidRequest(
+                serviceEndpoint: new Uri(hostUrl),
+                numberOfAgreementKeys: 1,
+                numberOfAuthenticationKeys: 1
+            );
+            
+            var createPeerDidResult = await Mediator.Send(createPeerDidRequest);
+            if (createPeerDidResult.IsFailed)
+            {
+                toastMessage = $"Failed to create PeerDID: {string.Join(", ", createPeerDidResult.Errors)}";
+                showToast = true;
+                await Task.Delay(3000);
+                showToast = false;
+                return;
+            }
+            
+            // Extract the DID string
+            TriggerInput.PeerDid = createPeerDidResult.Value.PeerDid.Value;
+            await OnChange.InvokeAsync();
+            
+            toastMessage = "PeerDID generated successfully!";
+            showToast = true;
+            StateHasChanged();
+            await Task.Delay(2000);
+            showToast = false;
+        }
+        catch (Exception ex)
+        {
+            toastMessage = $"Error creating PeerDID: {ex.Message}";
+            showToast = true;
+            await Task.Delay(3000);
+            showToast = false;
+        }
     }
 
     private class Parameter

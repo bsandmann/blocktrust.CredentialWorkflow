@@ -16,6 +16,9 @@ public class TriggerInputWalletInteraction : TriggerInput
     [JsonPropertyName("messageType")]
     public string MessageType { get; set; } = "BasicMessage";
 
+    [JsonPropertyName("peerDid")]
+    public string PeerDid { get; set; } = string.Empty;
+
     [JsonPropertyName("requiredParameters")]
     public Dictionary<string, ParameterDefinition> RequiredParameters { get; set; } = new();
 }
