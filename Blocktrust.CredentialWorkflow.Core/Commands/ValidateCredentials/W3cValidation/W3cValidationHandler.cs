@@ -30,9 +30,13 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
 
         // Get the parsed credential
         var credential = parseResult.Value;
+        
+        // Use PayloadJson property which contains the original JSON structure
+        // rather than ToJson() which might restructure the data
+        string jsonCredential = !string.IsNullOrEmpty(credential.PayloadJson) 
+            ? credential.PayloadJson 
+            : request.Credential; // Fallback to original request if PayloadJson is empty
             
-        // Convert the credential to JSON format for validation
-        string jsonCredential = credential.ToJson();
         JsonDocument credentialJson;
         try
         {
@@ -77,30 +81,39 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
     {
         var path = rule.Configuration;
         var pathParts = path.Split('.');
-        var element = credential.RootElement;
-            
-        if (element.ValueKind == JsonValueKind.Null)
+        
+        // Try direct path traversal
+        bool found = TryFindPath(credential.RootElement, pathParts);
+        
+        // If not found directly and path doesn't start with "vc", try through vc property
+        if (!found && !pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase))
         {
-            response.Errors.Add(new W3cValidationError("Required", $"Required field '{path}' is null"));
-            return;
+            if (credential.RootElement.TryGetProperty("vc", out var vcElement))
+            {
+                found = TryFindPath(vcElement, pathParts);
+            }
         }
-
-        // For JWT credentials, check if we need to navigate through the 'vc' property
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
+        
+        if (!found)
         {
-            element = vcElement;
+            response.Errors.Add(new W3cValidationError("Required", $"Required field '{path}' is missing"));
         }
+    }
 
+    private bool TryFindPath(JsonElement element, string[] pathParts)
+    {
+        var currentElement = element;
+        
         foreach (var part in pathParts)
         {
-            if (!element.TryGetProperty(part, out var child))
+            if (!currentElement.TryGetProperty(part, out var child))
             {
-                response.Errors.Add(new W3cValidationError("Required", $"Required field '{path}' is missing"));
-                return;
+                return false;
             }
-            element = child;
+            currentElement = child;
         }
+        
+        return true;
     }
 
     private void ValidateFormat(JsonDocument credential, ValidationRule rule, W3cValidationResponse response)
@@ -115,23 +128,15 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
         var path = config[0];
         var format = config[1];
         var pathParts = path.Split('.');
-        var element = credential.RootElement;
-
-        // For JWT credentials, check if we need to navigate through the 'vc' property
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
+        
+        // Try to find the element using the same approach as in ValidateRequiredField
+        JsonElement element;
+        bool found = TryGetElement(credential.RootElement, pathParts, out element);
+        
+        if (!found)
         {
-            element = vcElement;
-        }
-
-        foreach (var part in pathParts)
-        {
-            if (!element.TryGetProperty(part, out var child))
-            {
-                response.Errors.Add(new W3cValidationError("Format", $"Field '{path}' not found"));
-                return;
-            }
-            element = child;
+            response.Errors.Add(new W3cValidationError("Format", $"Field '{path}' not found"));
+            return;
         }
 
         switch (format.ToUpper())
@@ -194,23 +199,13 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
         }
 
         var pathParts = path.Split('.');
-        var element = credential.RootElement;
-
-        // For JWT credentials, check if we need to navigate through the 'vc' property
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
+        JsonElement element;
+        bool found = TryGetElement(credential.RootElement, pathParts, out element);
+        
+        if (!found)
         {
-            element = vcElement;
-        }
-
-        foreach (var part in pathParts)
-        {
-            if (!element.TryGetProperty(part, out var child))
-            {
-                response.Errors.Add(new W3cValidationError("Range", $"Field '{path}' not found"));
-                return;
-            }
-            element = child;
+            response.Errors.Add(new W3cValidationError("Range", $"Field '{path}' not found"));
+            return;
         }
 
         double value;
@@ -268,5 +263,54 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
         {
             return false;
         }
+    }
+    
+    private bool TryGetElement(JsonElement root, string[] pathParts, out JsonElement result)
+    {
+        result = root;
+        
+        // Try direct path first
+        bool directPathFound = true;
+        var directElement = root;
+        
+        foreach (var part in pathParts)
+        {
+            if (!directElement.TryGetProperty(part, out directElement))
+            {
+                directPathFound = false;
+                break;
+            }
+        }
+        
+        if (directPathFound)
+        {
+            result = directElement;
+            return true;
+        }
+        
+        // If direct path fails and first part isn't "vc", try through vc property
+        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
+            root.TryGetProperty("vc", out var vcElement))
+        {
+            bool vcPathFound = true;
+            var currentElement = vcElement;
+            
+            foreach (var part in pathParts)
+            {
+                if (!currentElement.TryGetProperty(part, out currentElement))
+                {
+                    vcPathFound = false;
+                    break;
+                }
+            }
+            
+            if (vcPathFound)
+            {
+                result = currentElement;
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
