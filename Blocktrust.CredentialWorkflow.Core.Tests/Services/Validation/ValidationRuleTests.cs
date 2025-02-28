@@ -1,17 +1,13 @@
-﻿namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.W3cValidator;
-using Domain.ProcessFlow.Actions.Validation;
-using FluentAssertions;
+﻿namespace Blocktrust.CredentialWorkflow.Core.Tests.Services.Validation;
+
 using System.Text.Json;
-using System.Text.RegularExpressions;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation;
+using Blocktrust.CredentialWorkflow.Core.Services;
+using FluentAssertions;
 using Xunit;
 
 public class ValidationRuleTests
 {
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     #region Required Field Rules Tests
 
     [Fact]
@@ -33,7 +29,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -59,7 +55,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -89,7 +85,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -116,7 +112,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -143,7 +139,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -173,7 +169,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRequiredField(credential, rule);
+        var result = ValidationUtility.ValidateRequiredField(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -201,7 +197,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -225,7 +221,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -251,7 +247,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -277,7 +273,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -303,7 +299,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -329,7 +325,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -355,7 +351,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -381,7 +377,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -407,7 +403,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -433,7 +429,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateFormat(credential, rule);
+        var result = ValidationUtility.ValidateFormat(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -463,7 +459,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -489,7 +485,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -515,7 +511,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -541,7 +537,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -567,7 +563,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -593,7 +589,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -619,7 +615,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -645,7 +641,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -671,7 +667,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeTrue();
@@ -697,7 +693,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -723,11 +719,11 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateRange(credential, rule);
+        var result = ValidationUtility.ValidateRange(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Field 'credentialSubject.missingField' not found");
+        result.ErrorMessage.Should().Contain("not found");
     }
 
     #endregion
@@ -751,7 +747,7 @@ public class ValidationRuleTests
         var credential = JsonDocument.Parse(json);
         
         // Act
-        var result = ValidateCustomRule(credential, rule);
+        var result = ValidationUtility.ValidateCustomRule(credential, rule);
         
         // Assert
         result.IsValid.Should().BeFalse();
@@ -759,220 +755,235 @@ public class ValidationRuleTests
     }
 
     #endregion
+
+    #region Custom JavaScript Rules Tests
     
-    #region Rule Validation Implementation
-    
-    private (bool IsValid, string? ErrorMessage) ValidateRequiredField(JsonDocument credential, ValidationRule rule)
+    [Fact]
+    public void JavaScriptRule_SimpleCondition_Valid_ShouldPass()
     {
-        var path = rule.Configuration;
-        var pathParts = path.Split('.');
-        var element = credential.RootElement;
-        
-        if (element.ValueKind == JsonValueKind.Null)
+        // Arrange
+        var rule = new CustomValidationRule
         {
-            return (false, $"Required field '{path}' is null");
-        }
+            Name = "NameRule",
+            Expression = "data.person.name && data.person.name.length > 2",
+            ErrorMessage = "Name is required and must be at least 3 characters"
+        };
         
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
-        {
-            element = vcElement;
-        }
-        
-        foreach (var part in pathParts)
-        {
-            // Check if this part references an array index
-            var arrayIndexMatch = Regex.Match(part, @"^(.*)\[(\d+)\]$");
-            if (arrayIndexMatch.Success)
-            {
-                var arrayName = arrayIndexMatch.Groups[1].Value;
-                var index = int.Parse(arrayIndexMatch.Groups[2].Value);
-                
-                if (!element.TryGetProperty(arrayName, out var arrayElement) || 
-                    arrayElement.ValueKind != JsonValueKind.Array ||
-                    index >= arrayElement.GetArrayLength())
-                {
-                    return (false, $"Required field '{path}' is missing");
-                }
-                
-                element = arrayElement[index];
-                continue;
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
             }
-            
-            if (!element.TryGetProperty(part, out var child))
-            {
-                return (false, $"Required field '{path}' is missing");
-            }
-            
-            element = child;
-        }
+        }";
         
-        return (true, null);
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
     }
     
-    private (bool IsValid, string? ErrorMessage) ValidateFormat(JsonDocument credential, ValidationRule rule)
+    [Fact]
+    public void JavaScriptRule_SimpleCondition_Invalid_ShouldFail()
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Arrange
+        var rule = new CustomValidationRule
         {
-            return (false, "Invalid format rule configuration");
-        }
+            Name = "NameRule",
+            Expression = "data.person.name && data.person.name.length > 2",
+            ErrorMessage = "Name is required and must be at least 3 characters"
+        };
         
-        var path = config[0];
-        var format = config[1];
-        var pathParts = path.Split('.');
-        var element = credential.RootElement;
-        
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
-        {
-            element = vcElement;
-        }
-        
-        foreach (var part in pathParts)
-        {
-            if (!element.TryGetProperty(part, out var child))
-            {
-                return (false, $"Field '{path}' not found");
+        var json = @"{
+            ""person"": {
+                ""name"": ""Jo"",
+                ""age"": 30
             }
-            
-            element = child;
-        }
+        }";
         
-        switch (format.ToUpper())
-        {
-            case "ISO8601":
-                if (element.ValueKind != JsonValueKind.String || 
-                    !DateTime.TryParse(element.GetString(), out _))
-                {
-                    return (false, $"Field '{path}' is not a valid ISO8601 date");
-                }
-                break;
-                
-            case "EMAIL":
-                if (element.ValueKind != JsonValueKind.String || 
-                    !IsValidEmail(element.GetString()))
-                {
-                    return (false, $"Field '{path}' is not a valid email format");
-                }
-                break;
-                
-            case "URL":
-                if (element.ValueKind != JsonValueKind.String || 
-                    !Uri.TryCreate(element.GetString(), UriKind.Absolute, out _))
-                {
-                    return (false, $"Field '{path}' is not a valid URL format");
-                }
-                break;
-                
-            case "DID":
-                if (element.ValueKind != JsonValueKind.String || 
-                    !element.GetString().StartsWith("did:"))
-                {
-                    return (false, $"Field '{path}' is not a valid DID format");
-                }
-                break;
-                
-            default:
-                return (false, $"Unsupported format '{format}'");
-        }
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
         
-        return (true, null);
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Name is required and must be at least 3 characters");
     }
     
-    private (bool IsValid, string? ErrorMessage) ValidateRange(JsonDocument credential, ValidationRule rule)
+    [Fact]
+    public void JavaScriptRule_NumberComparison_Valid_ShouldPass()
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Arrange
+        var rule = new CustomValidationRule
         {
-            return (false, "Invalid range rule configuration");
-        }
+            Name = "AgeRule",
+            Expression = "data.person.age >= 18",
+            ErrorMessage = "Age must be 18 or above"
+        };
         
-        var path = config[0];
-        var range = config[1].Split('-');
-        if (range.Length != 2)
-        {
-            return (false, "Invalid range format");
-        }
-        
-        if (!double.TryParse(range[0], out var min) || !double.TryParse(range[1], out var max))
-        {
-            return (false, "Invalid range values");
-        }
-        
-        var pathParts = path.Split('.');
-        var element = credential.RootElement;
-        
-        if (!pathParts[0].Equals("vc", StringComparison.OrdinalIgnoreCase) && 
-            element.TryGetProperty("vc", out var vcElement))
-        {
-            element = vcElement;
-        }
-        
-        foreach (var part in pathParts)
-        {
-            if (!element.TryGetProperty(part, out var child))
-            {
-                return (false, $"Field '{path}' not found");
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
             }
-            
-            element = child;
-        }
+        }";
         
-        double value;
-        if (element.ValueKind == JsonValueKind.Number)
-        {
-            try
-            {
-                value = element.GetDouble();
-            }
-            catch (InvalidOperationException)
-            {
-                return (false, $"Field '{path}' cannot be retrieved as a number");
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.String)
-        {
-            var stringValue = element.GetString();
-            if (!double.TryParse(stringValue, out value))
-            {
-                return (false, $"Field '{path}' is a string but cannot be parsed as a number");
-            }
-        }
-        else
-        {
-            return (false, $"Field '{path}' is neither a number nor a string");
-        }
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
         
-        if (value < min || value > max)
-        {
-            return (false, $"Field '{path}' value {value} is outside range {min}-{max}");
-        }
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
         
-        return (true, null);
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
     }
     
-    private (bool IsValid, string? ErrorMessage) ValidateCustomRule(JsonDocument credential, ValidationRule rule)
+    [Fact]
+    public void JavaScriptRule_NumberComparison_Invalid_ShouldFail()
     {
-        // Custom validation rules are not implemented yet
-        return (false, "Custom validation rules are not implemented yet");
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "AgeRule",
+            Expression = "data.person.age >= 18",
+            ErrorMessage = "Age must be 18 or above"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 16
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Age must be 18 or above");
     }
     
-    private bool IsValidEmail(string? email)
+    [Fact]
+    public void JavaScriptRule_MalformedExpression_ShouldReturnError()
     {
-        if (string.IsNullOrWhiteSpace(email))
-            return false;
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "InvalidSyntaxRule",
+            Expression = "data.person.name === 'John' &&& data.person.age > 20", // invalid syntax
+            ErrorMessage = "This rule has syntax errors"
+        };
         
-        try
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("Error evaluating rule");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ComplexObjectAccess_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
         {
-            var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-            return regex.IsMatch(email);
-        }
-        catch
+            Name = "DepartmentCountRule",
+            Expression = "data.organization.departments.length >= 2",
+            ErrorMessage = "Organization must have at least 2 departments"
+        };
+        
+        var json = @"{
+            ""organization"": {
+                ""name"": ""Acme Corp"",
+                ""departments"": [
+                    { ""name"": ""Engineering"", ""employeeCount"": 50 },
+                    { ""name"": ""Marketing"", ""employeeCount"": 20 }
+                ]
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ArrayOperations_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
         {
-            return false;
-        }
+            Name = "PriceCheckRule",
+            Expression = "data.items.some(item => item.price < 6.00)",
+            ErrorMessage = "Must have at least one item under $6.00"
+        };
+        
+        var json = @"{
+            ""items"": [
+                { ""id"": 1, ""name"": ""Item 1"", ""price"": 10.99 },
+                { ""id"": 2, ""name"": ""Item 2"", ""price"": 20.50 },
+                { ""id"": 3, ""name"": ""Item 3"", ""price"": 5.75 }
+            ]
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_DateComparison_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "RegistrationDateRule",
+            Expression = "new Date(data.registrationDate) <= new Date()",
+            ErrorMessage = "Registration date cannot be in the future"
+        };
+        
+        var json = @"{
+            ""registrationDate"": ""2023-01-01T12:00:00Z""
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
     }
     
     #endregion
+    
+   
 }

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
+using Blocktrust.CredentialWorkflow.Core.Services;
 using FluentResults;
-using Jint;
 using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.ValidateCredentials.CustomValidation;
@@ -10,36 +10,28 @@ public class CustomValidationHandler : IRequestHandler<CustomValidationRequest, 
     public async Task<Result<CustomValidationResult>> Handle(CustomValidationRequest request, CancellationToken cancellationToken)
     {
         var result = new CustomValidationResult();
-        var engine = new Engine();
-        
+    
         try
         {
-            // Convert data to JSON string for JavaScript engine
-            var dataJson = JsonSerializer.Serialize(request.Data);
-            
-            // Set up the JavaScript environment
-            engine.SetValue("data", JsonSerializer.Deserialize<JsonElement>(dataJson));
+            // Check if data is null
+            if (request.Data == null)
+            {
+                return Result.Fail<CustomValidationResult>("Validation failed: Data cannot be null");
+            }
+
+            // Get the data
+            var data = request.Data;
 
             foreach (var rule in request.Rules)
             {
-                try
-                {
-                    // Execute each validation rule
-                    var isValid = engine.Evaluate(rule.Expression).AsBoolean();
-                    
-                    if (!isValid)
-                    {
-                        result.Errors.Add(new CustomValidationError(
-                            rule.Name,
-                            rule.ErrorMessage
-                        ));
-                    }
-                }
-                catch (Exception ex)
+                // Use the ValidationUtility to evaluate each rule
+                var validationResult = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+            
+                if (!validationResult.IsValid)
                 {
                     result.Errors.Add(new CustomValidationError(
                         rule.Name,
-                        $"Error evaluating rule: {ex.Message}"
+                        validationResult.ErrorMessage ?? rule.ErrorMessage
                     ));
                 }
             }
@@ -52,4 +44,5 @@ public class CustomValidationHandler : IRequestHandler<CustomValidationRequest, 
             return Result.Fail($"Validation failed: {ex.Message}");
         }
     }
+    
 }

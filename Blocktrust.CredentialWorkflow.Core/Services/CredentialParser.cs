@@ -39,64 +39,188 @@ public class CredentialParser
         }
         errors.Add(jsonResult.Errors.First().Message);
 
-        // Try decoding as base64/base64url
-        try
+        // Try decoding as base64/base64url if the string looks like base64
+        if (LooksLikeBase64(credentialString))
         {
-            string decodedString;
             try
             {
-                // Try base64url first
-                decodedString = PrismEncoding.Base64ToString(credentialString);
+                string decodedString;
+                
+                // First try with base64url
+                try
+                {
+                    decodedString = PrismEncoding.Base64ToString(credentialString);
+                    
+                    // Check if the decoded string is not empty and is usable
+                    if (!string.IsNullOrWhiteSpace(decodedString))
+                    {
+                        // Recursively try to parse the decoded string
+                        return ParseCredential(decodedString);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Try with standard base64 if base64url fails
+                    try 
+                    {
+                        var paddedInput = credentialString;
+                        // Add padding if needed
+                        if (credentialString.Length % 4 != 0)
+                        {
+                            paddedInput = credentialString.PadRight(
+                                credentialString.Length + (4 - credentialString.Length % 4) % 4, '=');
+                        }
+                        
+                        decodedString = Encoding.UTF8.GetString(Convert.FromBase64String(paddedInput));
+                        
+                        // Check if the decoded string is not empty and is usable
+                        if (!string.IsNullOrWhiteSpace(decodedString))
+                        {
+                            // Recursively try to parse the decoded string
+                            return ParseCredential(decodedString);
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        errors.Add($"Base64 decoding failed: {innerEx.Message}");
+                    }
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall back to regular base64
-                decodedString = Encoding.UTF8.GetString(Convert.FromBase64String(
-                    credentialString.PadRight(credentialString.Length + (4 - credentialString.Length % 4) % 4, '=')));
+                errors.Add($"Base64 decoding failed: {ex.Message}");
             }
-
-            // Recursively try to parse the decoded string
-            return ParseCredential(decodedString);
         }
-        catch (Exception ex)
+        else
         {
-            errors.Add($"Base64 decoding failed: {ex.Message}");
+            errors.Add("Input does not appear to be base64 encoded");
+        }
+
+        // If parsing failed but it still looks like JSON, create a simplified Credential
+        // This handles the case of invalid date formats in otherwise valid JSON
+        if (IsLikelyJson(credentialString) && IsSyntacticallyValidJson(credentialString))
+        {
+            var credential = new Credential
+            {
+                HeaderJson = null,
+                PayloadJson = credentialString,
+                CredentialContext = null,
+                Type = null,
+                CredentialSubjects = null
+            };
+            
+            return Result.Ok(credential);
         }
 
         // If all parsing attempts failed, return aggregate error
         return Result.Fail($"Failed to parse credential. Errors: {string.Join(", ", errors)}");
     }
 
+    private bool IsLikelyJson(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return false;
+            
+        var trimmed = input.TrimStart();
+        return trimmed.StartsWith("{") || trimmed.StartsWith("[");
+    }
+    
+    private bool IsSyntacticallyValidJson(string input)
+    {
+        try
+        {
+            JsonDocument.Parse(input);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    private bool LooksLikeJwt(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return false;
+            
+        // Simple JWT format check: three base64url parts separated by dots
+        var parts = input.Split('.');
+        return parts.Length >= 2 && parts.All(p => p.Length > 0);
+    }
+
+    private bool LooksLikeBase64(string input)
+    {
+        // Return false for empty input
+        if (string.IsNullOrEmpty(input))
+            return false;
+            
+        // Skip if it looks like JSON (starts with { or [)
+        if (IsLikelyJson(input))
+            return false;
+        
+        // Skip if it's too short to be meaningful base64
+        if (input.Length < 8)
+            return false;
+            
+        // Check if the string contains only valid base64 characters
+        bool hasInvalidChar = false;
+        foreach (char c in input)
+        {
+            if (!((c >= 'A' && c <= 'Z') || 
+                 (c >= 'a' && c <= 'z') || 
+                 (c >= '0' && c <= '9') || 
+                 c == '+' || c == '/' || c == '=' || 
+                 c == '-' || c == '_')) // Include URL-safe characters
+            {
+                hasInvalidChar = true;
+                break;
+            }
+        }
+        
+        return !hasInvalidChar;
+    }
+
     private Result<Credential> TryParseAsJson(string input)
     {
         try
         {
+            // First check if it's valid JSON syntax
+            if (!IsSyntacticallyValidJson(input))
+            {
+                return Result.Fail("Not a valid JSON format");
+            }
+            
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
 
-            var baseCredential = JsonSerializer.Deserialize<VerifiableCredential>(input, jsonOptions);
-            if (baseCredential == null)
+            try
             {
-                return Result.Fail("Failed to parse credential as JSON-LD");
+                var baseCredential = JsonSerializer.Deserialize<VerifiableCredential>(input, jsonOptions);
+                if (baseCredential == null)
+                {
+                    return Result.Fail("Failed to parse credential as JSON-LD");
+                }
+
+                var credential = new Credential(baseCredential)
+                {
+                    HeaderJson = null,
+                    PayloadJson = input,
+                    CredentialContext = null,
+                    Type = null,
+                    CredentialSubjects = null
+                };
+
+                return Result.Ok(credential);
             }
-
-            var credential = new Credential(baseCredential)
+            catch (JsonException)
             {
-                HeaderJson = null,
-                PayloadJson = input,
-                CredentialContext = null,
-                Type = null,
-                CredentialSubjects = null
-            };
-
-            return Result.Ok(credential);
-        }
-        catch (JsonException)
-        {
-            return Result.Fail("Not a valid JSON format");
+                // If deserialization to VerifiableCredential fails, we'll return a failure
+                // The main ParseCredential method will create a simplified Credential if needed
+                return Result.Fail("Failed to deserialize to VerifiableCredential");
+            }
         }
         catch (Exception ex)
         {
