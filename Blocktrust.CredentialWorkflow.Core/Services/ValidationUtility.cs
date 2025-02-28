@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation;
+using Jint;
 
 namespace Blocktrust.CredentialWorkflow.Core.Services;
 
@@ -9,6 +10,8 @@ namespace Blocktrust.CredentialWorkflow.Core.Services;
 /// </summary>
 public static class ValidationUtility
 {
+    #region W3C Validation Methods
+    
     public static (bool IsValid, string? ErrorMessage) ValidateRequiredField(JsonDocument credential, ValidationRule rule)
     {
         var path = rule.Configuration;
@@ -240,6 +243,49 @@ public static class ValidationUtility
         return (false, "Custom validation rules are not implemented yet");
     }
     
+    #endregion
+    
+    #region Custom JavaScript Validation Methods
+    
+    public static (bool IsValid, string? ErrorMessage) ValidateJavaScriptExpression(object data, CustomValidationRule rule)
+    {
+        try
+        {
+            var engine = new Engine();
+        
+            // Convert JsonElement to a proper JS object if needed
+            if (data is JsonElement jsonElement)
+            {
+                // Serialize the JsonElement to a JSON string and then parse it in JavaScript
+                string jsonString = JsonSerializer.Serialize(jsonElement);
+                engine.Execute($"var data = JSON.parse('{jsonString.Replace("'", "\\'")}');");
+            }
+            else
+            {
+                // Set up the JavaScript environment for non-JsonElement data
+                engine.SetValue("data", data);
+            }
+        
+            // Execute validation rule
+            var isValid = engine.Evaluate(rule.Expression).AsBoolean();
+        
+            if (!isValid)
+            {
+                return (false, rule.ErrorMessage);
+            }
+        
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Error evaluating rule: {ex.Message}");
+        }
+    }
+    
+    #endregion
+    
+    #region Helper Methods
+    
     private static bool IsValidEmail(string? email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -345,4 +391,6 @@ public static class ValidationUtility
         result = default;
         return false;
     }
+    
+    #endregion
 }

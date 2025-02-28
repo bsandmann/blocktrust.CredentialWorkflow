@@ -272,7 +272,7 @@ public class W3cValidationProcessorTests
     {
         var validationRules = new List<ValidationRule>
         {
-            new ValidationRule { Type = "Required", Configuration = "credentialSubject.id" },
+            new() { Type = "Required", Configuration = "credentialSubject.id" },
             new ValidationRule { Type = "Format", Configuration = "issuanceDate:ISO8601" },
             new ValidationRule { Type = "Range", Configuration = "credentialSubject.age:18-100" }
         };
@@ -295,9 +295,8 @@ public class W3cValidationProcessorTests
         W3cValidationRequest capturedRequest = null;
         var validationResponse = new W3cValidationResponse { IsValid = true };
         _mediatorMock.Setup(m => m.Send(It.IsAny<W3cValidationRequest>(), It.IsAny<CancellationToken>()))
-            .Callback<W3cValidationRequest, CancellationToken>((req, _) => capturedRequest = req)
+            .Callback<IRequest<Result<W3cValidationResponse>>, CancellationToken>((req, _) => capturedRequest = (W3cValidationRequest)req)
             .ReturnsAsync(Result.Ok(validationResponse));
-            
         var result = await _processor.ProcessAsync(action, _actionOutcome, _processingContext);
         
         result.IsSuccess.Should().BeTrue();

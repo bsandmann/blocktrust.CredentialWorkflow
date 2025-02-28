@@ -755,4 +755,235 @@ public class ValidationRuleTests
     }
 
     #endregion
+
+    #region Custom JavaScript Rules Tests
+    
+    [Fact]
+    public void JavaScriptRule_SimpleCondition_Valid_ShouldPass()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "NameRule",
+            Expression = "data.person.name && data.person.name.length > 2",
+            ErrorMessage = "Name is required and must be at least 3 characters"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_SimpleCondition_Invalid_ShouldFail()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "NameRule",
+            Expression = "data.person.name && data.person.name.length > 2",
+            ErrorMessage = "Name is required and must be at least 3 characters"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""Jo"",
+                ""age"": 30
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Name is required and must be at least 3 characters");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_NumberComparison_Valid_ShouldPass()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "AgeRule",
+            Expression = "data.person.age >= 18",
+            ErrorMessage = "Age must be 18 or above"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_NumberComparison_Invalid_ShouldFail()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "AgeRule",
+            Expression = "data.person.age >= 18",
+            ErrorMessage = "Age must be 18 or above"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 16
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Age must be 18 or above");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_MalformedExpression_ShouldReturnError()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "InvalidSyntaxRule",
+            Expression = "data.person.name === 'John' &&& data.person.age > 20", // invalid syntax
+            ErrorMessage = "This rule has syntax errors"
+        };
+        
+        var json = @"{
+            ""person"": {
+                ""name"": ""John Doe"",
+                ""age"": 30
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("Error evaluating rule");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ComplexObjectAccess_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "DepartmentCountRule",
+            Expression = "data.organization.departments.length >= 2",
+            ErrorMessage = "Organization must have at least 2 departments"
+        };
+        
+        var json = @"{
+            ""organization"": {
+                ""name"": ""Acme Corp"",
+                ""departments"": [
+                    { ""name"": ""Engineering"", ""employeeCount"": 50 },
+                    { ""name"": ""Marketing"", ""employeeCount"": 20 }
+                ]
+            }
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ArrayOperations_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "PriceCheckRule",
+            Expression = "data.items.some(item => item.price < 6.00)",
+            ErrorMessage = "Must have at least one item under $6.00"
+        };
+        
+        var json = @"{
+            ""items"": [
+                { ""id"": 1, ""name"": ""Item 1"", ""price"": 10.99 },
+                { ""id"": 2, ""name"": ""Item 2"", ""price"": 20.50 },
+                { ""id"": 3, ""name"": ""Item 3"", ""price"": 5.75 }
+            ]
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    [Fact]
+    public void JavaScriptRule_DateComparison_ShouldWork()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "RegistrationDateRule",
+            Expression = "new Date(data.registrationDate) <= new Date()",
+            ErrorMessage = "Registration date cannot be in the future"
+        };
+        
+        var json = @"{
+            ""registrationDate"": ""2023-01-01T12:00:00Z""
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    #endregion
+    
+   
 }
