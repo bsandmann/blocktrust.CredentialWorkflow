@@ -11,7 +11,6 @@ using Moq;
 using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action;
 using ExecutionContext = Blocktrust.CredentialWorkflow.Core.Domain.Common.ExecutionContext;
 
-namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.Workflow.ExecuteWorkflow.ActionProcessorsTests;
 
 public class CustomValidationProcessorTests
 {
@@ -249,9 +248,10 @@ public class CustomValidationProcessorTests
 
         CustomValidationRequest capturedRequest = null;
         var validationResponse = new CustomValidationResult { IsValid = true };
+
         
         _mediatorMock.Setup(m => m.Send(It.IsAny<CustomValidationRequest>(), It.IsAny<CancellationToken>()))
-            .Callback<CustomValidationRequest, CancellationToken>((req, _) => capturedRequest = req)
+            .Callback<IRequest<Result<CustomValidationResult>>, CancellationToken>((req, _) => capturedRequest = (CustomValidationRequest)req)
             .ReturnsAsync(Result.Ok(validationResponse));
 
         // Act
