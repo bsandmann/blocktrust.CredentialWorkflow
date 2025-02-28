@@ -11,22 +11,19 @@ public abstract class ProcessBaseRequest : IRequest<Message?>
 {
     public Message UnpackedMessage { get; }
     public string? SenderDid { get; }
-    public string? MediatorDid { get; }
     public string? HostUrl { get; }
     public FromPrior? FromPrior { get; }
 
-    public ProcessBaseRequest(Message unpackedMessage, string? senderDid, string? mediatorDid, string hostUrl, FromPrior? fromPrior)
+    public ProcessBaseRequest(Message unpackedMessage, string? senderDid, string hostUrl, FromPrior? fromPrior)
     {
         UnpackedMessage = unpackedMessage;
         SenderDid = senderDid;
-        MediatorDid = mediatorDid;
         HostUrl = hostUrl;
         FromPrior = fromPrior;
     } 
     
-    public ProcessBaseRequest(Message unpackedMessage, string? mediatorDid = null)
+    public ProcessBaseRequest(Message unpackedMessage)
     {
         UnpackedMessage = unpackedMessage;
-        MediatorDid = mediatorDid;
-    } 
+    }
 }
