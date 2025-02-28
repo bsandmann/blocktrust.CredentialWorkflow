@@ -39,6 +39,28 @@ builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<WorkflowChangeTrackerService>();
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 
+
+var MyAllowSpecificOrigins = "MyCorsPolicy";
+
+// Register the CORS policy in the Services container:
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins, policy =>
+    {
+        // For local debugging, you can allow everything (less secure):
+        // policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+
+        // Or allow just your extension’s origin and local dev calls:
+        policy
+            .WithOrigins("chrome-extension://maknmcndlbopnoalcpponedjadclakng",
+                "https://localhost:7209") // or "http://localhost:7209" if you are using HTTP
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            // If you use cookies or Auth headers, you also need:
+            .AllowCredentials();
+    });
+});
+
 // Add Core Services
 
 // builder.Services.AddScoped<IDidResolutionService, DidResolutionService>();
@@ -139,9 +161,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCors(MyAllowSpecificOrigins);
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();

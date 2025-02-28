@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Blocktrust.CredentialWorkflow.Web.Controllers;
 
 using Blocktrust.Common.Resolver;
+using Core.Commands.DIDComm.ProcessMessage;
 using DIDComm;
 using DIDComm.Model.UnpackParamsModels;
 
@@ -20,29 +21,25 @@ using DIDComm.Model.UnpackParamsModels;
 public class DIDCommController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IWorkflowQueue _workflowQueue;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ISecretResolver _secretResolver;
     private readonly IDidDocResolver _didDocResolver;
 
-    public DIDCommController(IMediator mediator, WorkflowQueue workflowQueue, IHttpContextAccessor httpContextAccessor, ISecretResolver secretResolver, IDidDocResolver didDocResolver)
+    public DIDCommController(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISecretResolver secretResolver, IDidDocResolver didDocResolver)
     {
         _mediator = mediator;
-        _workflowQueue = workflowQueue;
         _httpContextAccessor = httpContextAccessor;
         _secretResolver = secretResolver;
         _didDocResolver = didDocResolver;
     }
 
     /// <summary>
-    /// DIDComm address endpoint
+    /// DIDComm workflow endpoint
     /// </summary>
     /// <returns></returns>
-    [HttpGet("api/workflow/{workflowGuidId:guid}/connect")]
-    public async Task<ActionResult<string>> DIDCommConnectionEndpoint(Guid workflowGuidId)
+    [HttpPost("api/workflow/{workflowGuidId:Guid}/didcomm")]
+    public async Task<ActionResult<string>> DIDCommTriggerEndpoint(Guid workflowGuidId)
     {
-        var hostUrl = string.Concat(_httpContextAccessor!.HttpContext.Request.Scheme, "://", _httpContextAccessor.HttpContext.Request.Host);
-
         var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId);
         var getWorkflowResult = await _mediator.Send(getWorkflowRequest);
         if (getWorkflowResult.IsFailed)
@@ -69,52 +66,12 @@ public class DIDCommController : ControllerBase
             return BadRequest("The workflow trigger is not an DIDComm (WalletInteraction) request trigger");
         }
 
-
-        // Maybe generate a peer did or invite (?) as a recipient endpoint
-
-
-        // var existingInvitationResult = await _mediator.Send(new GetOobInvitationRequest(hostUrl));
-        // var invitation = string.Empty;
-        // if (existingInvitationResult.IsFailed)
-        // {
-        //     var peerDidResponse = await _mediator.Send(new CreatePeerDidRequest(numberOfAgreementKeys: 1, numberOfAuthenticationKeys: 1, serviceEndpoint: new Uri(hostUrl)));
-        //     if (peerDidResponse.IsFailed)
-        //     {
-        //         return Problem(statusCode: 500, detail: peerDidResponse.Errors.First().Message);
-        //     }
-        //
-        //     var result = await _mediator.Send(new CreateOobInvitationRequest(hostUrl, peerDidResponse.Value.PeerDid));
-        //     if (result.IsFailed)
-        //     {
-        //         return Problem(statusCode: 500, detail: result.Errors.First().Message);
-        //     }
-        //
-        //     invitation = result.Value.Invitation;
-        // }
-        // else
-        // {
-        //     invitation = existingInvitationResult.Value.Invitation;
-        // }
-        //
-        // var invitationUrl = string.Concat(hostUrl, "?_oob=", invitation);
-        // return Ok(invitationUrl);
-
-        return Ok();
-    }
-
-    /// <summary>
-    /// DIDComm workflow endpoint
-    /// </summary>
-    /// <returns></returns>
-    [HttpPost("api/workflow/{workflowGuidId:guid}/didcomm")]
-    public async Task<ActionResult<string>> DIDCommTriggerEndpoint()
-    {
         var hostUrl = string.Concat(_httpContextAccessor!.HttpContext.Request.Scheme, "://", _httpContextAccessor.HttpContext.Request.Host);
-        if (System.Diagnostics.Debugger.IsAttached && hostUrl.Equals("http://localhost:5023"))
-        {
-            // This is only for local development and testing
-            hostUrl = "http://host.docker.internal:5023";
-        }
+        // if (System.Diagnostics.Debugger.IsAttached && hostUrl.Equals("http://localhost:5023"))
+        // {
+        //     // This is only for local development and testing
+        //     hostUrl = "http://host.docker.internal:5023";
+        // }
 
         var request = _httpContextAccessor.HttpContext.Request;
         var body = await new StreamReader(request.Body).ReadToEndAsync();
@@ -127,7 +84,6 @@ public class DIDCommController : ControllerBase
         {
             return BadRequest($"Unable to unpack message: {unpacked.Errors.First().Message}");
         }
-
 
         string? senderOldDid = null;
         string? senderDid = null;
