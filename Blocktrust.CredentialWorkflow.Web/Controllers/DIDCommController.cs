@@ -60,6 +60,8 @@ public class DIDCommController : ControllerBase
             return BadRequest("The workflow is inactive");
         }
 
+        var workflow = getWorkflowResult.Value;
+
         // Check if the workflow has triggers
         var processFlow = getWorkflowResult.Value.ProcessFlow;
         if (processFlow is null || !processFlow.Triggers.Any())
@@ -82,13 +84,7 @@ public class DIDCommController : ControllerBase
             return BadRequest("The recipientPeerDid could not be found in the configuration");
         }
 
-
         var hostUrl = string.Concat(_httpContextAccessor!.HttpContext.Request.Scheme, "://", _httpContextAccessor.HttpContext.Request.Host);
-        // if (System.Diagnostics.Debugger.IsAttached && hostUrl.Equals("http://localhost:5023"))
-        // {
-        //     // This is only for local development and testing
-        //     hostUrl = "http://host.docker.internal:5023";
-        // }
 
         var request = _httpContextAccessor.HttpContext.Request;
         var body = await new StreamReader(request.Body).ReadToEndAsync();
@@ -127,7 +123,7 @@ public class DIDCommController : ControllerBase
             }
         }
 
-        var processMessageResponse = await _mediator.Send(new ProcessMessageRequest(senderOldDid, senderDid, hostUrl, unpacked.Value));
+        var processMessageResponse = await _mediator.Send(new ProcessMessageRequest(senderOldDid, senderDid, hostUrl, unpacked.Value, workflow));
 
         // Check if we have a return route flag. Otherwise we should send a separate message
         var customHeaders = unpacked.Value.Message.CustomHeaders;

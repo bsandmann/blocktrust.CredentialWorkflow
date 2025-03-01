@@ -1,6 +1,7 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Core.Commands.DIDComm.ProcessMessage;
 
 using Blocktrust.DIDComm.Model.UnpackResultModels;
+using Domain.Workflow;
 using MediatR;
 
 public class ProcessMessageRequest : IRequest<ProcessMessageResponse>
@@ -25,8 +26,10 @@ public class ProcessMessageRequest : IRequest<ProcessMessageResponse>
     /// </summary>
     public UnpackResult UnpackResult { get; }
 
+    public Workflow Workflow { get; }
 
-    public ProcessMessageRequest(string? senderOldDid, string? senderDid, string hostUrl, UnpackResult unpackResult)
+
+    public ProcessMessageRequest(string? senderOldDid, string? senderDid, string hostUrl, UnpackResult unpackResult, Workflow workflow)
     {
         if (!string.IsNullOrEmpty(senderOldDid) && string.IsNullOrEmpty(senderDid))
         {
@@ -37,5 +40,6 @@ public class ProcessMessageRequest : IRequest<ProcessMessageResponse>
         SenderDid = senderDid;
         HostUrl = hostUrl;
         UnpackResult = unpackResult;
+        Workflow = workflow;
     }
 }
