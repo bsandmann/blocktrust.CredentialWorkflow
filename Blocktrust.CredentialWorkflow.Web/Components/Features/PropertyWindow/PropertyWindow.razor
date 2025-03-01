@@ -202,6 +202,16 @@
         {
             return formTrigger.Parameters.Keys;
         }
+        else if (trigger.Input is TriggerInputWalletInteraction walletInteraction)
+        {
+            // Add support for WalletInteractionTrigger parameters
+            return walletInteraction.RequiredParameters.Keys;
+        }
+        else if (trigger.Input is TriggerInputManual manualTrigger)
+        {
+            // Add support for ManualTrigger parameters
+            return manualTrigger.RequiredParameters.Keys;
+        }
 
         return null;
     }

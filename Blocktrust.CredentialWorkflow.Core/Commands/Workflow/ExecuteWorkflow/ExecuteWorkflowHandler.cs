@@ -151,6 +151,10 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
         {
             return ExecutionContext.FromForm(workflow.TenantId, executionContextString);
         }
+        if (trigger.Type == ETriggerType.WalletInteraction && executionContextString is not null)
+        {
+            return ExecutionContext.FromSimplifiedHttpContext(workflow.TenantId, executionContextString);
+        }
 
         return new ExecutionContext(workflow!.TenantId);
     }
