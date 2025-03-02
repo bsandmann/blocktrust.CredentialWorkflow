@@ -237,6 +237,121 @@ public static class ValidationUtility
         return (true, null);
     }
     
+    public static (bool IsValid, string? ErrorMessage) ValidateValue(JsonDocument credential, ValidationRule rule)
+    {
+        var config = rule.Configuration.Split(':');
+        if (config.Length != 2)
+        {
+            return (false, "Invalid value rule configuration. Expected format: 'path:expectedValue'");
+        }
+        
+        var path = config[0];
+        var expectedValue = config[1];
+        var pathParts = path.Split('.');
+        
+        if (!TryGetElementByPath(credential.RootElement, pathParts, out var element))
+        {
+            return (false, $"Field '{path}' not found");
+        }
+        
+        string? actualValue = null;
+        
+        // Get the actual value based on JSON element type
+        switch(element.ValueKind)
+        {
+            case JsonValueKind.String:
+                actualValue = element.GetString();
+                break;
+            case JsonValueKind.Number:
+                if (element.TryGetInt32(out var intVal))
+                    actualValue = intVal.ToString();
+                else if (element.TryGetInt64(out var longVal))
+                    actualValue = longVal.ToString();
+                else if (element.TryGetDouble(out var doubleVal))
+                    actualValue = doubleVal.ToString();
+                break;
+            case JsonValueKind.True:
+                actualValue = "true";
+                break;
+            case JsonValueKind.False:
+                actualValue = "false";
+                break;
+            case JsonValueKind.Null:
+                actualValue = "null";
+                break;
+            default:
+                return (false, $"Field '{path}' value type not supported for exact matching");
+        }
+        
+        if (actualValue != expectedValue)
+        {
+            return (false, $"Field '{path}' has value '{actualValue}' but expected '{expectedValue}'");
+        }
+        
+        return (true, null);
+    }
+    
+    public static (bool IsValid, string? ErrorMessage) ValidateValueArray(JsonDocument credential, ValidationRule rule)
+    {
+        var config = rule.Configuration.Split(':');
+        if (config.Length != 2)
+        {
+            return (false, "Invalid value array rule configuration. Expected format: 'path:value1,value2,value3'");
+        }
+        
+        var path = config[0];
+        var allowedValuesString = config[1];
+        var allowedValues = allowedValuesString.Split(',').Select(v => v.Trim()).ToArray();
+        
+        if (allowedValues.Length == 0)
+        {
+            return (false, "No allowed values specified");
+        }
+        
+        var pathParts = path.Split('.');
+        
+        if (!TryGetElementByPath(credential.RootElement, pathParts, out var element))
+        {
+            return (false, $"Field '{path}' not found");
+        }
+        
+        string? actualValue = null;
+        
+        // Get the actual value based on JSON element type
+        switch(element.ValueKind)
+        {
+            case JsonValueKind.String:
+                actualValue = element.GetString();
+                break;
+            case JsonValueKind.Number:
+                if (element.TryGetInt32(out var intVal))
+                    actualValue = intVal.ToString();
+                else if (element.TryGetInt64(out var longVal))
+                    actualValue = longVal.ToString();
+                else if (element.TryGetDouble(out var doubleVal))
+                    actualValue = doubleVal.ToString();
+                break;
+            case JsonValueKind.True:
+                actualValue = "true";
+                break;
+            case JsonValueKind.False:
+                actualValue = "false";
+                break;
+            case JsonValueKind.Null:
+                actualValue = "null";
+                break;
+            default:
+                return (false, $"Field '{path}' value type not supported for array matching");
+        }
+        
+        if (!allowedValues.Contains(actualValue))
+        {
+            return (false, $"Field '{path}' value '{actualValue}' is not one of the allowed values: {string.Join(", ", allowedValues)}");
+        }
+        
+        return (true, null);
+    }
+
     public static (bool IsValid, string? ErrorMessage) ValidateCustomRule(JsonDocument credential, ValidationRule rule)
     {
         // Custom validation rules are not implemented yet

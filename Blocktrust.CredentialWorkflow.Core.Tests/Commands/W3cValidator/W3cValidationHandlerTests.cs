@@ -344,4 +344,102 @@ public class W3cValidationHandlerTests
         result.Value.Errors.Should().Contain(e => e.RuleType == "Format" && e.Message.Contains("email"));
         result.Value.Errors.Should().Contain(e => e.RuleType == "Range" && e.Message.Contains("age"));
     }
+    
+    [Fact]
+    public async Task Handle_Value_ExactMatch_ShouldBeValid()
+    {
+        // Arrange
+        var rules = new List<ValidationRule>
+        {
+            new ValidationRule
+            {
+                Type = "Value",
+                Configuration = "credentialSubject.name:John Doe"
+            }
+        };
+        
+        var request = new W3cValidationRequest(ValidCredentialJson, rules);
+        
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue();
+        result.Value.Errors.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task Handle_Value_NotMatching_ShouldBeInvalid()
+    {
+        // Arrange
+        var rules = new List<ValidationRule>
+        {
+            new ValidationRule
+            {
+                Type = "Value",
+                Configuration = "credentialSubject.name:Jane Doe"
+            }
+        };
+        
+        var request = new W3cValidationRequest(ValidCredentialJson, rules);
+        
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeFalse();
+        result.Value.Errors.Should().ContainSingle()
+            .Which.Message.Should().Contain("has value 'John Doe' but expected 'Jane Doe'");
+    }
+    
+    [Fact]
+    public async Task Handle_ValueArray_ContainsValue_ShouldBeValid()
+    {
+        // Arrange
+        var rules = new List<ValidationRule>
+        {
+            new ValidationRule
+            {
+                Type = "ValueArray",
+                Configuration = "credentialSubject.name:Jane Doe,John Doe,Richard Roe"
+            }
+        };
+        
+        var request = new W3cValidationRequest(ValidCredentialJson, rules);
+        
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue();
+        result.Value.Errors.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task Handle_ValueArray_NotContainsValue_ShouldBeInvalid()
+    {
+        // Arrange
+        var rules = new List<ValidationRule>
+        {
+            new ValidationRule
+            {
+                Type = "ValueArray",
+                Configuration = "credentialSubject.name:Jane Doe,Richard Roe,Bob Smith"
+            }
+        };
+        
+        var request = new W3cValidationRequest(ValidCredentialJson, rules);
+        
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeFalse();
+        result.Value.Errors.Should().ContainSingle()
+            .Which.Message.Should().Contain("is not one of the allowed values");
+    }
 }

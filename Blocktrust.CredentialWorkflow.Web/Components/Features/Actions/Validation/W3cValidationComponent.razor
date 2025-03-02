@@ -85,6 +85,8 @@
                             <option value="Required">Required Field</option>
                             <option value="Format">Format Check</option>
                             <option value="Range">Value Range</option>
+                            <option value="Value">Exact Value</option>
+                            <option value="ValueArray">Value From Array</option>
                             <option value="Custom">Custom Rule</option>
                         </select>
                         <button class="text-red-500 hover:text-red-700"
@@ -198,6 +200,8 @@
         "Required" => "Enter the field path that must be present (e.g., 'credentialSubject.id')",
         "Format" => "Enter field path and expected format (e.g., 'credentialSubject.dateOfBirth:ISO8601')",
         "Range" => "Enter field path and range (e.g., 'credentialSubject.age:18-65')",
+        "Value" => "Enter field path and expected value (e.g., 'credentialSubject.type:Student')",
+        "ValueArray" => "Enter field path and comma-separated list of accepted values (e.g., 'credentialSubject.role:Student,Teacher,Admin')",
         "Custom" => "Enter custom validation expression",
         _ => string.Empty
     };

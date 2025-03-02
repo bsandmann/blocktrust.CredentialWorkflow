@@ -72,6 +72,20 @@ public class W3cValidationHandler : IRequestHandler<W3cValidationRequest, Result
                             result.Errors.Add(new W3cValidationError("Range", rangeResult.ErrorMessage));
                         }
                         break;
+                    case "value":
+                        var valueResult = ValidationUtility.ValidateValue(credentialJson, rule);
+                        if (!valueResult.IsValid)
+                        {
+                            result.Errors.Add(new W3cValidationError("Value", valueResult.ErrorMessage));
+                        }
+                        break;
+                    case "valuearray":
+                        var valueArrayResult = ValidationUtility.ValidateValueArray(credentialJson, rule);
+                        if (!valueArrayResult.IsValid)
+                        {
+                            result.Errors.Add(new W3cValidationError("ValueArray", valueArrayResult.ErrorMessage));
+                        }
+                        break;
                     case "custom":
                         var customResult = ValidationUtility.ValidateCustomRule(credentialJson, rule);
                         if (!customResult.IsValid)
