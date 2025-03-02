@@ -49,12 +49,32 @@
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200">
                                     <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">State</th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">Started</th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">Ended</th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">
+                                        <div class="flex items-center cursor-pointer" @onclick="() => SortByStarted()">
+                                            Started
+                                            @if (sortField == "Started")
+                                            {
+                                                <span class="material-symbols-outlined text-sm ml-1">
+                                                    @(sortAscending ? "arrow_upward" : "arrow_downward")
+                                                </span>
+                                            }
+                                        </div>
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">
+                                        <div class="flex items-center cursor-pointer" @onclick="() => SortByEnded()">
+                                            Ended
+                                            @if (sortField == "Ended")
+                                            {
+                                                <span class="material-symbols-outlined text-sm ml-1">
+                                                    @(sortAscending ? "arrow_upward" : "arrow_downward")
+                                                </span>
+                                            }
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200">
-                                @foreach (var workflowOutcome in workflowOutcomes)
+                                @foreach (var workflowOutcome in GetSortedWorkflowOutcomes())
                                 {
                                     <tr @onclick="() => ToggleOutcomeDetails(workflowOutcome.WorkflowOutcomeId)"
                                         class="cursor-pointer hover:bg-slate-50 transition-colors duration-150">
@@ -107,7 +127,7 @@
                                                                                     </button>
                                                                                 </div>
                                                                                 <div class="bg-white p-3 rounded-lg overflow-x-auto">
-                                                                                    <pre class="text-sm font-mono whitespace-pre-wrap break-all">@TruncateText(FormatJson(outcome.OutcomeJson), 200)</pre>
+                                                                                    <pre class="text-sm font-mono whitespace-pre-wrap break-all">@FormatJson(outcome.OutcomeJson)</pre>
                                                                                 </div>
                                                                             </div>
                                                                         }
@@ -155,16 +175,13 @@
                                                                                         <tr>
                                                                                             <td class="px-3 py-2 text-sm text-slate-600 whitespace-nowrap">@param.Key</td>
                                                                                             <td class="px-3 py-2 font-mono text-sm break-all">
-                                                                                                <div class="max-w-md">@TruncateText(param.Value, 50)</div>
+                                                                                                <div class="max-w-md overflow-x-auto">@param.Value</div>
                                                                                             </td>
                                                                                             <td class="px-3 py-2">
-                                                                                                @if (param.Value.Length > 50)
-                                                                                                {
-                                                                                                    <button @onclick="@(() => CopyToClipboard(param.Value))"
-                                                                                                            class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100">
-                                                                                                        <span class="material-symbols-outlined text-sm">content_copy</span>
-                                                                                                    </button>
-                                                                                                }
+                                                                                                <button @onclick="@(() => CopyToClipboard(param.Value))"
+                                                                                                        class="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100">
+                                                                                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                                                                </button>
                                                                                             </td>
                                                                                         </tr>
                                                                                     }
@@ -185,7 +202,7 @@
                                                                             </button>
                                                                         </div>
                                                                         <div class="bg-slate-50 p-3 rounded-lg overflow-x-auto">
-                                                                            <pre class="text-sm font-mono whitespace-pre-wrap break-all">@TruncateText(FormatJson(context.Body), 200)</pre>
+                                                                            <pre class="text-sm font-mono whitespace-pre-wrap break-all">@FormatJson(context.Body)</pre>
                                                                         </div>
                                                                     </div>
                                                                 }
@@ -204,7 +221,7 @@
                                                                 </button>
                                                             </div>
                                                             <div class="bg-red-50 p-3 rounded-lg overflow-x-auto">
-                                                                <pre class="text-sm font-mono text-red-700 whitespace-pre-wrap break-all">@TruncateText(FormatJson(workflowOutcome.ErrorJson), 200)</pre>
+                                                                <pre class="text-sm font-mono text-red-700 whitespace-pre-wrap break-all">@FormatJson(workflowOutcome.ErrorJson)</pre>
                                                             </div>
                                                         </div>
                                                     }
@@ -240,6 +257,10 @@ else
     private Guid? selectedWorkflowId;
     private List<WorkflowOutcome> workflowOutcomes = new();
     private Guid? expandedWorkflowOutcomeId;
+    
+    // Sorting properties
+    private string sortField = "Started";  // Default sort field
+    private bool sortAscending = false;    // Default sort order (descending)
 
     protected override async Task OnInitializedAsync()
     {
@@ -389,5 +410,55 @@ else
         {
             Logger.LogError(ex, "Failed to copy text to clipboard");
         }
+    }
+    
+    private void SortByStarted()
+    {
+        if (sortField == "Started")
+        {
+            // If already sorting by Started, toggle the direction
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            // Switch to sorting by Started
+            sortField = "Started";
+            sortAscending = false; // Default to descending for dates (newest first)
+        }
+    }
+    
+    private void SortByEnded()
+    {
+        if (sortField == "Ended")
+        {
+            // If already sorting by Ended, toggle the direction
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            // Switch to sorting by Ended
+            sortField = "Ended";
+            sortAscending = false; // Default to descending for dates (newest first)
+        }
+    }
+    
+    private List<WorkflowOutcome> GetSortedWorkflowOutcomes()
+    {
+        if (workflowOutcomes == null || !workflowOutcomes.Any())
+            return new List<WorkflowOutcome>();
+            
+        return sortField switch
+        {
+            "Started" => sortAscending 
+                ? workflowOutcomes.OrderBy(o => o.StartedUtc).ToList() 
+                : workflowOutcomes.OrderByDescending(o => o.StartedUtc).ToList(),
+                
+            "Ended" => sortAscending 
+                ? workflowOutcomes.OrderBy(o => o.EndedUtc).ToList() 
+                : workflowOutcomes.OrderByDescending(o => o.EndedUtc).ToList(),
+                
+            // Default case, should never be reached but added for safety
+            _ => workflowOutcomes.OrderByDescending(o => o.StartedUtc).ToList()
+        };
     }
 }
