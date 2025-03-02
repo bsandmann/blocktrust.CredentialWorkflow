@@ -1,5 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
 
 <div class="p-4 text-sm">
@@ -32,6 +34,22 @@
                             @foreach (var param in TriggerParameters ?? Array.Empty<string>())
                             {
                                 <option value="@param">@param</option>
+                            }
+                        }
+                        else if (ActionInput.To.Source == ParameterSource.ActionOutcome)
+                        {
+                            <option value="">Select previous action</option>
+                            @if (FlowItems != null)
+                            {
+                                @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                                {
+                                    if (item is WorkflowAction actionItem)
+                                    {
+                                        <option value="@actionItem.Input.Id">
+                                            @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                        </option>
+                                    }
+                                }
                             }
                         }
                         else
@@ -105,6 +123,22 @@
                                     <option value="@triggerParam">@triggerParam</option>
                                 }
                             }
+                            else if (param.Value.Source == ParameterSource.ActionOutcome)
+                            {
+                                <option value="">Select previous action</option>
+                                @if (FlowItems != null)
+                                {
+                                    @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                                    {
+                                        if (item is WorkflowAction actionItem)
+                                        {
+                                            <option value="@actionItem.Input.Id">
+                                                @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                            </option>
+                                        }
+                                    }
+                                }
+                            }
                             else
                             {
                                 <option value="">Select source</option>
@@ -125,6 +159,7 @@
     [Parameter] public EmailAction ActionInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
 
     private async Task OnValueChanged()
     {

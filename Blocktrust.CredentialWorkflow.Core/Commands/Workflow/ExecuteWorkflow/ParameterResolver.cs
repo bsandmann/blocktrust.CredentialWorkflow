@@ -29,6 +29,7 @@ public static class ParameterResolver
                 {
                     return null;
                 }
+
                 executionContext.InputContext.TryGetValue(parameterReference.Path.ToLowerInvariant(), out var value);
                 return value;
 
@@ -40,10 +41,12 @@ public static class ParameterResolver
                     {
                         return null;
                     }
+
                     if (parameterReference.Path.Equals("DefaultIssuerDid", StringComparison.CurrentCultureIgnoreCase))
                     {
                         return issuingKeysResult.Value.First().Did;
                     }
+
                     if (Guid.TryParse(parameterReference.Path, out var keyId))
                     {
                         var issuingKey = issuingKeysResult.Value.FirstOrDefault(k => k.IssuingKeyId == keyId);
@@ -57,23 +60,37 @@ public static class ParameterResolver
                     {
                         return null;
                     }
+
                     if (parameterReference.Path.Equals("DefaultSenderDid", StringComparison.CurrentCultureIgnoreCase))
                     {
                         return peerDidsResult.Value.First().PeerDID;
                     }
+
                     if (Guid.TryParse(parameterReference.Path, out var keyId))
                     {
                         var peerDid = peerDidsResult.Value.FirstOrDefault(p => p.PeerDIDEntityId == keyId);
                         return peerDid?.PeerDID;
                     }
                 }
+
                 return null;
 
             case ParameterSource.ActionOutcome:
                 var actionId = parameterReference.ActionId;
-                var actionOutcome = actionOutcomes.FirstOrDefault(a => a.ActionId == actionId);
-                return actionOutcome?.OutcomeJson;
+                if (actionId is not null)
+                {
+                    var actionOutcome = actionOutcomes.FirstOrDefault(a => a.ActionId == actionId);
+                    return actionOutcome?.OutcomeJson;
+                }
 
+                var actionIdIsParsabel = Guid.TryParse(parameterReference.Path, out var pathActionId);
+                if (actionIdIsParsabel)
+                {
+                    var actionOutcome = actionOutcomes.FirstOrDefault(a => a.ActionId == pathActionId);
+                    return actionOutcome?.OutcomeJson;
+                }
+
+                return null;
             default:
                 return null;
         }
@@ -99,6 +116,7 @@ public static class ParameterResolver
                 }
             }
         }
+
         return claims.Any() ? claims : null;
     }
 }
