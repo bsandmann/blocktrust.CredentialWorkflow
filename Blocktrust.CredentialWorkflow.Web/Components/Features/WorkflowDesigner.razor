@@ -2,6 +2,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
@@ -69,6 +71,16 @@
                                         case VerifyAnoncredCredential _:
                                             <p class="text-xs text-gray-600 mt-1">
                                                 VerifyCredentials checks configured
+                                            </p>
+                                            break;
+                                        case W3cValidationAction _:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Validationrules for Credential
+                                            </p>
+                                            break;
+                                        case DIDCommAction didCommAction:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                @(didCommAction.Type == EDIDCommType.Message ? "BasicMessage" : didCommAction.Type == EDIDCommType.CredentialIssuance ? "Credential-Presentation" : didCommAction.Type.ToString())
                                             </p>
                                             break;
                                     }
