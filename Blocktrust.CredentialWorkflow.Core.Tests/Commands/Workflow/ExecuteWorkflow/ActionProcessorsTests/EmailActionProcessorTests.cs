@@ -55,8 +55,8 @@ public class EmailActionProcessorTests
                 Source = ParameterSource.Static,
                 Path = "user@example.com"
             },
-            Subject = "Test Subject [Name]",
-            Body = "Hello [Name], This is a test email from [Source].",
+            Subject = "Test Subject {{Name}}",
+            Body = "Hello {{Name}}, This is a test email from {{Source}}.",
             Parameters = new Dictionary<string, ParameterReference>
             {
                 ["Name"] = new ParameterReference
@@ -221,8 +221,8 @@ public class EmailActionProcessorTests
                 Source = ParameterSource.Static,
                 Path = "user@example.com"
             },
-            Subject = "Test Subject [Name]",
-            Body = "Hello [Name], This is a test email from [Source].",
+            Subject = "Test Subject {{Name}}",
+            Body = "Hello {{Name}}, This is a test email from {{Source}}.",
             Parameters = new Dictionary<string, ParameterReference>
             {
                 // Only providing one of the parameters
@@ -253,13 +253,13 @@ public class EmailActionProcessorTests
         // Assert
         result.IsSuccess.Should().BeTrue();
             
-        // Verify the email was sent with the [Name] placeholder remaining
+        // Verify the email was sent with the {{Name}} placeholder remaining
         capturedRequest.Should().NotBeNull();
         capturedRequest.Should().BeOfType<SendEmailActionRequest>();
         var emailRequest = (SendEmailActionRequest)capturedRequest;
         emailRequest.ToEmail.Should().Be("user@example.com");
-        emailRequest.Subject.Should().Be("Test Subject [Name]");
-        emailRequest.Body.Should().Be("Hello [Name], This is a test email from Test System.");
+        emailRequest.Subject.Should().Be("Test Subject {{Name}}");
+        emailRequest.Body.Should().Be("Hello {{Name}}, This is a test email from Test System.");
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public class EmailActionProcessorTests
                 Path = "user@example.com"
             },
             Subject = "Verification Code",
-            Body = "Your verification code is [Code]",
+            Body = "Your verification code is {{Code}}",
             Parameters = new Dictionary<string, ParameterReference>
             {
                 ["Code"] = new ParameterReference
@@ -337,7 +337,7 @@ public class EmailActionProcessorTests
                 Path = "user@example.com"
             },
             Subject = "Test Subject",
-            Body = "Hello [Name]",
+            Body = "Hello {{Name}}",
             Parameters = new Dictionary<string, ParameterReference>
             {
                 ["Name"] = new ParameterReference
@@ -373,7 +373,7 @@ public class EmailActionProcessorTests
         var emailRequest = (SendEmailActionRequest)capturedRequest;
         emailRequest.ToEmail.Should().Be("user@example.com");
         emailRequest.Subject.Should().Be("Test Subject");
-        emailRequest.Body.Should().Be("Hello [Name]");
+        emailRequest.Body.Should().Be("Hello {{Name}}");
     }
     [Fact]
     public void ProcessEmailTemplate_WithNoParameters_ShouldReturnOriginalTemplate()
@@ -408,7 +408,7 @@ public class EmailActionProcessorTests
     public void ProcessEmailTemplate_WithMultipleParameterOccurrences_ShouldReplaceAll()
     {
         // Arrange
-        var template = "Hello [Name], your name is [Name] and you are [Age] years old.";
+        var template = "Hello {{Name}}, your name is {{Name}} and you are {{Age}} years old.";
         var parameters = new Dictionary<string, string>
         {
             ["Name"] = "John",
@@ -426,7 +426,7 @@ public class EmailActionProcessorTests
     public void ProcessEmailTemplate_WithCaseInsensitiveParameters_ShouldReplaceCorrectly()
     {
         // Arrange
-        var template = "Hello [NaMe], welcome to [SyStEm]!";
+        var template = "Hello {{NaMe}}, welcome to {{SyStEm}}!";
         var parameters = new Dictionary<string, string>
         {
             ["name"] = "Alice",
@@ -444,7 +444,7 @@ public class EmailActionProcessorTests
     public void ProcessEmailTemplate_WithExtraParameters_ShouldIgnoreUnused()
     {
         // Arrange
-        var template = "Hello [Name]!";
+        var template = "Hello {{Name}}!";
         var parameters = new Dictionary<string, string>
         {
             ["Name"] = "Bob",

@@ -8,5 +8,5 @@ using Action = Domain.ProcessFlow.Actions.Action;
 public interface IActionProcessor
 {
     EActionType ActionType { get; }
-    Task<Result> ProcessAsync(Action action, ActionOutcome actionOutcome, ActionProcessingContext context);
+    Task<FluentResults.Result> ProcessAsync(Action action, ActionOutcome actionOutcome, ActionProcessingContext context);
 }

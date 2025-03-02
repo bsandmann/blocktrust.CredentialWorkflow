@@ -37,6 +37,11 @@ public class EmailActionProcessor : IActionProcessor
         var parameters = new Dictionary<string, string>();
         foreach (var param in input.Parameters)
         {
+            if (string.IsNullOrEmpty(param.Value.Path))
+            {
+                param.Value.Path = param.Key;
+            }
+
             var value = await ParameterResolver.GetParameterFromExecutionContext(
                 param.Value, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
             if (value != null)
@@ -86,9 +91,10 @@ public class EmailActionProcessor : IActionProcessor
             {
                 var paramValue = param.Value ?? string.Empty;
                 var key = param.Key.Trim();
+                // Replace {{paramName}} pattern with the value
                 processedTemplate = Regex.Replace(
                     processedTemplate,
-                    $"\\[{key}\\]",
+                    "\\{\\{" + key + "\\}\\}",
                     paramValue,
                     RegexOptions.IgnoreCase);
             }
