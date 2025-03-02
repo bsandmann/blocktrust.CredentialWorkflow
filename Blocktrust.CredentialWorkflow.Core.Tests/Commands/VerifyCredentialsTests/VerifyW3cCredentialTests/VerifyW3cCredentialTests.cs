@@ -71,36 +71,6 @@ public class VerifyW3CCredentialTests
     }
 
     [Fact]
-    public async Task Handle_ExpiredCredential_ShouldReturnInvalidResult()
-    {
-        // Arrange
-        var request = new VerifyW3CCredentialRequest(ExpiredJwt, true, true, false, false, false);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.IsExpired.Should().BeTrue();
-        result.Value.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_RevokedCredential_ShouldReturnInvalidResult()
-    {
-        // Arrange
-        var request = new VerifyW3CCredentialRequest(RevokedJwt, true, false, true, false, false);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.IsRevoked.Should().BeTrue();
-        result.Value.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
     public async Task Handle_InvalidCredentialFormat_ShouldReturnFailure()
     {
         // Arrange

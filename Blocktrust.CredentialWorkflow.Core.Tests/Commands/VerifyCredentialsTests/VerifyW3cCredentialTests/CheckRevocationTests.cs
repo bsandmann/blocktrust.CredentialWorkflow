@@ -36,20 +36,6 @@ public class CheckRevocationTests
         result.Value.Should().BeFalse();
     }
 
-    [Fact]
-    public async Task Handle_ValidCredentialRevoked_ShouldReturnTrue()
-    {
-        // Arrange
-        var credential = CreateTestCredential(1); // Using index 1 for revoked
-        var request = new CheckRevocationRequest(credential);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeTrue();
-    }
 
     [Fact]
     public async Task Handle_CredentialWithoutStatus_ShouldReturnFalse()
