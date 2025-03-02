@@ -379,15 +379,24 @@ else
 
     private string FormatJson(string json)
     {
+        // Skip formatting if string is null or empty
+        if (string.IsNullOrWhiteSpace(json))
+            return json;
+
+        // Check if the string starts with a valid JSON character ({ or [)
+        if (!json.TrimStart().StartsWith("{") && !json.TrimStart().StartsWith("["))
+            return json; // Not JSON, return as is
+            
         try
         {
             using var document = JsonDocument.Parse(json);
             var options = new JsonSerializerOptions { WriteIndented = true };
             return JsonSerializer.Serialize(document, options);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.LogError(ex, "Failed to format JSON");
+            // Just return original text without logging the error
+            // We're already validating the input, so we don't need to log parsing errors
             return json;
         }
     }

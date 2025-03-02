@@ -178,6 +178,40 @@
                 </div>
             </div>
         }
+        else if (TriggerInput.MessageType == "CredentialPresentation")
+        {
+            <div class="pt-3 border-t">
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4">
+                    <div class="text-sm mb-3">
+                        To process a Credential (or Presentation) over DIDComm either send a Presentation-Proof directly to the above mentioned DIDComm Endpoint or initiate a Presentation-Request by calling this endpoint over HTTP (POST), providing the Peer-DID as JSON:
+                    </div>
+                    
+                    <!-- Presentation Request Endpoint URL -->
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium text-gray-900">Presentation Request Endpoint</div>
+                        <button @onclick="() => CopyToClipboard(PresentationRequestUrl)"
+                                class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                            <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                            Copy URL
+                        </button>
+                    </div>
+                    <div class="font-mono text-sm text-gray-600 break-all mb-4">
+                        @PresentationRequestUrl
+                    </div>
+                    
+                    <!-- cURL Example -->
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium text-gray-900">cURL Example</div>
+                        <button @onclick="() => CopyToClipboard(CurlExample)"
+                                class="text-gray-500 hover:text-gray-700 flex items-center text-xs">
+                            <span class="material-symbols-outlined text-sm mr-1">content_copy</span>
+                            Copy Example
+                        </button>
+                    </div>
+                    <pre class="font-mono text-sm text-gray-600 whitespace-pre-wrap break-all bg-white p-2 rounded">@CurlExample</pre>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -190,6 +224,8 @@
     private bool showToast;
     private List<Parameter> parameters = new();
     private string DidCommUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}/didcomm";
+    private string PresentationRequestUrl => $"{NavigationManager.BaseUri.TrimEnd('/')}/api/workflow/{WorkflowId}/didcomm/presentation-request";
+    private string CurlExample => $"curl -X POST {PresentationRequestUrl} \\\n-H \"Content-Type: application/json\" \\\n-d '{{ \"senderPeerDID\":\"peerDID-of-the-wallet\" }}'";
     private bool isInitialized = false;
 
     // Dynamically generate the Basic Message Example based on defined parameters
