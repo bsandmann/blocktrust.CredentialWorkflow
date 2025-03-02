@@ -17,3 +17,13 @@ Content-Type: application/json
   "email": "testuser@example.com",
   "age": "123"
 }
+
+
+### POST request to WorkflowController with JSON body
+POST https://localhost:7209/api/workflow/3d3bd575-a76c-45fb-88e6-08dd596d541a/didcomm/presentation-request
+Content-Type: application/json
+
+{
+  "senderPeerDid": "did:peer:2.Ez6LSoXb5zerVyNZXeJ7zTh1WCo4sykwaCjGzNbLXcGaBY1A3.Vz6MkgH2TQBqF1TCMvnKXWy1UwHfTK9rSuXEAaeLu86VbEZh3.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU2tnMXd5SFVNZ01XWmlEZkJSWnBYOGFaNm5oM0VaV2ljeEpUNFZnZWdCNURiLlZ6Nk1rano4RDlxeGd1ZER2WjluVW13cGl0a1lBOVB3OXFOQW1YeEJreGNGYnRGY3MuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXRaV1JwWVhSdmNpNWliRzlqYTNSeWRYTjBMbVJsZGk4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0"
+}
+

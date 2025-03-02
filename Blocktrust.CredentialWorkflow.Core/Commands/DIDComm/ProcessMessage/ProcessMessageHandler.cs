@@ -39,6 +39,9 @@ public class ProcessMessageHandler : IRequestHandler<ProcessMessageRequest, Proc
             case ProtocolConstants.BasicMessage:
                 result = await _mediator.Send(new BasicMessageWorkflowRequest(request.UnpackResult.Message, request.SenderDid,  request.HostUrl, fromPrior, request.Workflow), cancellationToken);
                 break;
+            case ProtocolConstants.PresentProofPresentation:
+                result = await _mediator.Send(new BasicMessageWorkflowRequest(request.UnpackResult.Message, request.SenderDid,  request.HostUrl, fromPrior, request.Workflow), cancellationToken);
+                break;
             default:
                 return new ProcessMessageResponse(ProblemReportMessage.Build(
                     fromPrior: fromPrior,
