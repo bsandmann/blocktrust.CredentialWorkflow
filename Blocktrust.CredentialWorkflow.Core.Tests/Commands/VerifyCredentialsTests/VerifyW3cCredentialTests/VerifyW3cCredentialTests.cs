@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Blocktrust.CredentialWorkflow.Core.Tests.Commands.VerifyCredentialsTests.VerifyW3cCredentialTests;
 
+using System.Net;
+using DidPrismResolverClient;
 using Services;
 
 public class VerifyW3CCredentialTests
@@ -37,8 +39,14 @@ public class VerifyW3CCredentialTests
     {
         _httpClient = new HttpClient();
         _credentialParser = new CredentialParser();
-
-        var signatureHandler = new CheckSignatureHandler(new ExtractPrismPubKeyFromLongFormDid(), new EcServiceBouncyCastle());
+        var mockHttpMessageHandler = new MockHttpMessageHandler(HttpStatusCode.ServiceUnavailable);
+        var fakeHttpClient = new HttpClient(mockHttpMessageHandler)
+        {
+            BaseAddress = new Uri("http://fake-unreachable.com/")
+        };
+        var fakePrismDidOptions = new PrismDidClientOptions { BaseUrl = "http://fake-unreachable.com" };
+        var mockPrismDidClient = new PrismDidClient(fakeHttpClient, fakePrismDidOptions);
+        var signatureHandler = new CheckSignatureHandler(new ExtractPrismPubKeyFromLongFormDid(), new EcServiceBouncyCastle(), mockPrismDidClient);
         var expiryHandler = new CheckExpiryHandler();
         var revocationHandler = new CheckRevocationHandler(_httpClient);
 

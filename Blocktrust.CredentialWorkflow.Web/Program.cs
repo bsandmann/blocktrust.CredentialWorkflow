@@ -14,6 +14,7 @@ using Blocktrust.CredentialWorkflow.Web.Services;
 using Blocktrust.Mediator.Client.Commands.TrustPing;
 using Blocktrust.Mediator.Common;
 using Blocktrust.Mediator.Common.Commands.CreatePeerDid;
+using DidPrismResolverClient;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -135,6 +136,23 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddEntityFrameworkStores<DataContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+builder.Services.AddHttpClient<PrismDidClient>()
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        return new HttpClientHandler
+        {
+            // Insecure: bypass SSL errors
+            ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+    });
+
+builder.Services.AddSingleton(new PrismDidClientOptions
+{
+    BaseUrl = "https://opn.blocktrust.dev:31201",
+    DefaultLedger = "mainnet"
+});
 
 builder.Services.AddTransient<IEmailSender, SendGridEmailSender>();
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, ApplicationUserEmailSender>();
