@@ -229,38 +229,47 @@ else
         {
             if (currentWorkflow != null)
             {
+                // First stop the workflow if it's active
+                if (currentWorkflow.WorkflowState != EWorkflowState.Inactive)
+                {
+                    var stopResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, EWorkflowState.Inactive));
+                    if (stopResult.IsFailed)
+                    {
+                        errorMessage = "Failed to stop the workflow before saving. Please try again.";
+                        await ShowToast(errorMessage);
+                        return;
+                    }
+                }
+
                 var updateResult = await Mediator.Send(new UpdateWorkflowRequest(
                     currentWorkflow.WorkflowId,
                     currentWorkflow.Name,
-                    currentWorkflow.WorkflowState,
+                    EWorkflowState.Inactive, // Always save as inactive
                     currentWorkflow.ProcessFlow));
 
                 if (updateResult.IsSuccess)
                 {
+                    // Get the updated workflow from the database
+                    await LoadWorkflow(currentWorkflow.WorkflowId);
+                    
                     var workflowInAppStateService = AppStateService.WorkflowSummaries
                         .FirstOrDefault(p => p.WorkflowId == currentWorkflow.WorkflowId);
                     if (workflowInAppStateService is not null)
                     {
                         workflowInAppStateService.Name = currentWorkflow.Name;
+                        workflowInAppStateService.WorkflowState = currentWorkflow.WorkflowState;
                     }
 
                     ChangeTracker.ResetChanges();
                     hasUnsavedChanges = false;
                     errorMessage = "";
 
-                    await ShowToast("Workflow saved (Re)start the workflow to apply changes.");
-
-                    var changeStateResult = await Mediator.Send(new ChangeWorkflowStateRequest(currentWorkflow.WorkflowId, EWorkflowState.Inactive));
-                    if (changeStateResult.IsFailed)
-                    {
-                        errorMessage = "Failed to change the workflow state. Please try again.";
-                        await ShowToast(errorMessage);
-                        return;
-                    }
+                    await ShowToast("Workflow saved. Start the workflow to apply changes.");
                 }
                 else
                 {
                     errorMessage = "Failed to save the workflow. Please try again.";
+                    await ShowToast(errorMessage);
                 }
             }
         }
@@ -268,6 +277,7 @@ else
         {
             errorMessage = "An error occurred while saving the workflow.";
             Logger.LogError(ex, "Error saving workflow");
+            await ShowToast(errorMessage);
         }
 
         StateHasChanged();
@@ -299,7 +309,9 @@ else
                         return;
                     }
 
-                    currentWorkflow.WorkflowState = state;
+                    // Get the updated workflow from the database
+                    await LoadWorkflow(currentWorkflow.WorkflowId);
+                    await ShowToast("Workflow started successfully.");
                 }
                 else
                 {
@@ -311,7 +323,17 @@ else
                         return;
                     }
 
-                    currentWorkflow.WorkflowState = EWorkflowState.Inactive;
+                    // Get the updated workflow from the database
+                    await LoadWorkflow(currentWorkflow.WorkflowId);
+                    await ShowToast("Workflow stopped successfully.");
+                }
+
+                // Update app state service workflow summaries
+                var workflowInAppStateService = AppStateService.WorkflowSummaries
+                    .FirstOrDefault(p => p.WorkflowId == currentWorkflow.WorkflowId);
+                if (workflowInAppStateService is not null)
+                {
+                    workflowInAppStateService.WorkflowState = currentWorkflow.WorkflowState;
                 }
 
                 StateHasChanged();
