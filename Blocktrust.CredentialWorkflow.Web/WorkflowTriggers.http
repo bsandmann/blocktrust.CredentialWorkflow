@@ -7,14 +7,14 @@ GET https://localhost:7209/api/workflow/22222222-2222-2222-2222-222222222222
     &testClaim=RandomStringABC
 
 ### POST request to WorkflowController with JSON body for credential issuing
-POST https://localhost:7209/api/workflow/7b818f8a-5ba0-4b86-0807-08dd58266d58
+POST https://localhost:7209/api/workflow/7ebce746-0d30-493a-846e-08dd60c2c359
 Content-Type: application/json
 
 {
   "subjectDid": "did:prism:85958de731e812d7cb30133660abc528ece48baeccc6c76a2a20c8e3c93f1ac2",
   "exampleClaim": "ClaimValueXYZ",
   "peerDid": "did:peer:2.Ez6LSq8zi2uUmB3FUyEhmQyJcM9vz5KFcVU3wVpGkgg2JnLpf.Vz6MkhLPbZsmWRbaY9oNiJB8MRbNHs5XW9ftpJDmi5PgbcPAt.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU3BDQVVmUjg3ZHlrWHRmWXo2b2lTdWJRdGJqNVZTSjFERXBXeTFOUnlnMlptLlZ6Nk1rcWV6M3RkMUMzYzN2ZmpmTkJaSldnenZHUFhMb01OZXVVZkVZdE5aQW92MXEuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXRaV1JwWVhSdmNpNWliRzlqYTNSeWRYTjBMbVJsZGk4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0",
-  "email": "testuser@example.com",
+  "email": "sandmann@blocktrust.dev",
   "age": "123"
 }
 

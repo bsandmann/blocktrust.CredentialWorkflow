@@ -45,13 +45,6 @@ public class IssueW3CCredentialProcessor : IActionProcessor
             return Result.Fail(errorMessage);
         }
 
-        DateOnly? validUntil = null;
-        if (input.ValidUntil is not null)
-        {
-            // TODO
-            // validUntil = await ParameterResolver.GetParameterFromExecutionContext(
-        }
-
         var claims = ParameterResolver.GetClaimsFromExecutionContext(input.Claims, context.ExecutionContext);
         if (claims == null)
         {
@@ -59,14 +52,30 @@ public class IssueW3CCredentialProcessor : IActionProcessor
             actionOutcome.FinishOutcomeWithFailure(errorMessage);
             return Result.Fail(errorMessage);
         }
+        
+        // Handle the ValidUntil property
+        DateTimeOffset? expirationDate = null;
+        if (input.ValidUntil.HasValue)
+        {
+            // Validate that the date is not in the past
+            if (input.ValidUntil.Value.Date < DateTime.Today)
+            {
+                var errorMessage = "The expiration date cannot be in the past.";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
+            }
 
+            // Set expiration to the end of the specified day (23:59:59.999)
+            var endOfDay = input.ValidUntil.Value.Date.AddDays(1).AddTicks(-1);
+            expirationDate = new DateTimeOffset(endOfDay);
+        }
 
         var createW3CCredentialRequest = new CreateW3cCredentialRequest(
             issuerDid: issuerDid,
             subjectDid: subjectDid,
             additionalSubjectData: claims,
-            validFrom: null,
-            expirationDate: input.ValidUntil.HasValue ? new DateTimeOffset(input.ValidUntil.Value) : null
+            validFrom: null, // Will default to current time in the handler
+            expirationDate: expirationDate
         );
 
         var createW3CCredentialResult = await _mediator.Send(createW3CCredentialRequest, context.CancellationToken);
