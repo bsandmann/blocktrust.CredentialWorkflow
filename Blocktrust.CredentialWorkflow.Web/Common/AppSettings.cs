@@ -14,4 +14,14 @@ public class AppSettings
     /// Configured Email for SendGrid
     /// </summary>
     public string? SendGridFromEmail { get; set; }
+    
+    /// <summary>
+    /// Base URL for Prism DID resolver
+    /// </summary>
+    public string? PrismBaseUrl { get; set; }
+    
+    /// <summary>
+    /// Default ledger for Prism DID resolver
+    /// </summary>
+    public string? PrismDefaultLedger { get; set; }
 }

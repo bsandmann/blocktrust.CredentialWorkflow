@@ -148,10 +148,14 @@ builder.Services.AddHttpClient<PrismDidClient>()
         };
     });
 
-builder.Services.AddSingleton(new PrismDidClientOptions
+builder.Services.AddSingleton(sp => 
 {
-    BaseUrl = "https://opn.blocktrust.dev:31201",
-    DefaultLedger = "mainnet"
+    var appSettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AppSettings>>().Value;
+    return new PrismDidClientOptions
+    {
+        BaseUrl = appSettings.PrismBaseUrl,
+        DefaultLedger = appSettings.PrismDefaultLedger
+    };
 });
 
 builder.Services.AddTransient<IEmailSender, SendGridEmailSender>();
