@@ -63,10 +63,25 @@ public class SignW3cCredentialHandler : IRequestHandler<SignW3cCredentialRequest
             {
                 { "iss", request.IssuerDid },
                 { "sub", request.Credential.CredentialSubjects?.FirstOrDefault()?.Id },
-                { "nbf", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddYears(5).ToUnixTimeSeconds() },
                 { "vc", cleanCredential }
             };
+            
+            // Add not-before (nbf) claim from credential's ValidFrom date if available
+            if (request.Credential.ValidFrom.HasValue)
+            {
+                payload["nbf"] = new DateTimeOffset(request.Credential.ValidFrom.Value).ToUnixTimeSeconds();
+            }
+            else
+            {
+                // Default to current time if ValidFrom is not specified
+                payload["nbf"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            }
+            
+            // Add expiration (exp) claim only if ExpirationDate is specified in the credential
+            if (request.Credential.ExpirationDate.HasValue)
+            {
+                payload["exp"] = new DateTimeOffset(request.Credential.ExpirationDate.Value).ToUnixTimeSeconds();
+            }
 
             var payloadJson = JsonSerializer.Serialize(payload, SerializerOptions);
             var payloadBase64 = PrismEncoding.ByteArrayToBase64(PrismEncoding.Utf8StringToByteArray(payloadJson));
