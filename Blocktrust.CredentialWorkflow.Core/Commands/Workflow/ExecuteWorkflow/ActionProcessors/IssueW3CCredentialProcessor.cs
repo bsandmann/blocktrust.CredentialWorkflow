@@ -45,6 +45,13 @@ public class IssueW3CCredentialProcessor : IActionProcessor
             return Result.Fail(errorMessage);
         }
 
+        DateOnly? validUntil = null;
+        if (input.ValidUntil is not null)
+        {
+            // TODO
+            // validUntil = await ParameterResolver.GetParameterFromExecutionContext(
+        }
+
         var claims = ParameterResolver.GetClaimsFromExecutionContext(input.Claims, context.ExecutionContext);
         if (claims == null)
         {
@@ -53,12 +60,13 @@ public class IssueW3CCredentialProcessor : IActionProcessor
             return Result.Fail(errorMessage);
         }
 
+
         var createW3CCredentialRequest = new CreateW3cCredentialRequest(
             issuerDid: issuerDid,
             subjectDid: subjectDid,
             additionalSubjectData: claims,
             validFrom: null,
-            expirationDate: null
+            expirationDate: input.ValidUntil.HasValue ? new DateTimeOffset(input.ValidUntil.Value) : null
         );
 
         var createW3CCredentialResult = await _mediator.Send(createW3CCredentialRequest, context.CancellationToken);

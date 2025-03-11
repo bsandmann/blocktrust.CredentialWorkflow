@@ -19,6 +19,9 @@ public class IssueW3cCredential : ActionInput
         Path = "DefaultIssuerDid"
     };
 
+    [JsonPropertyName("validUntil")]
+    public DateTime? ValidUntil { get; set; }
+
     [JsonPropertyName("claims")]
     public Dictionary<string, ClaimValue> Claims { get; set; } = new();
 }
