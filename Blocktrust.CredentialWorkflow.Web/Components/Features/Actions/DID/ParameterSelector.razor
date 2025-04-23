@@ -6,7 +6,8 @@
         <label class="block text-xs font-medium text-gray-700 mr-2">@Label</label>
         <div class="flex-grow"></div>
         <select class="text-xs border-none bg-transparent focus:ring-0 px-1 py-0 cursor-pointer"
-                @onchange="ChangeSourceType">
+                @bind="Parameter.Source" 
+                @bind:after="() => OnSourceChanged()">
             <option value="@ParameterSource.Static">Static</option>
             <option value="@ParameterSource.TriggerInput">From Trigger</option>
         </select>
@@ -120,13 +121,9 @@
     [Parameter] public bool IsCustomValue { get; set; } = false;
     [Parameter] public EventCallback<bool> OnCustomValueToggle { get; set; }
     
-    private async Task ChangeSourceType(ChangeEventArgs e)
+    private void OnSourceChanged()
     {
-        if (e.Value != null && Enum.TryParse<ParameterSource>(e.Value.ToString(), out var source))
-        {
-            Parameter.Source = source;
-            await OnChange.InvokeAsync(Parameter);
-        }
+        OnChange.InvokeAsync(Parameter);
     }
     
     private async Task OnTextInputChange(ChangeEventArgs e)
