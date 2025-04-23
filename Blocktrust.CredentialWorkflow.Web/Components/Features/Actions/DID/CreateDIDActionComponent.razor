@@ -2,12 +2,12 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
 
-<div class="p-4 text-sm">
+<div class="p-1 text-sm">
     <!-- DID Registrar Section -->
-    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-        <h3 class="font-medium text-gray-700 mb-2">DID Registrar</h3>
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">DID Registrar</h3>
         
-        <div class="mb-3">
+        <div class="mb-2">
             <div class="flex items-center">
                 <input type="radio" id="useTenantRegistrar" 
                        name="registrarSource" 
@@ -16,7 +16,7 @@
                        class="mr-2"/>
                 <label for="useTenantRegistrar" class="text-xs">Use from tenant settings</label>
             </div>
-            <div class="flex items-center mt-1">
+            <div class="flex items-center mt-0.5">
                 <input type="radio" id="useCustomRegistrar" 
                        name="registrarSource" 
                        checked="@(!ActionInput.UseTenantRegistrar)"
@@ -28,11 +28,11 @@
         
         @if (!ActionInput.UseTenantRegistrar)
         {
-            <div class="space-y-3">
+            <div class="space-y-2">
                 <!-- Registrar URL -->
-                <div class="space-y-3">
+                <div class="space-y-2">
                     <!-- Registrar URL -->
-                    <div class="p-2 border rounded-md">
+                    <div class="p-1.5 border rounded-md">
                         <ParameterSelector 
                             Label="OPN Registrar URL"
                             Parameter="ActionInput.RegistrarUrl"
@@ -42,7 +42,7 @@
                     </div>
                     
                     <!-- Wallet ID -->
-                    <div class="p-2 border rounded-md">
+                    <div class="p-1.5 border rounded-md">
                         <ParameterSelector 
                             Label="Wallet ID"
                             Parameter="ActionInput.WalletId"
@@ -56,7 +56,7 @@
     </div>
     
     <!-- Verification Methods Section -->
-    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
         <div class="flex justify-between items-center mb-2">
             <h3 class="font-medium text-gray-700">Verification Methods</h3>
             <button 
@@ -92,7 +92,7 @@
                         }
                     </div>
                     
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         <!-- Key ID -->
                         <ParameterSelector 
                             Label="Key ID"
@@ -128,7 +128,7 @@
     </div>
     
     <!-- Services Section -->
-    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
         <div class="flex justify-between items-center mb-2">
             <h3 class="font-medium text-gray-700">Services</h3>
             <button 
@@ -161,7 +161,7 @@
                         </button>
                     </div>
                     
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         <!-- Service ID -->
                         <ParameterSelector 
                             Label="Service ID"
