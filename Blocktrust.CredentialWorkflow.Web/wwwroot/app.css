@@ -1203,6 +1203,16 @@ video {
   border-radius: 0.75rem;
 }
 
+.rounded-l {
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.rounded-r {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
 .border {
   border-width: 1px;
 }
@@ -1233,6 +1243,10 @@ video {
 
 .border-t-2 {
   border-top-width: 2px;
+}
+
+.border-r {
+  border-right-width: 1px;
 }
 
 .border-blue-500 {
@@ -2009,6 +2023,11 @@ a {
 .hover\:bg-slate-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(51 65 85 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-gray-300:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity));
 }
 
 .hover\:text-blue-700:hover {

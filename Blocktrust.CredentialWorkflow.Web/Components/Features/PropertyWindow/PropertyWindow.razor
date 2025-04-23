@@ -387,6 +387,9 @@
                 EActionType.CreateDID => new CreateDIDAction
                 {
                     Id = Guid.NewGuid(),
+                    UseTenantRegistrar = true,
+                    RegistrarUrl = new ParameterReference { Source = ParameterSource.Static },
+                    WalletId = new ParameterReference { Source = ParameterSource.Static },
                     VerificationMethods = new List<VerificationMethod>
                     {
                         new VerificationMethod
@@ -395,7 +398,8 @@
                             Purpose = "Authentication",
                             Curve = "Secp256k1"
                         }
-                    }
+                    },
+                    Services = new List<ServiceEndpoint>()
                 },
                 EActionType.UpdateDID => new UpdateDIDAction
                 {

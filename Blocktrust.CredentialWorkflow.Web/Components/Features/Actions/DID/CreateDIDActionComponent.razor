@@ -1,7 +1,110 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
 
 <div class="p-4 text-sm">
+    <!-- DID Registrar Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+        <h3 class="font-medium text-gray-700 mb-2">DID Registrar</h3>
+        
+        <div class="mb-3">
+            <div class="flex items-center">
+                <input type="radio" id="useTenantRegistrar" 
+                       name="registrarSource" 
+                       checked="@ActionInput.UseTenantRegistrar"
+                       @onchange="() => SetRegistrarSource(true)"
+                       class="mr-2"/>
+                <label for="useTenantRegistrar" class="text-xs">Use from tenant settings</label>
+            </div>
+            <div class="flex items-center mt-1">
+                <input type="radio" id="useCustomRegistrar" 
+                       name="registrarSource" 
+                       checked="@(!ActionInput.UseTenantRegistrar)"
+                       @onchange="() => SetRegistrarSource(false)"
+                       class="mr-2"/>
+                <label for="useCustomRegistrar" class="text-xs">Configure custom registrar</label>
+            </div>
+        </div>
+        
+        @if (!ActionInput.UseTenantRegistrar)
+        {
+            <div class="space-y-3">
+                <!-- Registrar URL -->
+                <div class="p-2 border rounded-md">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">OPN Registrar URL</label>
+                    <div class="flex space-x-2">
+                        <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                                value="@ActionInput.RegistrarUrl.Source"
+                                @onchange="(e) => UpdateRegistrarUrlSource(e)">
+                            <option value="@ParameterSource.Static">Static Value</option>
+                            <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                        </select>
+                        
+                        @if (ActionInput.RegistrarUrl.Source == ParameterSource.Static)
+                        {
+                            <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                                   value="@ActionInput.RegistrarUrl.DefaultValue"
+                                   @onchange="(e) => UpdateRegistrarUrlValue(e)"
+                                   placeholder="Enter registrar URL" />
+                        }
+                        else if (ActionInput.RegistrarUrl.Source == ParameterSource.TriggerInput)
+                        {
+                            <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                                    value="@ActionInput.RegistrarUrl.Path"
+                                    @onchange="(e) => UpdateRegistrarUrlPath(e)">
+                                <option value="">Select trigger parameter</option>
+                                @if (TriggerParameters != null)
+                                {
+                                    @foreach (var param in TriggerParameters)
+                                    {
+                                        <option value="@param">@param</option>
+                                    }
+                                }
+                            </select>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Wallet ID -->
+                <div class="p-2 border rounded-md">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Wallet ID</label>
+                    <div class="flex space-x-2">
+                        <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                                value="@ActionInput.WalletId.Source"
+                                @onchange="(e) => UpdateWalletIdSource(e)">
+                            <option value="@ParameterSource.Static">Static Value</option>
+                            <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                        </select>
+                        
+                        @if (ActionInput.WalletId.Source == ParameterSource.Static)
+                        {
+                            <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                                   value="@ActionInput.WalletId.DefaultValue"
+                                   @onchange="(e) => UpdateWalletIdValue(e)"
+                                   placeholder="Enter wallet ID" />
+                        }
+                        else if (ActionInput.WalletId.Source == ParameterSource.TriggerInput)
+                        {
+                            <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                                    value="@ActionInput.WalletId.Path"
+                                    @onchange="(e) => UpdateWalletIdPath(e)">
+                                <option value="">Select trigger parameter</option>
+                                @if (TriggerParameters != null)
+                                {
+                                    @foreach (var param in TriggerParameters)
+                                    {
+                                        <option value="@param">@param</option>
+                                    }
+                                }
+                            </select>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <!-- Verification Methods Section -->
     <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
         <div class="flex justify-between items-center mb-2">
             <h3 class="font-medium text-gray-700">Verification Methods</h3>
@@ -111,6 +214,116 @@
             }
         </div>
     </div>
+    
+    <!-- Services Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-gray-700">Services</h3>
+            <button 
+                @onclick="AddService" 
+                class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Service
+            </button>
+        </div>
+
+        @if (ActionInput.Services.Count == 0)
+        {
+            <div class="text-xs text-gray-500 mb-2">No services added. Services are optional.</div>
+        }
+
+        <div class="space-y-2">
+            @for (int i = 0; i < ActionInput.Services.Count; i++)
+            {
+                var index = i;
+                var service = ActionInput.Services[i];
+                
+                <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-gray-700">Service @(i + 1)</span>
+                        
+                        <button 
+                            @onclick="() => RemoveService(index)"
+                            class="text-red-500 hover:text-red-700">
+                            <span class="material-symbols-outlined text-xs">delete</span>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <!-- Service ID -->
+                        <div>
+                            <label for="serviceId-@i" class="block text-xs font-medium text-gray-700 mb-1">Service ID</label>
+                            <input 
+                                id="serviceId-@i"
+                                type="text"
+                                @bind="service.ServiceId"
+                                @oninput="(e) => ValidateServiceId(index, e)"
+                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                                placeholder="service-1" />
+                            @if (!string.IsNullOrEmpty(_serviceIdErrors[index]))
+                            {
+                                <div class="text-red-500 text-xs mt-1">@_serviceIdErrors[index]</div>
+                            }
+                        </div>
+                        
+                        <!-- Type -->
+                        <div>
+                            <label for="serviceType-@i" class="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                            <div class="flex">
+                                @if (_isCustomServiceType[index])
+                                {
+                                    <input 
+                                        id="serviceType-@i"
+                                        type="text"
+                                        @bind="service.Type"
+                                        @oninput="(e) => ValidateServiceType(index, e)"
+                                        class="w-full px-2 py-1 border border-gray-300 rounded-l text-xs"
+                                        placeholder="Custom service type" />
+                                    <button 
+                                        @onclick="() => ToggleCustomServiceType(index, false)"
+                                        class="bg-gray-200 hover:bg-gray-300 px-2 rounded-r border-t border-r border-b border-gray-300">
+                                        <span class="material-symbols-outlined text-xs">list</span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <select 
+                                        id="serviceType-@i"
+                                        @bind="service.Type"
+                                        class="w-full px-2 py-1 border border-gray-300 rounded-l text-xs">
+                                        @foreach (var type in _serviceTypes)
+                                        {
+                                            <option value="@type">@type</option>
+                                        }
+                                    </select>
+                                    <button 
+                                        @onclick="() => ToggleCustomServiceType(index, true)"
+                                        class="bg-gray-200 hover:bg-gray-300 px-2 rounded-r border-t border-r border-b border-gray-300">
+                                        <span class="material-symbols-outlined text-xs">edit</span>
+                                    </button>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(_serviceTypeErrors[index]))
+                            {
+                                <div class="text-red-500 text-xs mt-1">@_serviceTypeErrors[index]</div>
+                            }
+                        </div>
+                        
+                        <!-- Endpoint -->
+                        <div>
+                            <label for="endpoint-@i" class="block text-xs font-medium text-gray-700 mb-1">Endpoint</label>
+                            <input 
+                                id="endpoint-@i"
+                                type="text"
+                                @bind="service.Endpoint"
+                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                                placeholder="https://example.com" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 @code {
@@ -136,6 +349,19 @@
         ("X25519", true)
     };
     
+    private List<string> _serviceTypes = new List<string>
+    {
+        "LinkedDomain",
+        "DIDCommMessaging",
+        "CredentialRegistry",
+        "OID4VCI",
+        "OID4VP"
+    };
+    
+    private List<bool> _isCustomServiceType = new List<bool>();
+    private List<string> _serviceIdErrors = new List<string>();
+    private List<string> _serviceTypeErrors = new List<string>();
+    
     protected override void OnInitialized()
     {
         // Ensure we have at least one verification method
@@ -144,8 +370,21 @@
             AddDefaultVerificationMethod();
         }
         
-        // Initialize error tracking array
+        // Initialize error tracking array for verification methods
         _keyIdErrors = new List<string>(new string[ActionInput.VerificationMethods.Count]);
+        
+        // Initialize error tracking arrays for services
+        _serviceIdErrors = new List<string>(new string[ActionInput.Services.Count]);
+        _serviceTypeErrors = new List<string>(new string[ActionInput.Services.Count]);
+        
+        // Initialize custom service type flags
+        _isCustomServiceType = new List<bool>(new bool[ActionInput.Services.Count]);
+        
+        // Check if any service has a custom type
+        for (int i = 0; i < ActionInput.Services.Count; i++)
+        {
+            _isCustomServiceType.Add(!_serviceTypes.Contains(ActionInput.Services[i].Type));
+        }
     }
     
     private void AddDefaultVerificationMethod()
@@ -247,5 +486,148 @@
     {
         // ASCII letters, numbers, and dashes only
         return System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9-]+$");
+    }
+    
+    // Service methods
+    private async Task AddService()
+    {
+        var newService = new ServiceEndpoint
+        {
+            ServiceId = $"service-{ActionInput.Services.Count + 1}",
+            Type = "LinkedDomain",
+            Endpoint = ""
+        };
+        
+        ActionInput.Services.Add(newService);
+        _serviceIdErrors.Add(string.Empty);
+        _serviceTypeErrors.Add(string.Empty);
+        _isCustomServiceType.Add(false);
+        
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task RemoveService(int index)
+    {
+        ActionInput.Services.RemoveAt(index);
+        _serviceIdErrors.RemoveAt(index);
+        _serviceTypeErrors.RemoveAt(index);
+        _isCustomServiceType.RemoveAt(index);
+        
+        // Update remaining service IDs to be sequential
+        for (int i = 0; i < ActionInput.Services.Count; i++)
+        {
+            if (ActionInput.Services[i].ServiceId.StartsWith("service-") && 
+                int.TryParse(ActionInput.Services[i].ServiceId.Substring(8), out _))
+            {
+                ActionInput.Services[i].ServiceId = $"service-{i + 1}";
+            }
+        }
+        
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+    
+    private void ToggleCustomServiceType(int index, bool isCustom)
+    {
+        _isCustomServiceType[index] = isCustom;
+        
+        // If switching from custom to predefined, set to the first predefined type
+        if (!isCustom && !_serviceTypes.Contains(ActionInput.Services[index].Type))
+        {
+            ActionInput.Services[index].Type = _serviceTypes[0];
+            OnChange.InvokeAsync();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private void ValidateServiceId(int index, ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        
+        if (string.IsNullOrEmpty(value))
+        {
+            _serviceIdErrors[index] = "Service ID is required";
+        }
+        else if (!IsValidKeyId(value))
+        {
+            _serviceIdErrors[index] = "Service ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _serviceIdErrors[index] = string.Empty;
+            ActionInput.Services[index].ServiceId = value;
+            OnChange.InvokeAsync();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private void ValidateServiceType(int index, ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        
+        if (string.IsNullOrEmpty(value))
+        {
+            _serviceTypeErrors[index] = "Service Type is required";
+        }
+        else
+        {
+            _serviceTypeErrors[index] = string.Empty;
+            ActionInput.Services[index].Type = value;
+            OnChange.InvokeAsync();
+        }
+        
+        StateHasChanged();
+    }
+    
+    // DID Registrar methods
+    private async Task SetRegistrarSource(bool useTenant)
+    {
+        ActionInput.UseTenantRegistrar = useTenant;
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task UpdateRegistrarUrlSource(ChangeEventArgs e)
+    {
+        if (e.Value != null && Enum.TryParse<ParameterSource>(e.Value.ToString(), out var source))
+        {
+            ActionInput.RegistrarUrl.Source = source;
+            await OnChange.InvokeAsync();
+        }
+    }
+    
+    private async Task UpdateRegistrarUrlValue(ChangeEventArgs e)
+    {
+        ActionInput.RegistrarUrl.DefaultValue = e.Value?.ToString();
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task UpdateRegistrarUrlPath(ChangeEventArgs e)
+    {
+        ActionInput.RegistrarUrl.Path = e.Value?.ToString() ?? string.Empty;
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task UpdateWalletIdSource(ChangeEventArgs e)
+    {
+        if (e.Value != null && Enum.TryParse<ParameterSource>(e.Value.ToString(), out var source))
+        {
+            ActionInput.WalletId.Source = source;
+            await OnChange.InvokeAsync();
+        }
+    }
+    
+    private async Task UpdateWalletIdValue(ChangeEventArgs e)
+    {
+        ActionInput.WalletId.DefaultValue = e.Value?.ToString();
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task UpdateWalletIdPath(ChangeEventArgs e)
+    {
+        ActionInput.WalletId.Path = e.Value?.ToString() ?? string.Empty;
+        await OnChange.InvokeAsync();
     }
 }
