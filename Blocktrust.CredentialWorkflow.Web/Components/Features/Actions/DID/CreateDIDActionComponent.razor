@@ -1,0 +1,251 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
+
+<div class="p-4 text-sm">
+    <div class="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-gray-700">Verification Methods</h3>
+            <button 
+                @onclick="AddVerificationMethod" 
+                class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Method
+            </button>
+        </div>
+
+        @if (ActionInput.VerificationMethods.Count == 0)
+        {
+            <div class="text-red-500 text-xs mb-2">At least one verification method is required</div>
+        }
+
+        <div class="space-y-2">
+            @for (int i = 0; i < ActionInput.VerificationMethods.Count; i++)
+            {
+                var index = i;
+                var method = ActionInput.VerificationMethods[i];
+                
+                <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-gray-700">Method @(i + 1)</span>
+                        
+                        @if (ActionInput.VerificationMethods.Count > 1)
+                        {
+                            <button 
+                                @onclick="() => RemoveVerificationMethod(index)"
+                                class="text-red-500 hover:text-red-700">
+                                <span class="material-symbols-outlined text-xs">delete</span>
+                            </button>
+                        }
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <!-- Key ID -->
+                        <div>
+                            <label for="keyId-@i" class="block text-xs font-medium text-gray-700 mb-1">Key ID</label>
+                            <input 
+                                id="keyId-@i"
+                                type="text"
+                                @bind="method.KeyId"
+                                @oninput="(e) => ValidateKeyId(index, e)"
+                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                                placeholder="key-1" />
+                            @if (!string.IsNullOrEmpty(_keyIdErrors[index]))
+                            {
+                                <div class="text-red-500 text-xs mt-1">@_keyIdErrors[index]</div>
+                            }
+                        </div>
+                        
+                        <!-- Purpose -->
+                        <div>
+                            <label for="purpose-@i" class="block text-xs font-medium text-gray-700 mb-1">Purpose</label>
+                            <select 
+                                id="purpose-@i"
+                                value="@method.Purpose"
+                                @onchange="(e) => UpdatePurpose(index, e)"
+                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
+                                @foreach (var purpose in _availablePurposes)
+                                {
+                                    if (purpose.IsSelectable)
+                                    {
+                                        <option value="@purpose.Value">@purpose.Value</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@purpose.Value" disabled>@purpose.Value</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        
+                        <!-- Curve -->
+                        <div>
+                            <label for="curve-@i" class="block text-xs font-medium text-gray-700 mb-1">Curve</label>
+                            <select 
+                                id="curve-@i"
+                                value="@method.Curve"
+                                @onchange="(e) => UpdateCurve(index, e)"
+                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
+                                @foreach (var curve in _availableCurves)
+                                {
+                                    if (method.Purpose == "KeyAgreement" && curve.Value == "X25519")
+                                    {
+                                        <option value="@curve.Value">@curve.Value</option>
+                                    }
+                                    else if (method.Purpose == "KeyAgreement" && curve.Value != "X25519")
+                                    {
+                                        <option value="@curve.Value" disabled>@curve.Value</option>
+                                    }
+                                    else if (method.Purpose != "KeyAgreement" && curve.Value != "X25519")
+                                    {
+                                        <option value="@curve.Value">@curve.Value</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@curve.Value" disabled>@curve.Value</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CreateDIDAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    
+    private List<string> _keyIdErrors = new List<string>();
+    
+    private List<(string Value, bool IsSelectable)> _availablePurposes = new List<(string, bool)>
+    {
+        ("Authentication", true),
+        ("KeyAgreement", true),
+        ("AssertionMethod", true),
+        ("CapabilityInvocation", false),
+        ("CapabilityDelegation", false)
+    };
+    
+    private List<(string Value, bool IsSelectable)> _availableCurves = new List<(string, bool)>
+    {
+        ("Secp256k1", true),
+        ("Ed25519", true),
+        ("X25519", true)
+    };
+    
+    protected override void OnInitialized()
+    {
+        // Ensure we have at least one verification method
+        if (ActionInput.VerificationMethods.Count == 0)
+        {
+            AddDefaultVerificationMethod();
+        }
+        
+        // Initialize error tracking array
+        _keyIdErrors = new List<string>(new string[ActionInput.VerificationMethods.Count]);
+    }
+    
+    private void AddDefaultVerificationMethod()
+    {
+        ActionInput.VerificationMethods.Add(new VerificationMethod
+        {
+            KeyId = $"key-{ActionInput.VerificationMethods.Count + 1}",
+            Purpose = "Authentication",
+            Curve = "Secp256k1"
+        });
+        
+        _keyIdErrors.Add(string.Empty);
+        StateHasChanged();
+    }
+    
+    private void AddVerificationMethod()
+    {
+        ActionInput.VerificationMethods.Add(new VerificationMethod
+        {
+            KeyId = $"key-{ActionInput.VerificationMethods.Count + 1}",
+            Purpose = "Authentication",
+            Curve = "Secp256k1"
+        });
+        
+        _keyIdErrors.Add(string.Empty);
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+    
+    private void RemoveVerificationMethod(int index)
+    {
+        if (ActionInput.VerificationMethods.Count > 1)
+        {
+            ActionInput.VerificationMethods.RemoveAt(index);
+            _keyIdErrors.RemoveAt(index);
+            StateHasChanged();
+            OnChange.InvokeAsync();
+        }
+    }
+    
+    private void UpdatePurpose(int index, ChangeEventArgs e)
+    {
+        string? purpose = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(purpose))
+        {
+            var method = ActionInput.VerificationMethods[index];
+            method.Purpose = purpose;
+            
+            // If the purpose is KeyAgreement, automatically set the curve to X25519
+            if (purpose == "KeyAgreement")
+            {
+                method.Curve = "X25519";
+            }
+            // If we're changing from KeyAgreement and the curve is X25519, change it to Secp256k1
+            else if (method.Curve == "X25519")
+            {
+                method.Curve = "Secp256k1";
+            }
+            
+            StateHasChanged();
+            OnChange.InvokeAsync();
+        }
+    }
+    
+    private void UpdateCurve(int index, ChangeEventArgs e)
+    {
+        string? curve = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(curve))
+        {
+            ActionInput.VerificationMethods[index].Curve = curve;
+            StateHasChanged();
+            OnChange.InvokeAsync();
+        }
+    }
+    
+    private void ValidateKeyId(int index, ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        
+        if (string.IsNullOrEmpty(value))
+        {
+            _keyIdErrors[index] = "Key ID is required";
+        }
+        else if (!IsValidKeyId(value))
+        {
+            _keyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _keyIdErrors[index] = string.Empty;
+            ActionInput.VerificationMethods[index].KeyId = value;
+            OnChange.InvokeAsync();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private bool IsValidKeyId(string value)
+    {
+        // ASCII letters, numbers, and dashes only
+        return System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9-]+$");
+    }
+}

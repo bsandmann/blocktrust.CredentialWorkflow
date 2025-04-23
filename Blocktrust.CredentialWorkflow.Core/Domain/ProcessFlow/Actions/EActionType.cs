@@ -12,5 +12,8 @@ public enum EActionType
     Http,
     Email,
     W3cValidation,
-    CustomValidation
+    CustomValidation,
+    CreateDID,
+    UpdateDID,
+    DeleteDID
 }

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
@@ -26,6 +27,11 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 // Validation
 [JsonDerivedType(typeof(W3cValidationAction), typeDiscriminator: "w3cValidation")]
 [JsonDerivedType(typeof(CustomValidationAction), typeDiscriminator: "customValidation")]
+
+// DID Management
+[JsonDerivedType(typeof(CreateDIDAction), typeDiscriminator: "createDID")]
+[JsonDerivedType(typeof(UpdateDIDAction), typeDiscriminator: "updateDID")]
+[JsonDerivedType(typeof(DeleteDIDAction), typeDiscriminator: "deleteDID")]
 
 public abstract class ActionInput
 {

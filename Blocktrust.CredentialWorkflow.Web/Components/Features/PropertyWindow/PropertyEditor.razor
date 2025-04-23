@@ -8,6 +8,7 @@
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Verification
@@ -167,6 +168,21 @@
                         TriggerParameters="TriggerParameters"
                         FlowItems="FlowItems"/>
                 }
+                break;
+            case EActionType.CreateDID:
+                @if (action.Input is CreateDIDAction createDIDAction)
+                {
+                    <CreateDIDActionComponent
+                        ActionInput="createDIDAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"/>
+                }
+                break;
+            case EActionType.UpdateDID:
+                // We'll implement this later
+                break;
+            case EActionType.DeleteDID:
+                // We'll implement this later
                 break;
         }
     }
