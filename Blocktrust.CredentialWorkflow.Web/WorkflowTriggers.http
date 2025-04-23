@@ -7,7 +7,7 @@ GET https://localhost:7209/api/workflow/22222222-2222-2222-2222-222222222222
     &testClaim=RandomStringABC
 
 ### POST request to WorkflowController with JSON body for credential issuing
-POST https://localhost:7209/api/workflow/7ebce746-0d30-493a-846e-08dd60c2c359
+POST https://localhost:7209/api/workflow/3e388fcb-10e6-4d5f-230c-08dd825cfefa
 Content-Type: application/json
 
 {
@@ -17,7 +17,6 @@ Content-Type: application/json
   "email": "sandmann@blocktrust.dev",
   "age": "123"
 }
-
 
 
 
@@ -31,31 +30,6 @@ Content-Type: application/json
   "grade": "A",
   "email": "sandmann@blocktrust.dev"
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ### POST request to WorkflowController with JSON body to receive a presentation-request

@@ -270,3 +270,6 @@ FakesAssemblies/
 riderModule.iml
 /_ReSharper.Caches/
 node_modules/
+
+aidocs/
+.claude/
