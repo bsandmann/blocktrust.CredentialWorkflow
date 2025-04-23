@@ -40,12 +40,17 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
             return Result.Fail("Tenant not found");
         }
 
+        var tenantEntity = await _context.TenantEntities
+            .FirstOrDefaultAsync(p => p.TenantEntityId == request.TenantEntityId, cancellationToken);
+        
         return Result.Ok(new GetTenantInformationResponse()
         {
             Tenant = new Tenant()
             {
                 Name = result.TenantName,
-                TenantId = request.TenantEntityId
+                TenantId = request.TenantEntityId,
+                OpnRegistrarUrl = tenantEntity?.OpnRegistrarUrl,
+                WalletId = tenantEntity?.WalletId
             },
             WorkflowSummaries = result.WorkflowSummaries.Select(p => new WorkflowSummary()
             {

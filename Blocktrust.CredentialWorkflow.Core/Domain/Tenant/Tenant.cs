@@ -7,4 +7,8 @@ public record Tenant
     public string Name { get; init; }
 
     public DateTime CreatedUtc { get; init; }
+    
+    public string? OpnRegistrarUrl { get; init; }
+    
+    public string? WalletId { get; init; }
 }

@@ -1,0 +1,159 @@
+@page "/Account/Manage/DidRegistrar"
+
+@using System.ComponentModel.DataAnnotations
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.UpdateDidRegistrar
+@using Blocktrust.CredentialWorkflow.Web.Common
+@using MediatR
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Options
+@using Microsoft.AspNetCore.Http
+
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IOptions<AppSettings> AppSettings
+
+<PageTitle>DID Registrar Settings</PageTitle>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h2 class="font-museo text-3xl font-semibold text-slate-800">DID Registrar Settings</h2>
+            <p class="mt-2 text-slate-600">Configure your DID Registrar settings for credential management.</p>
+        </div>
+
+        <StatusMessage Message="@message"/>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6">
+                @* Change OnSubmit to OnValidSubmit for better validation handling *@
+                <EditForm Model="DidRegistrarSettings" FormName="did-registrar-settings" OnValidSubmit="OnSaveSettingsAsync" method="post">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-red-500 list-disc list-inside mb-4" /> @* Added styling for visibility *@
+
+                    <div class="space-y-5">
+                        <div>
+                            <label for="opnRegistrarUrl" class="block text-sm font-medium text-slate-700 mb-1">OPN Registrar URL</label>
+                            <InputText id="opnRegistrarUrl"
+                                      @bind-Value="DidRegistrarSettings.OpnRegistrarUrl"
+                                      class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                      placeholder="https://opn.mainnet.blocktrust.dev"/>
+                            <ValidationMessage For="() => DidRegistrarSettings.OpnRegistrarUrl" class="mt-1 text-sm text-red-500"/>
+                        </div>
+
+                        <div>
+                            <label for="walletId" class="block text-sm font-medium text-slate-700 mb-1">Wallet ID</label>
+                            <InputText id="walletId"
+                                      @bind-Value="DidRegistrarSettings.WalletId"
+                                      class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                      placeholder="Enter your wallet ID"/>
+                             @* Optionally add validation for WalletId if needed in the model *@
+                            <ValidationMessage For="() => DidRegistrarSettings.WalletId" class="mt-1 text-sm text-red-500"/>
+                        </div>
+
+                        <div>
+                            <button type="submit"
+                                    class="w-full bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? message;
+    private Guid TenantId { get; set; }
+
+    // FormName here isn't strictly needed if it matches the EditForm's FormName, but doesn't hurt.
+    [SupplyParameterFromForm(FormName = "did-registrar-settings")]
+    private DidRegistrarSettingsModel DidRegistrarSettings { get; set; } = new();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(HttpContext); // Ensure HttpContext is available
+
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        TenantId = user.TenantEntityId!.Value;
+
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            await LoadTenantSettings();
+        }
+    }
+
+    private async Task LoadTenantSettings()
+    {
+        message = null; // Clear message when loading/reloading
+        var result = await Mediator.Send(new GetTenantInformationRequest(TenantId));
+        if (result.IsFailed)
+        {
+            message = $"Error loading tenant settings: {string.Join(", ", result.Errors)}";
+            // Ensure model is reset or handled appropriately in case of load failure
+            DidRegistrarSettings = new DidRegistrarSettingsModel
+            {
+                OpnRegistrarUrl = AppSettings.Value.PrismBaseUrl // Keep default on error
+            };
+            return;
+        }
+
+        // Populate the model with existing data or defaults
+        DidRegistrarSettings.OpnRegistrarUrl = result.Value.Tenant.OpnRegistrarUrl ?? AppSettings.Value.PrismBaseUrl;
+        DidRegistrarSettings.WalletId = result.Value.Tenant.WalletId ?? string.Empty;
+    }
+
+    // Renamed parameterless to match OnValidSubmit
+    private async Task OnSaveSettingsAsync()
+    {
+        // No need to manually check model validity here, OnValidSubmit ensures it
+        try
+        {
+            // The DidRegistrarSettings object now correctly holds the submitted values
+            var request = new UpdateDidRegistrarRequest(
+                TenantId,
+                DidRegistrarSettings.OpnRegistrarUrl, // Use the value from the bound model
+                DidRegistrarSettings.WalletId);      // Use the value from the bound model
+
+            var result = await Mediator.Send(request);
+
+            if (result.IsSuccess)
+            {
+                message = "DID Registrar settings updated successfully.";
+                await LoadTenantSettings();
+            }
+            else
+            {
+                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Message));
+                // Check for specific validation errors from the command if available
+                // For now, just show the generic error message
+                message = $"Error updating settings: {errorMessages}";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the exception details (using a proper logging framework is recommended)
+            Console.Error.WriteLine($"Error saving DID Registrar settings: {ex}");
+            message = $"An unexpected error occurred: {ex.Message}";
+        }
+    }
+
+    // Consider adding validation attributes if these fields are required
+    private sealed class DidRegistrarSettingsModel
+    {
+        [Display(Name = "OPN Registrar URL")]
+        [Required(ErrorMessage = "OPN Registrar URL is required.")]
+        [Url(ErrorMessage = "Please enter a valid URL.")]
+        public string? OpnRegistrarUrl { get; set; }
+
+        [Display(Name = "Wallet ID")]
+        public string? WalletId { get; set; }
+    }
+}

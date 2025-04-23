@@ -14,6 +14,16 @@ public record TenantEntity
     [Unicode(true)] [MaxLength(100)] public required string Name { get; init; }
 
     public DateTime CreatedUtc { get; init; }
+    
+    /// <summary>
+    /// OPN Registrar URL for DID registration
+    /// </summary>
+    [Unicode(true)] [MaxLength(255)] public string? OpnRegistrarUrl { get; set; }
+    
+    /// <summary>
+    /// Wallet ID for DID registration
+    /// </summary>
+    [Unicode(true)] [MaxLength(100)] public string? WalletId { get; set; }
 
     /// <summary>
     /// A tenant can have many workflows
