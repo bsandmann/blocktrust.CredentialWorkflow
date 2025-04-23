@@ -27,23 +27,41 @@ public class CreateDIDAction : ActionInput
 public class VerificationMethod
 {
     [JsonPropertyName("keyId")]
-    public string KeyId { get; set; } = "key-1";
+    public ParameterReference KeyId { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static, 
+        DefaultValue = "key-1" 
+    };
     
     [JsonPropertyName("purpose")]
-    public string Purpose { get; set; } = "Authentication";
+    public ParameterReference Purpose { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static,
+        DefaultValue = "Authentication"
+    };
     
     [JsonPropertyName("curve")]
-    public string Curve { get; set; } = "Secp256k1";
+    public ParameterReference Curve { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static,
+        DefaultValue = "Secp256k1"
+    };
 }
 
 public class ServiceEndpoint
 {
     [JsonPropertyName("serviceId")]
-    public string ServiceId { get; set; } = "service-1";
+    public ParameterReference ServiceId { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static,
+        DefaultValue = "service-1"
+    };
     
     [JsonPropertyName("type")]
-    public string Type { get; set; } = "LinkedDomain";
+    public ParameterReference Type { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static,
+        DefaultValue = "LinkedDomain"
+    };
     
     [JsonPropertyName("endpoint")]
-    public string Endpoint { get; set; } = "";
+    public ParameterReference Endpoint { get; set; } = new ParameterReference { 
+        Source = ParameterSource.Static,
+        DefaultValue = ""
+    };
 }

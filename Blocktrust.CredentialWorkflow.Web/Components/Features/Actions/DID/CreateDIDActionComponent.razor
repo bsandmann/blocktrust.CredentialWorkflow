@@ -30,74 +30,25 @@
         {
             <div class="space-y-3">
                 <!-- Registrar URL -->
-                <div class="p-2 border rounded-md">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">OPN Registrar URL</label>
-                    <div class="flex space-x-2">
-                        <select class="w-1/3 rounded border px-2 py-1 text-xs"
-                                value="@ActionInput.RegistrarUrl.Source"
-                                @onchange="(e) => UpdateRegistrarUrlSource(e)">
-                            <option value="@ParameterSource.Static">Static Value</option>
-                            <option value="@ParameterSource.TriggerInput">From Trigger</option>
-                        </select>
-                        
-                        @if (ActionInput.RegistrarUrl.Source == ParameterSource.Static)
-                        {
-                            <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
-                                   value="@ActionInput.RegistrarUrl.DefaultValue"
-                                   @onchange="(e) => UpdateRegistrarUrlValue(e)"
-                                   placeholder="Enter registrar URL" />
-                        }
-                        else if (ActionInput.RegistrarUrl.Source == ParameterSource.TriggerInput)
-                        {
-                            <select class="w-2/3 rounded border px-2 py-1 text-xs"
-                                    value="@ActionInput.RegistrarUrl.Path"
-                                    @onchange="(e) => UpdateRegistrarUrlPath(e)">
-                                <option value="">Select trigger parameter</option>
-                                @if (TriggerParameters != null)
-                                {
-                                    @foreach (var param in TriggerParameters)
-                                    {
-                                        <option value="@param">@param</option>
-                                    }
-                                }
-                            </select>
-                        }
+                <div class="space-y-3">
+                    <!-- Registrar URL -->
+                    <div class="p-2 border rounded-md">
+                        <ParameterSelector 
+                            Label="OPN Registrar URL"
+                            Parameter="ActionInput.RegistrarUrl"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter registrar URL"
+                            TriggerParameters="TriggerParameters" />
                     </div>
-                </div>
-                
-                <!-- Wallet ID -->
-                <div class="p-2 border rounded-md">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Wallet ID</label>
-                    <div class="flex space-x-2">
-                        <select class="w-1/3 rounded border px-2 py-1 text-xs"
-                                value="@ActionInput.WalletId.Source"
-                                @onchange="(e) => UpdateWalletIdSource(e)">
-                            <option value="@ParameterSource.Static">Static Value</option>
-                            <option value="@ParameterSource.TriggerInput">From Trigger</option>
-                        </select>
-                        
-                        @if (ActionInput.WalletId.Source == ParameterSource.Static)
-                        {
-                            <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
-                                   value="@ActionInput.WalletId.DefaultValue"
-                                   @onchange="(e) => UpdateWalletIdValue(e)"
-                                   placeholder="Enter wallet ID" />
-                        }
-                        else if (ActionInput.WalletId.Source == ParameterSource.TriggerInput)
-                        {
-                            <select class="w-2/3 rounded border px-2 py-1 text-xs"
-                                    value="@ActionInput.WalletId.Path"
-                                    @onchange="(e) => UpdateWalletIdPath(e)">
-                                <option value="">Select trigger parameter</option>
-                                @if (TriggerParameters != null)
-                                {
-                                    @foreach (var param in TriggerParameters)
-                                    {
-                                        <option value="@param">@param</option>
-                                    }
-                                }
-                            </select>
-                        }
+                    
+                    <!-- Wallet ID -->
+                    <div class="p-2 border rounded-md">
+                        <ParameterSelector 
+                            Label="Wallet ID"
+                            Parameter="ActionInput.WalletId"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter wallet ID"
+                            TriggerParameters="TriggerParameters" />
                     </div>
                 </div>
             </div>
@@ -141,74 +92,35 @@
                         }
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="space-y-3">
                         <!-- Key ID -->
-                        <div>
-                            <label for="keyId-@i" class="block text-xs font-medium text-gray-700 mb-1">Key ID</label>
-                            <input 
-                                id="keyId-@i"
-                                type="text"
-                                @bind="method.KeyId"
-                                @oninput="(e) => ValidateKeyId(index, e)"
-                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                                placeholder="key-1" />
-                            @if (!string.IsNullOrEmpty(_keyIdErrors[index]))
-                            {
-                                <div class="text-red-500 text-xs mt-1">@_keyIdErrors[index]</div>
-                            }
-                        </div>
+                        <ParameterSelector 
+                            Label="Key ID"
+                            Parameter="method.KeyId"
+                            OnChange="() => OnValueChanged()"
+                            OnInputValidation="(value) => ValidateKeyId(index, value)"
+                            ValidationError="@_keyIdErrors[index]"
+                            Placeholder="key-1"
+                            TriggerParameters="TriggerParameters" />
                         
                         <!-- Purpose -->
-                        <div>
-                            <label for="purpose-@i" class="block text-xs font-medium text-gray-700 mb-1">Purpose</label>
-                            <select 
-                                id="purpose-@i"
-                                value="@method.Purpose"
-                                @onchange="(e) => UpdatePurpose(index, e)"
-                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
-                                @foreach (var purpose in _availablePurposes)
-                                {
-                                    if (purpose.IsSelectable)
-                                    {
-                                        <option value="@purpose.Value">@purpose.Value</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@purpose.Value" disabled>@purpose.Value</option>
-                                    }
-                                }
-                            </select>
-                        </div>
+                        <ParameterSelector 
+                            Label="Purpose"
+                            Parameter="method.Purpose"
+                            OnChange="(p) => UpdatePurpose(index, p)"
+                            TriggerParameters="TriggerParameters"
+                            IsDropdown="true"
+                            Options="@_purposeOptions" />
                         
                         <!-- Curve -->
-                        <div>
-                            <label for="curve-@i" class="block text-xs font-medium text-gray-700 mb-1">Curve</label>
-                            <select 
-                                id="curve-@i"
-                                value="@method.Curve"
-                                @onchange="(e) => UpdateCurve(index, e)"
-                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
-                                @foreach (var curve in _availableCurves)
-                                {
-                                    if (method.Purpose == "KeyAgreement" && curve.Value == "X25519")
-                                    {
-                                        <option value="@curve.Value">@curve.Value</option>
-                                    }
-                                    else if (method.Purpose == "KeyAgreement" && curve.Value != "X25519")
-                                    {
-                                        <option value="@curve.Value" disabled>@curve.Value</option>
-                                    }
-                                    else if (method.Purpose != "KeyAgreement" && curve.Value != "X25519")
-                                    {
-                                        <option value="@curve.Value">@curve.Value</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@curve.Value" disabled>@curve.Value</option>
-                                    }
-                                }
-                            </select>
-                        </div>
+                        <ParameterSelector 
+                            Label="Curve"
+                            Parameter="method.Curve"
+                            OnChange="() => OnValueChanged()"
+                            TriggerParameters="TriggerParameters"
+                            IsDropdown="true"
+                            Options="@_curveOptions"
+                            DisabledValue="@(GetDisabledCurveValue(method))" />
                     </div>
                 </div>
             }
@@ -249,76 +161,39 @@
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="space-y-3">
                         <!-- Service ID -->
-                        <div>
-                            <label for="serviceId-@i" class="block text-xs font-medium text-gray-700 mb-1">Service ID</label>
-                            <input 
-                                id="serviceId-@i"
-                                type="text"
-                                @bind="service.ServiceId"
-                                @oninput="(e) => ValidateServiceId(index, e)"
-                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                                placeholder="service-1" />
-                            @if (!string.IsNullOrEmpty(_serviceIdErrors[index]))
-                            {
-                                <div class="text-red-500 text-xs mt-1">@_serviceIdErrors[index]</div>
-                            }
-                        </div>
+                        <ParameterSelector 
+                            Label="Service ID"
+                            Parameter="service.ServiceId"
+                            OnChange="() => OnValueChanged()"
+                            OnInputValidation="(value) => ValidateServiceId(index, value)"
+                            ValidationError="@_serviceIdErrors[index]"
+                            Placeholder="service-1"
+                            TriggerParameters="TriggerParameters" />
                         
                         <!-- Type -->
-                        <div>
-                            <label for="serviceType-@i" class="block text-xs font-medium text-gray-700 mb-1">Type</label>
-                            <div class="flex">
-                                @if (_isCustomServiceType[index])
-                                {
-                                    <input 
-                                        id="serviceType-@i"
-                                        type="text"
-                                        @bind="service.Type"
-                                        @oninput="(e) => ValidateServiceType(index, e)"
-                                        class="w-full px-2 py-1 border border-gray-300 rounded-l text-xs"
-                                        placeholder="Custom service type" />
-                                    <button 
-                                        @onclick="() => ToggleCustomServiceType(index, false)"
-                                        class="bg-gray-200 hover:bg-gray-300 px-2 rounded-r border-t border-r border-b border-gray-300">
-                                        <span class="material-symbols-outlined text-xs">list</span>
-                                    </button>
-                                }
-                                else
-                                {
-                                    <select 
-                                        id="serviceType-@i"
-                                        @bind="service.Type"
-                                        class="w-full px-2 py-1 border border-gray-300 rounded-l text-xs">
-                                        @foreach (var type in _serviceTypes)
-                                        {
-                                            <option value="@type">@type</option>
-                                        }
-                                    </select>
-                                    <button 
-                                        @onclick="() => ToggleCustomServiceType(index, true)"
-                                        class="bg-gray-200 hover:bg-gray-300 px-2 rounded-r border-t border-r border-b border-gray-300">
-                                        <span class="material-symbols-outlined text-xs">edit</span>
-                                    </button>
-                                }
-                            </div>
-                            @if (!string.IsNullOrEmpty(_serviceTypeErrors[index]))
-                            {
-                                <div class="text-red-500 text-xs mt-1">@_serviceTypeErrors[index]</div>
-                            }
-                        </div>
+                        <ParameterSelector 
+                            Label="Type"
+                            Parameter="service.Type"
+                            OnChange="() => OnValueChanged()"
+                            OnInputValidation="(value) => ValidateServiceType(index, value)"
+                            ValidationError="@_serviceTypeErrors[index]"
+                            Placeholder="Custom service type"
+                            TriggerParameters="TriggerParameters"
+                            CanSwitchToCustomValue="true"
+                            IsCustomValue="@_isCustomServiceType[index]"
+                            OnCustomValueToggle="(isCustom) => ToggleCustomServiceType(index, isCustom)"
+                            IsDropdown="!_isCustomServiceType[index]"
+                            Options="@_serviceTypeOptions" />
                         
                         <!-- Endpoint -->
-                        <div>
-                            <label for="endpoint-@i" class="block text-xs font-medium text-gray-700 mb-1">Endpoint</label>
-                            <input 
-                                id="endpoint-@i"
-                                type="text"
-                                @bind="service.Endpoint"
-                                class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                                placeholder="https://example.com" />
-                        </div>
+                        <ParameterSelector 
+                            Label="Endpoint"
+                            Parameter="service.Endpoint"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="https://example.com"
+                            TriggerParameters="TriggerParameters" />
                     </div>
                 </div>
             }
@@ -333,23 +208,23 @@
     
     private List<string> _keyIdErrors = new List<string>();
     
-    private List<(string Value, bool IsSelectable)> _availablePurposes = new List<(string, bool)>
+    private List<string> _purposeOptions = new List<string>
     {
-        ("Authentication", true),
-        ("KeyAgreement", true),
-        ("AssertionMethod", true),
-        ("CapabilityInvocation", false),
-        ("CapabilityDelegation", false)
+        "Authentication",
+        "KeyAgreement",
+        "AssertionMethod",
+        "CapabilityInvocation",
+        "CapabilityDelegation"
     };
     
-    private List<(string Value, bool IsSelectable)> _availableCurves = new List<(string, bool)>
+    private List<string> _curveOptions = new List<string>
     {
-        ("Secp256k1", true),
-        ("Ed25519", true),
-        ("X25519", true)
+        "Secp256k1",
+        "Ed25519",
+        "X25519"
     };
     
-    private List<string> _serviceTypes = new List<string>
+    private List<string> _serviceTypeOptions = new List<string>
     {
         "LinkedDomain",
         "DIDCommMessaging",
@@ -383,7 +258,9 @@
         // Check if any service has a custom type
         for (int i = 0; i < ActionInput.Services.Count; i++)
         {
-            _isCustomServiceType.Add(!_serviceTypes.Contains(ActionInput.Services[i].Type));
+            bool isCustom = ActionInput.Services[i].Type.Source == ParameterSource.Static && 
+                           !_serviceTypeOptions.Contains(ActionInput.Services[i].Type.DefaultValue);
+            _isCustomServiceType.Add(isCustom);
         }
     }
     
@@ -391,9 +268,21 @@
     {
         ActionInput.VerificationMethods.Add(new VerificationMethod
         {
-            KeyId = $"key-{ActionInput.VerificationMethods.Count + 1}",
-            Purpose = "Authentication",
-            Curve = "Secp256k1"
+            KeyId = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = $"key-{ActionInput.VerificationMethods.Count + 1}" 
+            },
+            Purpose = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "Authentication" 
+            },
+            Curve = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "Secp256k1" 
+            }
         });
         
         _keyIdErrors.Add(string.Empty);
@@ -404,9 +293,21 @@
     {
         ActionInput.VerificationMethods.Add(new VerificationMethod
         {
-            KeyId = $"key-{ActionInput.VerificationMethods.Count + 1}",
-            Purpose = "Authentication",
-            Curve = "Secp256k1"
+            KeyId = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = $"key-{ActionInput.VerificationMethods.Count + 1}" 
+            },
+            Purpose = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "Authentication" 
+            },
+            Curve = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "Secp256k1" 
+            }
         });
         
         _keyIdErrors.Add(string.Empty);
@@ -425,45 +326,45 @@
         }
     }
     
-    private void UpdatePurpose(int index, ChangeEventArgs e)
+    private async Task UpdatePurpose(int index, ParameterReference parameter)
     {
-        string? purpose = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(purpose))
-        {
-            var method = ActionInput.VerificationMethods[index];
-            method.Purpose = purpose;
-            
-            // If the purpose is KeyAgreement, automatically set the curve to X25519
-            if (purpose == "KeyAgreement")
-            {
-                method.Curve = "X25519";
-            }
-            // If we're changing from KeyAgreement and the curve is X25519, change it to Secp256k1
-            else if (method.Curve == "X25519")
-            {
-                method.Curve = "Secp256k1";
-            }
-            
-            StateHasChanged();
-            OnChange.InvokeAsync();
-        }
-    }
-    
-    private void UpdateCurve(int index, ChangeEventArgs e)
-    {
-        string? curve = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(curve))
-        {
-            ActionInput.VerificationMethods[index].Curve = curve;
-            StateHasChanged();
-            OnChange.InvokeAsync();
-        }
-    }
-    
-    private void ValidateKeyId(int index, ChangeEventArgs e)
-    {
-        string? value = e.Value?.ToString();
+        var method = ActionInput.VerificationMethods[index];
         
+        // If it's a static value and it's KeyAgreement, set curve to X25519
+        if (parameter.Source == ParameterSource.Static && 
+            parameter.DefaultValue == "KeyAgreement" && 
+            method.Curve.Source == ParameterSource.Static)
+        {
+            method.Curve.DefaultValue = "X25519";
+        }
+        // If we're changing from KeyAgreement and the curve is X25519, change it to Secp256k1
+        else if (parameter.Source == ParameterSource.Static && 
+                 parameter.DefaultValue != "KeyAgreement" && 
+                 method.Curve.Source == ParameterSource.Static && 
+                 method.Curve.DefaultValue == "X25519")
+        {
+            method.Curve.DefaultValue = "Secp256k1";
+        }
+        
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+    
+    private string? GetDisabledCurveValue(VerificationMethod method)
+    {
+        // Only enforce X25519 for KeyAgreement when both are static values
+        if (method.Purpose.Source == ParameterSource.Static && 
+            method.Purpose.DefaultValue == "KeyAgreement")
+        {
+            return method.Curve.DefaultValue == "X25519" ? null : "X25519";
+        }
+        
+        return method.Purpose.Source == ParameterSource.Static && 
+               method.Purpose.DefaultValue != "KeyAgreement" ? "X25519" : null;
+    }
+    
+    private void ValidateKeyId(int index, string? value)
+    {
         if (string.IsNullOrEmpty(value))
         {
             _keyIdErrors[index] = "Key ID is required";
@@ -475,8 +376,6 @@
         else
         {
             _keyIdErrors[index] = string.Empty;
-            ActionInput.VerificationMethods[index].KeyId = value;
-            OnChange.InvokeAsync();
         }
         
         StateHasChanged();
@@ -493,9 +392,21 @@
     {
         var newService = new ServiceEndpoint
         {
-            ServiceId = $"service-{ActionInput.Services.Count + 1}",
-            Type = "LinkedDomain",
-            Endpoint = ""
+            ServiceId = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = $"service-{ActionInput.Services.Count + 1}" 
+            },
+            Type = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "LinkedDomain" 
+            },
+            Endpoint = new ParameterReference 
+            { 
+                Source = ParameterSource.Static, 
+                DefaultValue = "" 
+            }
         };
         
         ActionInput.Services.Add(newService);
@@ -514,13 +425,16 @@
         _serviceTypeErrors.RemoveAt(index);
         _isCustomServiceType.RemoveAt(index);
         
-        // Update remaining service IDs to be sequential
+        // Update remaining service IDs to be sequential if they're static values
         for (int i = 0; i < ActionInput.Services.Count; i++)
         {
-            if (ActionInput.Services[i].ServiceId.StartsWith("service-") && 
-                int.TryParse(ActionInput.Services[i].ServiceId.Substring(8), out _))
+            var service = ActionInput.Services[i];
+            if (service.ServiceId.Source == ParameterSource.Static && 
+                service.ServiceId.DefaultValue != null &&
+                service.ServiceId.DefaultValue.StartsWith("service-") && 
+                int.TryParse(service.ServiceId.DefaultValue.Substring(8), out _))
             {
-                ActionInput.Services[i].ServiceId = $"service-{i + 1}";
+                service.ServiceId.DefaultValue = $"service-{i + 1}";
             }
         }
         
@@ -528,24 +442,24 @@
         await OnChange.InvokeAsync();
     }
     
-    private void ToggleCustomServiceType(int index, bool isCustom)
+    private async Task ToggleCustomServiceType(int index, bool isCustom)
     {
         _isCustomServiceType[index] = isCustom;
         
-        // If switching from custom to predefined, set to the first predefined type
-        if (!isCustom && !_serviceTypes.Contains(ActionInput.Services[index].Type))
+        // If switching from custom to predefined and it's a static value, set to the first predefined type
+        if (!isCustom && 
+            ActionInput.Services[index].Type.Source == ParameterSource.Static &&
+            !_serviceTypeOptions.Contains(ActionInput.Services[index].Type.DefaultValue))
         {
-            ActionInput.Services[index].Type = _serviceTypes[0];
-            OnChange.InvokeAsync();
+            ActionInput.Services[index].Type.DefaultValue = _serviceTypeOptions[0];
+            await OnChange.InvokeAsync();
         }
         
         StateHasChanged();
     }
     
-    private void ValidateServiceId(int index, ChangeEventArgs e)
+    private void ValidateServiceId(int index, string? value)
     {
-        string? value = e.Value?.ToString();
-        
         if (string.IsNullOrEmpty(value))
         {
             _serviceIdErrors[index] = "Service ID is required";
@@ -557,17 +471,13 @@
         else
         {
             _serviceIdErrors[index] = string.Empty;
-            ActionInput.Services[index].ServiceId = value;
-            OnChange.InvokeAsync();
         }
         
         StateHasChanged();
     }
     
-    private void ValidateServiceType(int index, ChangeEventArgs e)
+    private void ValidateServiceType(int index, string? value)
     {
-        string? value = e.Value?.ToString();
-        
         if (string.IsNullOrEmpty(value))
         {
             _serviceTypeErrors[index] = "Service Type is required";
@@ -575,14 +485,17 @@
         else
         {
             _serviceTypeErrors[index] = string.Empty;
-            ActionInput.Services[index].Type = value;
-            OnChange.InvokeAsync();
         }
         
         StateHasChanged();
     }
     
     // DID Registrar methods
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+    
     private async Task SetRegistrarSource(bool useTenant)
     {
         ActionInput.UseTenantRegistrar = useTenant;

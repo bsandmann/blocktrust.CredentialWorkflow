@@ -394,9 +394,21 @@
                     {
                         new VerificationMethod
                         {
-                            KeyId = "key-1",
-                            Purpose = "Authentication",
-                            Curve = "Secp256k1"
+                            KeyId = new ParameterReference 
+                            { 
+                                Source = ParameterSource.Static, 
+                                DefaultValue = "key-1" 
+                            },
+                            Purpose = new ParameterReference 
+                            { 
+                                Source = ParameterSource.Static, 
+                                DefaultValue = "Authentication" 
+                            },
+                            Curve = new ParameterReference 
+                            { 
+                                Source = ParameterSource.Static, 
+                                DefaultValue = "Secp256k1" 
+                            }
                         }
                     },
                     Services = new List<ServiceEndpoint>()
