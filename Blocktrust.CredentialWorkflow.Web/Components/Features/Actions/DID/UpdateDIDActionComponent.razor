@@ -1,0 +1,821 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
+
+<div class="p-1 text-sm">
+    <!-- DID Registrar Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">DID Registrar</h3>
+
+        <div class="mb-2">
+            <div class="flex items-center">
+                <input type="radio" id="useTenantRegistrar"
+                       name="registrarSource"
+                       checked="@ActionInput.UseTenantRegistrar"
+                       @onchange="() => SetRegistrarSource(true)"
+                       class="mr-2"/>
+                <label for="useTenantRegistrar" class="text-xs">Use from tenant settings</label>
+            </div>
+            <div class="flex items-center mt-0.5">
+                <input type="radio" id="useCustomRegistrar"
+                       name="registrarSource"
+                       checked="@(!ActionInput.UseTenantRegistrar)"
+                       @onchange="() => SetRegistrarSource(false)"
+                       class="mr-2"/>
+                <label for="useCustomRegistrar" class="text-xs">Configure custom registrar</label>
+            </div>
+        </div>
+
+        @if (!ActionInput.UseTenantRegistrar)
+        {
+            <div class="space-y-2">
+                <!-- Registrar URL -->
+                <div class="space-y-2">
+                    <!-- Registrar URL -->
+                    <div class="p-1.5 border rounded-md">
+                        <ParameterSelector
+                            Label="OPN Registrar URL"
+                            Parameter="ActionInput.RegistrarUrl"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter registrar URL"
+                            TriggerParameters="TriggerParameters"/>
+                    </div>
+
+                    <!-- Wallet ID -->
+                    <div class="p-1.5 border rounded-md">
+                        <ParameterSelector
+                            Label="Wallet ID"
+                            Parameter="ActionInput.WalletId"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter wallet ID"
+                            TriggerParameters="TriggerParameters"/>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- DID Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">DID</h3>
+
+        <div class="space-y-2">
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Did.Source"
+                        @bind:after="OnDidSourceChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.Did.Source == ParameterSource.Static)
+                {
+                    <input type="text"
+                           class="w-2/3 rounded border px-2 py-1 text-xs"
+                           placeholder="Enter DID (did:prism:...)"
+                           @bind="ActionInput.Did.DefaultValue"
+                           @bind:after="OnValueChanged"/>
+                }
+                else if (ActionInput.Did.Source == ParameterSource.TriggerInput)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Did.Path"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select trigger parameter</option>
+                        @if (TriggerParameters?.Any() == true)
+                        {
+                            @foreach (var param in TriggerParameters)
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                    </select>
+                }
+                else if (ActionInput.Did.Source == ParameterSource.ActionOutcome)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Did.ActionId"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select previous action</option>
+                        @if (FlowItems != null)
+                        {
+                            @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                            {
+                                if (item is WorkflowAction actionItem)
+                                {
+                                    <option value="@actionItem.Input.Id">
+                                        @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                    </option>
+                                }
+                            }
+                        }
+                    </select>
+                }
+            </div>
+            @if (ActionInput.Did.Source == ParameterSource.Static &&
+                 !string.IsNullOrEmpty(ActionInput.Did.DefaultValue) &&
+                 !ActionInput.Did.DefaultValue.StartsWith("did:prism:"))
+            {
+                <div class="text-red-500 text-xs">DID must be in format 'did:prism:...'</div>
+            }
+        </div>
+    </div>
+
+    <!-- DID Update Operations Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-gray-700">DID Update Operations</h3>
+            <button
+                @onclick="AddUpdateOperation"
+                class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Operation
+            </button>
+        </div>
+
+        @if (ActionInput.UpdateOperations.Count == 0)
+        {
+            <div class="text-red-500 text-xs mb-2">At least one update operation is required</div>
+        }
+
+        <div class="space-y-2">
+            @for (int i = 0; i < ActionInput.UpdateOperations.Count; i++)
+            {
+                var index = i;
+                var operation = ActionInput.UpdateOperations[i];
+                var operationType = operation.OperationType.Source == ParameterSource.Static
+                    ? operation.OperationType.DefaultValue
+                    : null;
+
+                <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-gray-700">Operation @(i + 1)</span>
+
+                        <button
+                            @onclick="() => RemoveUpdateOperation(index)"
+                            class="text-red-500 hover:text-red-700">
+                            <span class="material-symbols-outlined text-xs">delete</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- Operation Type -->
+                        <ParameterSelector
+                            Label="Operation Type"
+                            Parameter="operation.OperationType"
+                            OnChange="(p) => UpdateOperationType(index, p)"
+                            TriggerParameters="TriggerParameters"
+                            IsDropdown="true"
+                            Options="@_operationTypeOptions"/>
+
+                        @if (operationType == "Add")
+                        {
+                            <!-- Add Operation: Verification Method -->
+                            <div class="border border-gray-200 rounded p-2 mt-2">
+                                <h4 class="text-xs font-medium text-gray-700 mb-2">Verification Method</h4>
+
+                                @if (operation.VerificationMethod == null)
+                                {
+                                    // Initialize verification method with defaults
+                                    UpdateOperationDefaults(operation);
+                                }
+
+                                <!-- Key ID -->
+                                <ParameterSelector
+                                    Label="Key ID"
+                                    Parameter="operation.VerificationMethod.KeyId"
+                                    OnChange="() => OnValueChanged()"
+                                    OnInputValidation="(value) => ValidateKeyId(index, value)"
+                                    ValidationError="@_keyIdErrors[index]"
+                                    Placeholder="key-1"
+                                    TriggerParameters="TriggerParameters"/>
+
+                                <!-- Purpose -->
+                                <ParameterSelector
+                                    Label="Purpose"
+                                    Parameter="operation.VerificationMethod.Purpose"
+                                    OnChange="(p) => UpdatePurpose(index, p)"
+                                    TriggerParameters="TriggerParameters"
+                                    IsDropdown="true"
+                                    Options="@_purposeOptions"/>
+
+                                <!-- Curve -->
+                                <ParameterSelector
+                                    Label="Curve"
+                                    Parameter="operation.VerificationMethod.Curve"
+                                    OnChange="() => OnValueChanged()"
+                                    TriggerParameters="TriggerParameters"
+                                    IsDropdown="true"
+                                    Options="@_curveOptions"
+                                    DisabledValue="@(GetDisabledCurveValue(operation.VerificationMethod))"/>
+                            </div>
+                        }
+                        @if (operationType == "Remove")
+                        {
+                            <!-- Remove Operation: KeyId -->
+                            <div class="border border-gray-200 rounded p-2 mt-2">
+                                <h4 class="text-xs font-medium text-gray-700 mb-2">Key to Remove</h4>
+
+                                @if (operation.KeyId == null)
+                                {
+                                    operation.KeyId = new ParameterReference
+                                    {
+                                        Source = ParameterSource.Static,
+                                        DefaultValue = $"key-{ActionInput.UpdateOperations.Count}"
+                                    };
+                                }
+
+                                <!-- Key ID -->
+                                <ParameterSelector
+                                    Label="Key ID"
+                                    Parameter="operation.KeyId"
+                                    OnChange="() => OnValueChanged()"
+                                    OnInputValidation="(value) => ValidateRemoveKeyId(index, value)"
+                                    ValidationError="@_removeKeyIdErrors[index]"
+                                    Placeholder="key-1"
+                                    TriggerParameters="TriggerParameters"/>
+                            </div>
+                        }
+                        @if (operationType == "Set")
+                        {
+                            <!-- Set Operation: Services -->
+                            <div class="border border-gray-200 rounded p-2 mt-2">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xs font-medium text-gray-700">Services</h4>
+                                    <button
+                                        @onclick="() => AddService(index)"
+                                        class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                                        <span class="material-symbols-outlined text-sm mr-1">add</span>
+                                        Add Service
+                                    </button>
+                                </div>
+
+                                @if (operation.Services.Count == 0)
+                                {
+                                    <div class="text-xs text-gray-500 mb-2">No services added. Services are optional.
+                                    </div>
+                                }
+
+                                <div class="space-y-2">
+                                    @for (int j = 0; j < operation.Services.Count; j++)
+                                    {
+                                        var serviceIndex = j;
+                                        var service = operation.Services[j];
+                                        var serviceErrorsIndex = GetServiceErrorsIndex(index, serviceIndex);
+
+                                        <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-xs font-medium text-gray-700">Service @(j + 1)</span>
+
+                                                <button
+                                                    @onclick="() => RemoveService(index, serviceIndex)"
+                                                    class="text-red-500 hover:text-red-700">
+                                                    <span class="material-symbols-outlined text-xs">delete</span>
+                                                </button>
+                                            </div>
+
+                                            <div class="space-y-2">
+                                                <!-- Service ID -->
+                                                <ParameterSelector
+                                                    Label="Service ID"
+                                                    Parameter="service.ServiceId"
+                                                    OnChange="() => OnValueChanged()"
+                                                    OnInputValidation="(value) => ValidateServiceId(serviceErrorsIndex, value)"
+                                                    ValidationError="@_serviceIdErrors[serviceErrorsIndex]"
+                                                    Placeholder="service-1"
+                                                    TriggerParameters="TriggerParameters"/>
+
+                                                <!-- Type -->
+                                                <ParameterSelector
+                                                    Label="Type"
+                                                    Parameter="service.Type"
+                                                    OnChange="() => OnValueChanged()"
+                                                    OnInputValidation="(value) => ValidateServiceType(serviceErrorsIndex, value)"
+                                                    ValidationError="@_serviceTypeErrors[serviceErrorsIndex]"
+                                                    Placeholder="Custom service type"
+                                                    TriggerParameters="TriggerParameters"
+                                                    CanSwitchToCustomValue="true"
+                                                    IsCustomValue="@_isCustomServiceType[serviceErrorsIndex]"
+                                                    OnCustomValueToggle="(isCustom) => ToggleCustomServiceType(serviceErrorsIndex, isCustom)"
+                                                    IsDropdown="!_isCustomServiceType[serviceErrorsIndex]"
+                                                    Options="@_serviceTypeOptions"/>
+
+                                                <!-- Endpoint -->
+                                                <ParameterSelector
+                                                    Label="Endpoint"
+                                                    Parameter="service.Endpoint"
+                                                    OnChange="() => OnValueChanged()"
+                                                    Placeholder="https://example.com"
+                                                    TriggerParameters="TriggerParameters"/>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public UpdateDIDAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+
+    private List<string> _keyIdErrors = new List<string>();
+    private List<string> _removeKeyIdErrors = new List<string>();
+
+    private List<string> _operationTypeOptions = new List<string>
+    {
+        "Add",
+        "Remove",
+        "Set"
+    };
+
+    private List<string> _purposeOptions = new List<string>
+    {
+        "authentication",
+        "keyAgreement",
+        "assertionMethod",
+        "capabilityInvocation",
+        "capabilityDelegation"
+    };
+
+    private List<string> _curveOptions = new List<string>
+    {
+        "secp256k1",
+        "Ed25519",
+        "X25519"
+    };
+
+    private List<string> _serviceTypeOptions = new List<string>
+    {
+        "LinkedDomain",
+        "DIDCommMessaging",
+        "CredentialRegistry",
+        "OID4VCI",
+        "OID4VP"
+    };
+
+    private List<bool> _isCustomServiceType = new List<bool>();
+    private List<string> _serviceIdErrors = new List<string>();
+    private List<string> _serviceTypeErrors = new List<string>();
+
+    protected override void OnInitialized()
+    {
+        // Ensure we have at least one update operation
+        if (ActionInput.UpdateOperations.Count == 0)
+        {
+            AddDefaultUpdateOperation();
+        }
+
+        InitializeErrorArrays();
+    }
+
+    private void InitializeErrorArrays()
+    {
+        // Initialize error tracking arrays
+        _keyIdErrors = new List<string>(new string[ActionInput.UpdateOperations.Count]);
+        _removeKeyIdErrors = new List<string>(new string[ActionInput.UpdateOperations.Count]);
+
+        // Count total services across all operations
+        int totalServices = 0;
+        foreach (var operation in ActionInput.UpdateOperations)
+        {
+            if (operation.OperationType.Source == ParameterSource.Static &&
+                operation.OperationType.DefaultValue == "Set")
+            {
+                totalServices += operation.Services.Count;
+            }
+        }
+
+        // Initialize error tracking arrays for services
+        _serviceIdErrors = new List<string>(new string[totalServices]);
+        _serviceTypeErrors = new List<string>(new string[totalServices]);
+        _isCustomServiceType = new List<bool>(new bool[totalServices]);
+
+        // Check if any service has a custom type
+        int serviceIndex = 0;
+        foreach (var operation in ActionInput.UpdateOperations)
+        {
+            if (operation.OperationType.Source == ParameterSource.Static &&
+                operation.OperationType.DefaultValue == "Set")
+            {
+                for (int i = 0; i < operation.Services.Count; i++)
+                {
+                    bool isCustom = operation.Services[i].Type.Source == ParameterSource.Static &&
+                                    !_serviceTypeOptions.Contains(operation.Services[i].Type.DefaultValue);
+
+                    if (serviceIndex < _isCustomServiceType.Count)
+                    {
+                        _isCustomServiceType[serviceIndex] = isCustom;
+                    }
+                    else
+                    {
+                        _isCustomServiceType.Add(isCustom);
+                    }
+
+                    serviceIndex++;
+                }
+            }
+        }
+    }
+
+    private void AddDefaultUpdateOperation()
+    {
+        var operation = new DIDUpdateOperation
+        {
+            OperationType = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = "Add"
+            }
+        };
+
+        // Initialize with proper defaults
+        UpdateOperationDefaults(operation);
+
+        ActionInput.UpdateOperations.Add(operation);
+
+        _keyIdErrors.Add(string.Empty);
+        _removeKeyIdErrors.Add(string.Empty);
+        StateHasChanged();
+    }
+
+    private void AddUpdateOperation()
+    {
+        var operation = new DIDUpdateOperation
+        {
+            OperationType = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = "Add"
+            }
+        };
+
+        // Set default values based on operation type
+        UpdateOperationDefaults(operation);
+
+        ActionInput.UpdateOperations.Add(operation);
+        _keyIdErrors.Add(string.Empty);
+        _removeKeyIdErrors.Add(string.Empty);
+
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    private void RemoveUpdateOperation(int index)
+    {
+        ActionInput.UpdateOperations.RemoveAt(index);
+        _keyIdErrors.RemoveAt(index);
+        _removeKeyIdErrors.RemoveAt(index);
+
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    private void UpdateOperationDefaults(DIDUpdateOperation operation)
+    {
+        if (operation.OperationType.Source == ParameterSource.Static)
+        {
+            var operationType = operation.OperationType.DefaultValue;
+
+            if (operationType == "Add")
+            {
+                // Always create a new VerificationMethod with default values
+                operation.VerificationMethod = new VerificationMethod
+                {
+                    KeyId = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                    },
+                    Purpose = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        DefaultValue = "authentication"
+                    },
+                    Curve = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        DefaultValue = "secp256k1"
+                    }
+                };
+                operation.KeyId = null;
+                operation.Services = new List<ServiceEndpoint>();
+            }
+            else if (operationType == "Remove")
+            {
+                operation.KeyId = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                };
+                operation.VerificationMethod = null;
+                operation.Services = new List<ServiceEndpoint>();
+            }
+            else if (operationType == "Set")
+            {
+                operation.Services = new List<ServiceEndpoint>();
+                operation.VerificationMethod = null;
+                operation.KeyId = null;
+            }
+        }
+    }
+
+    private async Task UpdateOperationType(int index, ParameterReference parameter)
+    {
+        if (parameter.Source == ParameterSource.Static)
+        {
+            var operation = ActionInput.UpdateOperations[index];
+            var oldType = operation.OperationType.DefaultValue;
+            var newType = parameter.DefaultValue;
+
+            if (oldType != newType)
+            {
+                // If operation type changes, update the appropriate fields
+                UpdateOperationDefaults(operation);
+            }
+        }
+
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task UpdatePurpose(int index, ParameterReference parameter)
+    {
+        var operation = ActionInput.UpdateOperations[index];
+
+        if (operation.VerificationMethod != null)
+        {
+            // If it's a static value and it's keyAgreement, set curve to X25519
+            if (parameter.Source == ParameterSource.Static &&
+                parameter.DefaultValue == "keyAgreement" &&
+                operation.VerificationMethod.Curve.Source == ParameterSource.Static)
+            {
+                operation.VerificationMethod.Curve.DefaultValue = "X25519";
+            }
+            // If we're changing from keyAgreement and the curve is X25519, change it to secp256k1
+            else if (parameter.Source == ParameterSource.Static &&
+                     parameter.DefaultValue != "keyAgreement" &&
+                     operation.VerificationMethod.Curve.Source == ParameterSource.Static &&
+                     operation.VerificationMethod.Curve.DefaultValue == "X25519")
+            {
+                operation.VerificationMethod.Curve.DefaultValue = "secp256k1";
+            }
+        }
+
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+
+    private string? GetDisabledCurveValue(VerificationMethod method)
+    {
+        // Only enforce X25519 for keyAgreement when both are static values
+        if (method.Purpose.Source == ParameterSource.Static &&
+            method.Purpose.DefaultValue == "keyAgreement")
+        {
+            return method.Curve.DefaultValue == "X25519" ? null : "X25519";
+        }
+
+        return method.Purpose.Source == ParameterSource.Static &&
+               method.Purpose.DefaultValue != "keyAgreement"
+            ? "X25519"
+            : null;
+    }
+
+    private void ValidateKeyId(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _keyIdErrors[index] = "Key ID is required";
+        }
+        else if (!IsValidKeyId(value))
+        {
+            _keyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _keyIdErrors[index] = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidateRemoveKeyId(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _removeKeyIdErrors[index] = "Key ID is required";
+        }
+        else if (!IsValidKeyId(value))
+        {
+            _removeKeyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _removeKeyIdErrors[index] = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsValidKeyId(string value)
+    {
+        // ASCII letters, numbers, and dashes only
+        return System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9-]+$");
+    }
+
+    // Service methods
+    private async Task AddService(int operationIndex)
+    {
+        var operation = ActionInput.UpdateOperations[operationIndex];
+
+        if (operation.OperationType.Source == ParameterSource.Static &&
+            operation.OperationType.DefaultValue == "Set")
+        {
+            var newService = new ServiceEndpoint
+            {
+                ServiceId = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    DefaultValue = $"service-{operation.Services.Count + 1}"
+                },
+                Type = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    DefaultValue = "LinkedDomain"
+                },
+                Endpoint = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    DefaultValue = ""
+                }
+            };
+
+            operation.Services.Add(newService);
+
+            InitializeErrorArrays();
+            StateHasChanged();
+            await OnChange.InvokeAsync();
+        }
+    }
+
+    private async Task RemoveService(int operationIndex, int serviceIndex)
+    {
+        var operation = ActionInput.UpdateOperations[operationIndex];
+
+        if (operation.OperationType.Source == ParameterSource.Static &&
+            operation.OperationType.DefaultValue == "Set")
+        {
+            operation.Services.RemoveAt(serviceIndex);
+
+            // Update remaining service IDs to be sequential if they're static values
+            for (int i = 0; i < operation.Services.Count; i++)
+            {
+                var service = operation.Services[i];
+                if (service.ServiceId.Source == ParameterSource.Static &&
+                    service.ServiceId.DefaultValue != null &&
+                    service.ServiceId.DefaultValue.StartsWith("service-") &&
+                    int.TryParse(service.ServiceId.DefaultValue.Substring(8), out _))
+                {
+                    service.ServiceId.DefaultValue = $"service-{i + 1}";
+                }
+            }
+
+            InitializeErrorArrays();
+            StateHasChanged();
+            await OnChange.InvokeAsync();
+        }
+    }
+
+    private int GetServiceErrorsIndex(int operationIndex, int serviceIndex)
+    {
+        // Calculate the actual index in the errors arrays for a service
+        int index = 0;
+
+        for (int i = 0; i < operationIndex; i++)
+        {
+            var operation = ActionInput.UpdateOperations[i];
+            if (operation.OperationType.Source == ParameterSource.Static &&
+                operation.OperationType.DefaultValue == "Set")
+            {
+                index += operation.Services.Count;
+            }
+        }
+
+        return index + serviceIndex;
+    }
+
+    private async Task ToggleCustomServiceType(int index, bool isCustom)
+    {
+        _isCustomServiceType[index] = isCustom;
+
+        // Find the actual operation and service based on the index
+        int operationIndex = 0;
+        int serviceIndex = 0;
+        int currentServiceIndex = 0;
+        bool found = false;
+
+        foreach (var operation in ActionInput.UpdateOperations)
+        {
+            if (operation.OperationType.Source == ParameterSource.Static &&
+                operation.OperationType.DefaultValue == "Set")
+            {
+                for (int i = 0; i < operation.Services.Count; i++)
+                {
+                    if (currentServiceIndex == index)
+                    {
+                        serviceIndex = i;
+                        found = true;
+                        break;
+                    }
+
+                    currentServiceIndex++;
+                }
+
+                if (found) break;
+            }
+
+            operationIndex++;
+        }
+
+        if (found && operationIndex < ActionInput.UpdateOperations.Count)
+        {
+            var operation = ActionInput.UpdateOperations[operationIndex];
+
+            // If switching from custom to predefined and it's a static value, set to the first predefined type
+            if (!isCustom &&
+                operation.Services[serviceIndex].Type.Source == ParameterSource.Static &&
+                !_serviceTypeOptions.Contains(operation.Services[serviceIndex].Type.DefaultValue))
+            {
+                operation.Services[serviceIndex].Type.DefaultValue = _serviceTypeOptions[0];
+                await OnChange.InvokeAsync();
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidateServiceId(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _serviceIdErrors[index] = "Service ID is required";
+        }
+        else if (!IsValidKeyId(value))
+        {
+            _serviceIdErrors[index] = "Service ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _serviceIdErrors[index] = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidateServiceType(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _serviceTypeErrors[index] = "Service Type is required";
+        }
+        else
+        {
+            _serviceTypeErrors[index] = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    // DID Registrar methods
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task SetRegistrarSource(bool useTenant)
+    {
+        ActionInput.UseTenantRegistrar = useTenant;
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task OnDidSourceChanged()
+    {
+        ActionInput.Did.Path = string.Empty;
+        ActionInput.Did.ActionId = null;
+        ActionInput.Did.DefaultValue = string.Empty;
+        await OnValueChanged();
+    }
+
+}

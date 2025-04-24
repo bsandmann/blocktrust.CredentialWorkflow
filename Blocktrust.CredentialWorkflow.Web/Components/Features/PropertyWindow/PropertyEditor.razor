@@ -179,7 +179,14 @@
                 }
                 break;
             case EActionType.UpdateDID:
-                // We'll implement this later
+                @if (action.Input is UpdateDIDAction updateDIDAction)
+                {
+                    <UpdateDIDActionComponent
+                        ActionInput="updateDIDAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"
+                        FlowItems="FlowItems"/>
+                }
                 break;
             case EActionType.DeleteDID:
                 // We'll implement this later
