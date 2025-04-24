@@ -51,8 +51,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             };
         }
 
-        #region Public API – CREATE
-
         public async Task<Result<RegistrarResponseDto>> CreateDidAsync(
             string baseUrl,
             string walletId,
@@ -63,7 +61,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             // Synchronous validation – mirrors server‑side rules (trimmed to essentials).
             var validationFailure = ValidateCreateParameters(baseUrl, walletId, verificationMethods, services);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             var body = BuildCreateRequestBody(walletId, verificationMethods, services);
             var url = Combine(baseUrl, "/api/v1/registrar/create");
@@ -78,17 +78,15 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             var validationFailure = ValidateJobId(jobId);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             var body = new { jobId };
             var url = Combine(baseUrl, "/api/v1/registrar/create");
 
             return await SendAsync(url, body, cancellationToken);
         }
-
-        #endregion
-
-        #region Public API – UPDATE
 
         public async Task<Result<RegistrarResponseDto>> UpdateDidAsync(
             string baseUrl,
@@ -101,10 +99,13 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             var validationFailure = ValidateUpdateParameters(baseUrl, did, walletId, didDocumentOperations, didDocuments);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             object? secretSection = null;
             if (verificationMethods?.Any() == true)
+            {
                 secretSection = new
                 {
                     verificationMethod = verificationMethods.Select(vm => new
@@ -115,6 +116,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                         curve = vm["curve"]
                     })
                 };
+            }
 
             var body = new
             {
@@ -137,7 +139,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             var validationFailure = ValidateJobId(jobId);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             var body = new { jobId };
             var url = Combine(baseUrl, $"/api/v1/registrar/update/{Uri.EscapeDataString(did)}");
@@ -145,9 +149,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             return await SendAsync(url, body, cancellationToken);
         }
 
-        #endregion
-
-        #region Public API – DEACTIVATE
 
         public async Task<Result<RegistrarResponseDto>> DeactivateDidAsync(
             string baseUrl,
@@ -157,7 +158,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             var validationFailure = ValidateDeactivateParameters(baseUrl, did, walletId);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             var body = new { options = new { walletId } };
             var url = Combine(baseUrl, $"/api/v1/registrar/deactivate/{Uri.EscapeDataString(did)}");
@@ -173,7 +176,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             var validationFailure = ValidateJobId(jobId);
             if (validationFailure is not null)
+            {
                 return Result.Fail(validationFailure);
+            }
 
             var body = new { jobId };
             var url = Combine(baseUrl, $"/api/v1/registrar/deactivate/{Uri.EscapeDataString(did)}");
@@ -181,9 +186,6 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             return await SendAsync(url, body, cancellationToken);
         }
 
-        #endregion
-
-        #region --- Low‑level helpers ------------------------------------------------------
 
         private async Task<Result<RegistrarResponseDto>> SendAsync(string url, object body, CancellationToken ct)
         {
@@ -215,10 +217,20 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             List<Dictionary<string, string>> verificationMethods,
             List<Dictionary<string, string>> services)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl)) return "BaseUrl must not be empty.";
-            if (string.IsNullOrWhiteSpace(walletId)) return "WalletId must not be empty.";
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return "BaseUrl must not be empty.";
+            }
+
+            if (string.IsNullOrWhiteSpace(walletId))
+            {
+                return "WalletId must not be empty.";
+            }
+
             if (verificationMethods is null || verificationMethods.Count == 0)
+            {
                 return "At least one verification method must be supplied.";
+            }
 
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var vm in verificationMethods)
@@ -229,20 +241,50 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                     return !string.IsNullOrWhiteSpace(value);
                 }
 
-                if (!TryGet("keyId", out var keyId)) return "Each verification method needs a keyId.";
-                if (keyId.Contains('#')) return "keyId must not contain '#'";
-                if (keyId.Contains("did:")) return "keyId must not contain 'did:'";
+                if (!TryGet("keyId", out var keyId))
+                {
+                    return "Each verification method needs a keyId.";
+                }
+
+                if (keyId.Contains('#'))
+                {
+                    return "keyId must not contain '#'";
+                }
+
+                if (keyId.Contains("did:"))
+                {
+                    return "keyId must not contain 'did:'";
+                }
+
                 if (keyId.StartsWith("master", StringComparison.OrdinalIgnoreCase))
+                {
                     return "keyId must not start with 'master'.";
-                if (!ids.Add(keyId)) return $"Duplicate keyId '{keyId}'.";
+                }
 
-                if (!TryGet("purpose", out var purpose)) return $"Verification method '{keyId}' needs a purpose.";
+                if (!ids.Add(keyId))
+                {
+                    return $"Duplicate keyId '{keyId}'.";
+                }
+
+                if (!TryGet("purpose", out var purpose))
+                {
+                    return $"Verification method '{keyId}' needs a purpose.";
+                }
+
                 if (!AllowedPurposes.Contains(purpose))
+                {
                     return $"Invalid purpose '{purpose}' for '{keyId}'.";
+                }
 
-                if (!TryGet("curve", out var curve)) return $"Verification method '{keyId}' needs a curve.";
+                if (!TryGet("curve", out var curve))
+                {
+                    return $"Verification method '{keyId}' needs a curve.";
+                }
+
                 if (!AllowedCurves.Contains(curve))
+                {
                     return $"Invalid curve '{curve}' for '{keyId}'.";
+                }
             }
 
             if (services is not null)
@@ -256,10 +298,25 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                         return !string.IsNullOrWhiteSpace(value);
                     }
 
-                    if (!TryGet("serviceId", out var sid)) return "Each service needs a serviceId.";
-                    if (!serviceIds.Add(sid)) return $"Duplicate service id '{sid}'.";
-                    if (!TryGet("type", out _)) return $"Service '{sid}' needs a type.";
-                    if (!TryGet("endpoint", out _)) return $"Service '{sid}' needs an endpoint.";
+                    if (!TryGet("serviceId", out var sid))
+                    {
+                        return "Each service needs a serviceId.";
+                    }
+
+                    if (!serviceIds.Add(sid))
+                    {
+                        return $"Duplicate service id '{sid}'.";
+                    }
+
+                    if (!TryGet("type", out _))
+                    {
+                        return $"Service '{sid}' needs a type.";
+                    }
+
+                    if (!TryGet("endpoint", out _))
+                    {
+                        return $"Service '{sid}' needs an endpoint.";
+                    }
                 }
             }
 
@@ -273,31 +330,61 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             List<string> operations,
             List<Dictionary<string, object>> documents)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl)) return "BaseUrl must not be empty.";
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return "BaseUrl must not be empty.";
+            }
+
             if (string.IsNullOrWhiteSpace(did) || !did.StartsWith("did:prism:"))
+            {
                 return "Did must be provided in format 'did:prism:…'.";
-            if (string.IsNullOrWhiteSpace(walletId)) return "WalletId must not be empty.";
+            }
+
+            if (string.IsNullOrWhiteSpace(walletId))
+            {
+                return "WalletId must not be empty.";
+            }
 
             if (operations is null || operations.Count == 0)
+            {
                 return "At least one didDocumentOperation must be supplied.";
+            }
+
             if (documents is null || documents.Count != operations.Count)
+            {
                 return "didDocumentOperation and didDocument arrays must have the same length.";
+            }
 
             return null;
         }
 
         private static string? ValidateDeactivateParameters(string baseUrl, string did, string walletId)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl)) return "BaseUrl must not be empty.";
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return "BaseUrl must not be empty.";
+            }
+
             if (string.IsNullOrWhiteSpace(did) || !did.StartsWith("did:prism:"))
+            {
                 return "Did must be provided in format 'did:prism:…'.";
-            if (string.IsNullOrWhiteSpace(walletId)) return "WalletId must not be empty.";
+            }
+
+            if (string.IsNullOrWhiteSpace(walletId))
+            {
+                return "WalletId must not be empty.";
+            }
+
             return null;
         }
 
         private static string? ValidateJobId(string jobId)
         {
-            if (string.IsNullOrWhiteSpace(jobId)) return "JobId must not be empty.";
+            if (string.IsNullOrWhiteSpace(jobId))
+            {
+                return "JobId must not be empty.";
+            }
+
             return jobId.All(IsHex) && jobId.Length % 2 == 0 ? null : "JobId must be a valid hex string.";
         }
 
@@ -348,7 +435,5 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 didDocument = didDocSection
             };
         }
-
-        #endregion
     }
 }
