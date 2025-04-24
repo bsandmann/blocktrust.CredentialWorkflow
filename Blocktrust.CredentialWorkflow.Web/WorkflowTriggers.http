@@ -40,6 +40,18 @@ Content-Type: application/json
   "senderPeerDid": "did:peer:2.Ez6LSq13gaaCGtEsj3W9M8rvDrTULBuRQFvXpMq3BjdvFZZjB.Vz6MkpPL5UoSNN5wPJgfuGjbxmksrKmFmVUdpZdj5RwC4woGd.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU2tnMXd5SFVNZ01XWmlEZkJSWnBYOGFaNm5oM0VaV2ljeEpUNFZnZWdCNURiLlZ6Nk1rano4RDlxeGd1ZER2WjluVW13cGl0a1lBOVB3OXFOQW1YeEJreGNGYnRGY3MuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXRaV1JwWVhSdmNpNWliRzlqYTNSeWRYTjBMbVJsZGk4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0"
 }
 
+### POST request to WorkflowController with JSON for DID creation
+POST https://localhost:7209/api/workflow/0a63ef3a-ea2c-46a1-a872-08dd8271d637
+Content-Type: application/json
+
+{
+  "subjectDid": "did:prism:85958de731e812d7cb30133660abc528ece48baeccc6c76a2a20c8e3c93f1ac2",
+  "exampleClaim": "ClaimValueXYZ",
+  "peerDid": "did:peer:2.Ez6LSq8zi2uUmB3FUyEhmQyJcM9vz5KFcVU3wVpGkgg2JnLpf.Vz6MkhLPbZsmWRbaY9oNiJB8MRbNHs5XW9ftpJDmi5PgbcPAt.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOnsidXJpIjoiZGlkOnBlZXI6Mi5FejZMU3BDQVVmUjg3ZHlrWHRmWXo2b2lTdWJRdGJqNVZTSjFERXBXeTFOUnlnMlptLlZ6Nk1rcWV6M3RkMUMzYzN2ZmpmTkJaSldnenZHUFhMb01OZXVVZkVZdE5aQW92MXEuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OXRaV1JwWVhSdmNpNWliRzlqYTNSeWRYTjBMbVJsZGk4aUxDSnlJanBiWFN3aVlTSTZXeUprYVdSamIyMXRMM1l5SWwxOWZRIiwiciI6W10sImEiOlsiZGlkY29tbS92MiJdfX0",
+  "email": "sandmann@blocktrust.dev",
+  "age": "123"
+}
+
 
 
 

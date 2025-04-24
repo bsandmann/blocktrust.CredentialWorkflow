@@ -130,6 +130,8 @@
     {
         string? value = e.Value?.ToString();
         Parameter.DefaultValue = value;
+        // Also set the Path for compatibility with ParameterResolver
+        Parameter.Path = value ?? "";
         await OnChange.InvokeAsync(Parameter);
     }
     
@@ -147,6 +149,8 @@
     {
         string? value = e.Value?.ToString();
         Parameter.DefaultValue = value;
+        // Also set the Path for compatibility with ParameterResolver
+        Parameter.Path = value ?? "";
         await OnChange.InvokeAsync(Parameter);
     }
     

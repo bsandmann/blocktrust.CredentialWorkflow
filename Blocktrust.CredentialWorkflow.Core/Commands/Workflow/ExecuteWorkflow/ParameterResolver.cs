@@ -22,7 +22,11 @@ public static class ParameterResolver
         switch (parameterReference.Source)
         {
             case ParameterSource.Static:
-                return parameterReference.Path;
+                // Check both Path and DefaultValue - preferring Path for compatibility with existing actions
+                // but falling back to DefaultValue for newer actions like CreateDID that store values there
+                return !string.IsNullOrEmpty(parameterReference.Path) 
+                    ? parameterReference.Path 
+                    : parameterReference.DefaultValue;
 
             case ParameterSource.TriggerInput:
                 if (executionContext.InputContext is null)
