@@ -170,6 +170,17 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             List<Dictionary<string, object>> updateOperations,
             CancellationToken cancellationToken = default)
         {
+            return await UpdateDidAsync(baseUrl, did, walletId, updateOperations, null, cancellationToken);
+        }
+        
+        public async Task<Result<RegistrarResponseDto>> UpdateDidAsync(
+            string baseUrl,
+            string did,
+            string walletId,
+            List<Dictionary<string, object>> updateOperations,
+            string? masterKeySecret = null,
+            CancellationToken cancellationToken = default)
+        {
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
                 return Result.Fail("BaseUrl must not be empty.");
@@ -190,11 +201,27 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 return Result.Fail("At least one update operation must be supplied.");
             }
             
-            var body = new
+            var options = new { walletId, storeSecrets = true, returnSecrets = true };
+            object body;
+            
+            // Include masterKeySecret if provided
+            if (!string.IsNullOrWhiteSpace(masterKeySecret))
             {
-                options = new { walletId, storeSecrets = true, returnSecrets = true },
-                updateOperations
-            };
+                body = new
+                {
+                    options,
+                    updateOperations,
+                    masterKeySecret
+                };
+            }
+            else
+            {
+                body = new
+                {
+                    options,
+                    updateOperations
+                };
+            }
             
             var url = Combine(baseUrl, $"/api/v1/registrar/update/{Uri.EscapeDataString(did)}");
 

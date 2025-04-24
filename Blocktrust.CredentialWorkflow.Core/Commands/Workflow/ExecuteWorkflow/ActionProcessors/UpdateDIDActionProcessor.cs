@@ -109,6 +109,25 @@ public class UpdateDIDActionProcessor : IActionProcessor
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
+            
+            // Get Master Key Secret (optional)
+            var masterKeySecret = await ParameterResolver.GetParameterFromExecutionContext(
+                input.MasterKeySecret, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+            
+            // Validate Base64 format if provided
+            if (!string.IsNullOrWhiteSpace(masterKeySecret))
+            {
+                try 
+                {
+                    Convert.FromBase64String(masterKeySecret);
+                }
+                catch 
+                {
+                    var errorMessage = "Master Key Secret must be a valid base64 encoded string.";
+                    actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                    return Result.Fail(errorMessage);
+                }
+            }
 
             // Process update operations
             if (input.UpdateOperations == null || !input.UpdateOperations.Any())
@@ -223,7 +242,7 @@ public class UpdateDIDActionProcessor : IActionProcessor
             }
 
             var client = new OpenPrismNodeRegistrarClient(_httpClientFactory);
-            var result = await client.UpdateDidAsync(registrarUrl, did, walletId, updateOperations, context.CancellationToken);
+            var result = await client.UpdateDidAsync(registrarUrl, did, walletId, updateOperations, masterKeySecret, context.CancellationToken);
             if (result.IsFailed)
             {
                 var errorMessage = $"Failed to update DID: {result.Errors.FirstOrDefault()?.Message}";

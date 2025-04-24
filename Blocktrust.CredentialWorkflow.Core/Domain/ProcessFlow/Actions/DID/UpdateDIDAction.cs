@@ -14,6 +14,7 @@ public class UpdateDIDAction : ActionInput
     private ParameterReference _registrarUrl;
     private ParameterReference _walletId;
     private ParameterReference _did;
+    private ParameterReference _masterKeySecret;
     
     [JsonPropertyName("registrarUrl")]
     public ParameterReference RegistrarUrl 
@@ -34,6 +35,13 @@ public class UpdateDIDAction : ActionInput
     {
         get => _did ?? new ParameterReference { Source = ParameterSource.Static }; 
         set => _did = value; 
+    }
+    
+    [JsonPropertyName("masterKeySecret")]
+    public ParameterReference MasterKeySecret
+    {
+        get => _masterKeySecret ?? new ParameterReference { Source = ParameterSource.Static }; 
+        set => _masterKeySecret = value; 
     }
     
     [JsonPropertyName("updateOperations")]
