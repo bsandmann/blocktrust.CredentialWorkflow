@@ -92,6 +92,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             string baseUrl,
             string did,
             string walletId,
+            string masterkey,
             List<string> didDocumentOperations,
             List<Dictionary<string, object>> didDocuments,
             List<Dictionary<string, string>>? verificationMethods = null,
@@ -118,9 +119,17 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 };
             }
 
+            var options = new RegistrarOptions
+            {
+                WalletId = walletId,
+                MasterKeySecretString = masterkey,
+                ReturnSecrets = true,
+                StoreSecrets = true
+            };
+            
             var body = new
             {
-                options = new { walletId, storeSecrets = true, returnSecrets = true },
+                options = options,
                 secret = secretSection,
                 didDocumentOperation = didDocumentOperations,
                 didDocument = didDocuments,
@@ -152,9 +161,14 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 return Result.Fail("At least one update operation must be supplied.");
             }
             
+            var options = new RegistrarOptions
+            {
+                WalletId = walletId
+            };
+            
             var body = new
             {
-                options = new { walletId, storeSecrets = true, returnSecrets = true },
+                options = options,
                 updateOperations
             };
             
@@ -201,26 +215,17 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 return Result.Fail("At least one update operation must be supplied.");
             }
             
-            var options = new { walletId, storeSecrets = true, returnSecrets = true, masterKeySecret };
-            object body;
+            var options = new RegistrarOptions
+            {
+                WalletId = walletId,
+                MasterKeySecretString = masterKeySecret
+            };
             
-            // Include masterKeySecret if provided
-            if (!string.IsNullOrWhiteSpace(masterKeySecret))
+            var body = new
             {
-                body = new
-                {
-                    options,
-                    updateOperations
-                };
-            }
-            else
-            {
-                body = new
-                {
-                    options,
-                    updateOperations
-                };
-            }
+                options,
+                updateOperations
+            };
             
             var url = Combine(baseUrl, $"/api/v1/registrar/update/{Uri.EscapeDataString(did)}");
 
@@ -275,7 +280,12 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 return Result.Fail(validationFailure);
             }
 
-            var body = new { options = new { walletId } };
+            var options = new RegistrarOptions
+            {
+                WalletId = walletId
+            };
+            
+            var body = new { options };
             var url = Combine(baseUrl, $"/api/v1/registrar/deactivate/{Uri.EscapeDataString(did)}");
 
             return await SendAsync(url, body, cancellationToken);
@@ -303,6 +313,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         private async Task<Result<RegistrarResponseDto>> SendAsync(string url, object body, CancellationToken ct)
         {
             var client = _httpClientFactory.CreateClient("OpenPrismNode");
+            var bodyJson = JsonSerializer.Serialize(body, _jsonOptions);
             using var response = await client.PostAsJsonAsync(url, body, _jsonOptions, ct).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -540,10 +551,15 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 }).ToList<object>()
             };
 
+            var options = new RegistrarOptions
+            {
+                WalletId = walletId
+            };
+
             return new
             {
                 method = "prism",
-                options = new { walletId, storeSecrets = true, returnSecrets = true },
+                options = options,
                 secret = secretSection,
                 didDocument = didDocSection
             };

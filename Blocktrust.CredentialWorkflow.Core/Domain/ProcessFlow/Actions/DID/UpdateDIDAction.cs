@@ -15,6 +15,7 @@ public class UpdateDIDAction : ActionInput
     private ParameterReference _walletId;
     private ParameterReference _did;
     private ParameterReference _masterKeySecret;
+    private ParameterReference _network;
     
     [JsonPropertyName("registrarUrl")]
     public ParameterReference RegistrarUrl 
@@ -44,27 +45,52 @@ public class UpdateDIDAction : ActionInput
         set => _masterKeySecret = value; 
     }
     
-    [JsonPropertyName("updateOperations")]
-    public List<DIDUpdateOperation> UpdateOperations { get; set; } = new List<DIDUpdateOperation>();
+    [JsonPropertyName("network")]
+    public ParameterReference Network
+    {
+        get => _network ?? new ParameterReference { Source = ParameterSource.Static }; 
+        set => _network = value; 
+    }
+    
+    [JsonPropertyName("operations")]
+    public List<DIDDocumentOperation> Operations { get; set; } = new List<DIDDocumentOperation>();
+    
+    [JsonPropertyName("verificationMethods")]
+    public List<VerificationMethod> VerificationMethods { get; set; } = new List<VerificationMethod>();
 }
 
-public class DIDUpdateOperation
+public class DIDDocumentOperation
 {
     private ParameterReference _operationType;
     
     [JsonPropertyName("operationType")]
     public ParameterReference OperationType 
     { 
-        get => _operationType ?? new ParameterReference { Source = ParameterSource.Static, DefaultValue = "Add" }; 
+        get => _operationType ?? new ParameterReference { Source = ParameterSource.Static, DefaultValue = "setDidDocument" }; 
         set => _operationType = value; 
     }
     
-    [JsonPropertyName("verificationMethod")]
-    public VerificationMethod? VerificationMethod { get; set; }
-    
-    [JsonPropertyName("keyId")]
-    public ParameterReference? KeyId { get; set; }
-    
+    [JsonPropertyName("document")]
+    public DIDDocument Document { get; set; } = new DIDDocument();
+}
+
+public class DIDDocument
+{
     [JsonPropertyName("services")]
     public List<ServiceEndpoint> Services { get; set; } = new List<ServiceEndpoint>();
+    
+    [JsonPropertyName("verificationMethods")]
+    public List<DIDVerificationMethodReference> VerificationMethods { get; set; } = new List<DIDVerificationMethodReference>();
+}
+
+public class DIDVerificationMethodReference
+{
+    private ParameterReference _id;
+    
+    [JsonPropertyName("id")]
+    public ParameterReference Id
+    {
+        get => _id ?? new ParameterReference { Source = ParameterSource.Static }; 
+        set => _id = value; 
+    }
 }

@@ -116,24 +116,27 @@ public class UpdateDIDActionProcessor : IActionProcessor
                 input.MasterKeySecret, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
 
             // Validate Base64 format if provided
-            if (string.IsNullOrWhiteSpace(masterKeySecret) || !PrismEncoding.IsValidBase64(masterKeySecret))
+            if (!string.IsNullOrWhiteSpace(masterKeySecret) && !PrismEncoding.IsValidBase64(masterKeySecret))
             {
                 var errorMessage = "Master Key Secret must be a valid base64 encoded string.";
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
 
-            // Process update operations
-            if (input.UpdateOperations == null || !input.UpdateOperations.Any())
+            // Process operations
+            if (input.Operations == null || !input.Operations.Any())
             {
-                var errorMessage = "At least one update operation is required for DID update.";
+                var errorMessage = "At least one operation is required for DID update.";
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
 
-            // Process each update operation
-            var updateOperations = new List<Dictionary<string, object>>();
-            foreach (var operation in input.UpdateOperations)
+            // Create the required arrays for the update operation
+            var didDocumentOperations = new List<string>();
+            var didDocuments = new List<Dictionary<string, object>>();
+
+            // Process each operation
+            foreach (var operation in input.Operations)
             {
                 var operationType = await ParameterResolver.GetParameterFromExecutionContext(
                     operation.OperationType, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
@@ -145,98 +148,129 @@ public class UpdateDIDActionProcessor : IActionProcessor
                     return Result.Fail(errorMessage);
                 }
 
-                var operationData = new Dictionary<string, object>
-                {
-                    { "type", operationType }
-                };
+                didDocumentOperations.Add(operationType);
 
-                // Process based on operation type
-                if (operationType.Equals("Add", StringComparison.OrdinalIgnoreCase) && operation.VerificationMethod != null)
+                // Create the document object for this operation
+                var documentObject = new Dictionary<string, object>();
+
+                // Add @context for setDidDocument operation
+                if (operationType == "setDidDocument")
+                {
+                    documentObject["@context"] = new[] { 
+                        "https://www.w3.org/ns/did/v1", 
+                        "https://w3id.org/security/suites/jws-2020/v1" 
+                    };
+                }
+
+                // Process services if any
+                if (operation.Document.Services != null && operation.Document.Services.Any())
+                {
+                    var services = new List<Dictionary<string, object>>();
+                    foreach (var service in operation.Document.Services)
+                    {
+                        var serviceId = await ParameterResolver.GetParameterFromExecutionContext(
+                            service.ServiceId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+
+                        var type = await ParameterResolver.GetParameterFromExecutionContext(
+                            service.Type, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+
+                        var endpoint = await ParameterResolver.GetParameterFromExecutionContext(
+                            service.Endpoint, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+
+                        if (string.IsNullOrWhiteSpace(serviceId) || string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(endpoint))
+                        {
+                            var errorMessage = "Invalid service endpoint parameters.";
+                            actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                            return Result.Fail(errorMessage);
+                        }
+
+                        services.Add(new Dictionary<string, object>
+                        {
+                            { "id", serviceId.ToLowerInvariant() },
+                            { "type", type },
+                            { "serviceEndpoint", endpoint }
+                        });
+                    }
+
+                    if (services.Any())
+                    {
+                        documentObject["service"] = services;
+                    }
+                }
+
+                // Process verification methods if any
+                if (operation.Document.VerificationMethods != null && operation.Document.VerificationMethods.Any())
+                {
+                    var verificationMethods = new List<Dictionary<string, object>>();
+                    foreach (var vm in operation.Document.VerificationMethods)
+                    {
+                        var id = await ParameterResolver.GetParameterFromExecutionContext(
+                            vm.Id, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+
+                        if (string.IsNullOrWhiteSpace(id))
+                        {
+                            var errorMessage = "Invalid verification method ID.";
+                            actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                            return Result.Fail(errorMessage);
+                        }
+
+                        verificationMethods.Add(new Dictionary<string, object>
+                        {
+                            { "id", id }
+                        });
+                    }
+
+                    if (verificationMethods.Any())
+                    {
+                        documentObject["verificationMethod"] = verificationMethods;
+                    }
+                }
+
+                didDocuments.Add(documentObject);
+            }
+
+            // Process verification methods for the secret section if any
+            var secretVerificationMethods = new List<Dictionary<string, string>>();
+            if (input.VerificationMethods != null && input.VerificationMethods.Any())
+            {
+                foreach (var vm in input.VerificationMethods)
                 {
                     var keyId = await ParameterResolver.GetParameterFromExecutionContext(
-                        operation.VerificationMethod.KeyId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                        vm.KeyId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
 
                     var purpose = await ParameterResolver.GetParameterFromExecutionContext(
-                        operation.VerificationMethod.Purpose, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                        vm.Purpose, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
 
                     var curve = await ParameterResolver.GetParameterFromExecutionContext(
-                        operation.VerificationMethod.Curve, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                        vm.Curve, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
 
                     if (string.IsNullOrWhiteSpace(keyId) || string.IsNullOrWhiteSpace(purpose) || string.IsNullOrWhiteSpace(curve))
                     {
-                        var errorMessage = "Invalid verification method parameters for Add operation.";
+                        var errorMessage = "Invalid verification method parameters.";
                         actionOutcome.FinishOutcomeWithFailure(errorMessage);
                         return Result.Fail(errorMessage);
                     }
 
-                    operationData["verificationMethod"] = new Dictionary<string, string>
+                    secretVerificationMethods.Add(new Dictionary<string, string>
                     {
                         { "keyId", keyId.ToLowerInvariant() },
                         { "purpose", purpose },
                         { "curve", curve }
-                    };
+                    });
                 }
-                else if (operationType.Equals("Remove", StringComparison.OrdinalIgnoreCase) && operation.KeyId != null)
-                {
-                    var keyId = await ParameterResolver.GetParameterFromExecutionContext(
-                        operation.KeyId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-
-                    if (string.IsNullOrWhiteSpace(keyId))
-                    {
-                        var errorMessage = "Invalid key ID for Remove operation.";
-                        actionOutcome.FinishOutcomeWithFailure(errorMessage);
-                        return Result.Fail(errorMessage);
-                    }
-
-                    operationData["keyId"] = keyId.ToLowerInvariant();
-                }
-                else if (operationType.Equals("Set", StringComparison.OrdinalIgnoreCase))
-                {
-                    var services = new List<Dictionary<string, string>>();
-
-                    if (operation.Services != null && operation.Services.Any())
-                    {
-                        foreach (var service in operation.Services)
-                        {
-                            var serviceId = await ParameterResolver.GetParameterFromExecutionContext(
-                                service.ServiceId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-
-                            var type = await ParameterResolver.GetParameterFromExecutionContext(
-                                service.Type, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-
-                            var endpoint = await ParameterResolver.GetParameterFromExecutionContext(
-                                service.Endpoint, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-
-                            if (string.IsNullOrWhiteSpace(serviceId) || string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(endpoint))
-                            {
-                                var errorMessage = "Invalid service endpoint parameters for Set operation.";
-                                actionOutcome.FinishOutcomeWithFailure(errorMessage);
-                                return Result.Fail(errorMessage);
-                            }
-
-                            services.Add(new Dictionary<string, string>
-                            {
-                                { "serviceId", serviceId.ToLowerInvariant() },
-                                { "type", type },
-                                { "endpoint", endpoint }
-                            });
-                        }
-                    }
-
-                    operationData["services"] = services;
-                }
-                else
-                {
-                    var errorMessage = $"Invalid operation configuration for operation type: {operationType}.";
-                    actionOutcome.FinishOutcomeWithFailure(errorMessage);
-                    return Result.Fail(errorMessage);
-                }
-
-                updateOperations.Add(operationData);
             }
 
             var client = new OpenPrismNodeRegistrarClient(_httpClientFactory);
-            var result = await client.UpdateDidAsync(registrarUrl, did, walletId, updateOperations, masterKeySecret, context.CancellationToken);
+            var result = await client.UpdateDidAsync(
+                registrarUrl, 
+                did, 
+                walletId,
+                masterKeySecret!,
+                didDocumentOperations, 
+                didDocuments,
+                secretVerificationMethods.Any() ? secretVerificationMethods : null,  
+                context.CancellationToken);
+                
             if (result.IsFailed)
             {
                 var errorMessage = $"Failed to update DID: {result.Errors.FirstOrDefault()?.Message}";

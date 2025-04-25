@@ -187,30 +187,88 @@
                 <div class="text-red-500 text-xs">Value must be a valid base64 encoded string</div>
             }
         </div>
+        
+        <!-- Network Input -->
+        <div class="mt-4 space-y-2">
+            <h4 class="text-xs font-medium text-gray-700">Network (optional)</h4>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Network.Source"
+                        @bind:after="OnNetworkSourceChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.Network.Source == ParameterSource.Static)
+                {
+                    <input type="text"
+                           class="w-2/3 rounded border px-2 py-1 text-xs"
+                           placeholder="Enter network (e.g. preprod, mainnet)"
+                           @bind="ActionInput.Network.DefaultValue"
+                           @bind:after="OnValueChanged"/>
+                }
+                else if (ActionInput.Network.Source == ParameterSource.TriggerInput)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Network.Path"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select trigger parameter</option>
+                        @if (TriggerParameters?.Any() == true)
+                        {
+                            @foreach (var param in TriggerParameters)
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                    </select>
+                }
+                else if (ActionInput.Network.Source == ParameterSource.ActionOutcome)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Network.ActionId"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select previous action</option>
+                        @if (FlowItems != null)
+                        {
+                            @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                            {
+                                if (item is WorkflowAction actionItem)
+                                {
+                                    <option value="@actionItem.Input.Id">
+                                        @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                    </option>
+                                }
+                            }
+                        }
+                    </select>
+                }
+            </div>
+        </div>
     </div>
 
-    <!-- DID Update Operations Section -->
+    <!-- DID Operations Section -->
     <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="font-medium text-gray-700">DID Update Operations</h3>
+            <h3 class="font-medium text-gray-700">DID Document Operations</h3>
             <button
-                @onclick="AddUpdateOperation"
+                @onclick="AddOperation"
                 class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
                 <span class="material-symbols-outlined text-sm mr-1">add</span>
                 Add Operation
             </button>
         </div>
 
-        @if (ActionInput.UpdateOperations.Count == 0)
+        @if (ActionInput.Operations.Count == 0)
         {
-            <div class="text-red-500 text-xs mb-2">At least one update operation is required</div>
+            <div class="text-red-500 text-xs mb-2">At least one operation is required</div>
         }
 
         <div class="space-y-2">
-            @for (int i = 0; i < ActionInput.UpdateOperations.Count; i++)
+            @for (int i = 0; i < ActionInput.Operations.Count; i++)
             {
                 var index = i;
-                var operation = ActionInput.UpdateOperations[i];
+                var operation = ActionInput.Operations[i];
                 var operationType = operation.OperationType.Source == ParameterSource.Static
                     ? operation.OperationType.DefaultValue
                     : null;
@@ -220,7 +278,7 @@
                         <span class="text-xs font-medium text-gray-700">Operation @(i + 1)</span>
 
                         <button
-                            @onclick="() => RemoveUpdateOperation(index)"
+                            @onclick="() => RemoveOperation(index)"
                             class="text-red-500 hover:text-red-700">
                             <span class="material-symbols-outlined text-xs">delete</span>
                         </button>
@@ -236,151 +294,242 @@
                             IsDropdown="true"
                             Options="@_operationTypeOptions"/>
 
-                        @if (operationType == "Add")
-                        {
-                            <!-- Add Operation: Verification Method -->
-                            <div class="border border-gray-200 rounded p-2 mt-2">
-                                <h4 class="text-xs font-medium text-gray-700 mb-2">Verification Method</h4>
+                        <!-- Document Section -->
+                        <div class="border border-gray-200 rounded p-2 mt-2">
+                            <h4 class="text-xs font-medium text-gray-700 mb-2">Document Contents</h4>
 
-                                @if (operation.VerificationMethod == null)
+                            @if (operationType == "setDidDocument" || operationType == "addToDidDocument")
+                            {
+                                <!-- For set and add operations, we can have services -->
+                                @if (operationType == "setDidDocument")
                                 {
-                                    // Initialize verification method with defaults
-                                    UpdateOperationDefaults(operation);
-                                }
+                                    <div class="border border-gray-200 rounded p-2 mt-2">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="text-xs font-medium text-gray-700">Services</h4>
+                                            <button
+                                                @onclick="() => AddService(index)"
+                                                class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                                                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                                                Add Service
+                                            </button>
+                                        </div>
 
-                                <!-- Key ID -->
-                                <ParameterSelector
-                                    Label="Key ID"
-                                    Parameter="operation.VerificationMethod.KeyId"
-                                    OnChange="() => OnValueChanged()"
-                                    OnInputValidation="(value) => ValidateKeyId(index, value)"
-                                    ValidationError="@_keyIdErrors[index]"
-                                    Placeholder="key-1"
-                                    TriggerParameters="TriggerParameters"/>
+                                        @if (operation.Document.Services.Count == 0)
+                                        {
+                                            <div class="text-xs text-gray-500 mb-2">No services added. Services are optional.</div>
+                                        }
 
-                                <!-- Purpose -->
-                                <ParameterSelector
-                                    Label="Purpose"
-                                    Parameter="operation.VerificationMethod.Purpose"
-                                    OnChange="(p) => UpdatePurpose(index, p)"
-                                    TriggerParameters="TriggerParameters"
-                                    IsDropdown="true"
-                                    Options="@_purposeOptions"/>
+                                        <div class="space-y-2">
+                                            @for (int j = 0; j < operation.Document.Services.Count; j++)
+                                            {
+                                                var serviceIndex = j;
+                                                var service = operation.Document.Services[j];
+                                                var serviceErrorsIndex = GetServiceErrorsIndex(index, serviceIndex);
 
-                                <!-- Curve -->
-                                <ParameterSelector
-                                    Label="Curve"
-                                    Parameter="operation.VerificationMethod.Curve"
-                                    OnChange="() => OnValueChanged()"
-                                    TriggerParameters="TriggerParameters"
-                                    IsDropdown="true"
-                                    Options="@_curveOptions"
-                                    DisabledValue="@(GetDisabledCurveValue(operation.VerificationMethod))"/>
-                            </div>
-                        }
-                        @if (operationType == "Remove")
-                        {
-                            <!-- Remove Operation: KeyId -->
-                            <div class="border border-gray-200 rounded p-2 mt-2">
-                                <h4 class="text-xs font-medium text-gray-700 mb-2">Key to Remove</h4>
+                                                <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                                                    <div class="flex justify-between items-center mb-2">
+                                                        <span class="text-xs font-medium text-gray-700">Service @(j + 1)</span>
 
-                                @if (operation.KeyId == null)
-                                {
-                                    operation.KeyId = new ParameterReference
-                                    {
-                                        Source = ParameterSource.Static,
-                                        DefaultValue = $"key-{ActionInput.UpdateOperations.Count}"
-                                    };
-                                }
+                                                        <button
+                                                            @onclick="() => RemoveService(index, serviceIndex)"
+                                                            class="text-red-500 hover:text-red-700">
+                                                            <span class="material-symbols-outlined text-xs">delete</span>
+                                                        </button>
+                                                    </div>
 
-                                <!-- Key ID -->
-                                <ParameterSelector
-                                    Label="Key ID"
-                                    Parameter="operation.KeyId"
-                                    OnChange="() => OnValueChanged()"
-                                    OnInputValidation="(value) => ValidateRemoveKeyId(index, value)"
-                                    ValidationError="@_removeKeyIdErrors[index]"
-                                    Placeholder="key-1"
-                                    TriggerParameters="TriggerParameters"/>
-                            </div>
-                        }
-                        @if (operationType == "Set")
-                        {
-                            <!-- Set Operation: Services -->
-                            <div class="border border-gray-200 rounded p-2 mt-2">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="text-xs font-medium text-gray-700">Services</h4>
-                                    <button
-                                        @onclick="() => AddService(index)"
-                                        class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
-                                        <span class="material-symbols-outlined text-sm mr-1">add</span>
-                                        Add Service
-                                    </button>
-                                </div>
+                                                    <div class="space-y-2">
+                                                        <!-- Service ID -->
+                                                        <ParameterSelector
+                                                            Label="Service ID"
+                                                            Parameter="service.ServiceId"
+                                                            OnChange="() => OnValueChanged()"
+                                                            OnInputValidation="(value) => ValidateServiceId(serviceErrorsIndex, value)"
+                                                            ValidationError="@_serviceIdErrors[serviceErrorsIndex]"
+                                                            Placeholder="service-1"
+                                                            TriggerParameters="TriggerParameters"/>
 
-                                @if (operation.Services.Count == 0)
-                                {
-                                    <div class="text-xs text-gray-500 mb-2">No services added. Services are optional.
+                                                        <!-- Type -->
+                                                        <ParameterSelector
+                                                            Label="Type"
+                                                            Parameter="service.Type"
+                                                            OnChange="() => OnValueChanged()"
+                                                            OnInputValidation="(value) => ValidateServiceType(serviceErrorsIndex, value)"
+                                                            ValidationError="@_serviceTypeErrors[serviceErrorsIndex]"
+                                                            Placeholder="Custom service type"
+                                                            TriggerParameters="TriggerParameters"
+                                                            CanSwitchToCustomValue="true"
+                                                            IsCustomValue="@_isCustomServiceType[serviceErrorsIndex]"
+                                                            OnCustomValueToggle="(isCustom) => ToggleCustomServiceType(serviceErrorsIndex, isCustom)"
+                                                            IsDropdown="!_isCustomServiceType[serviceErrorsIndex]"
+                                                            Options="@_serviceTypeOptions"/>
+
+                                                        <!-- Endpoint -->
+                                                        <ParameterSelector
+                                                            Label="Endpoint"
+                                                            Parameter="service.Endpoint"
+                                                            OnChange="() => OnValueChanged()"
+                                                            Placeholder="https://example.com"
+                                                            TriggerParameters="TriggerParameters"/>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
                                     </div>
                                 }
 
-                                <div class="space-y-2">
-                                    @for (int j = 0; j < operation.Services.Count; j++)
+                                <!-- Verification Methods section: present for both setDidDocument and addToDidDocument -->
+                                <div class="border border-gray-200 rounded p-2 mt-2">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-xs font-medium text-gray-700">Verification Methods</h4>
+                                        <button
+                                            @onclick="() => AddVerificationMethod(index)"
+                                            class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                                            <span class="material-symbols-outlined text-sm mr-1">add</span>
+                                            Add Method
+                                        </button>
+                                    </div>
+
+                                    @if (operation.Document.VerificationMethods.Count == 0)
                                     {
-                                        var serviceIndex = j;
-                                        var service = operation.Services[j];
-                                        var serviceErrorsIndex = GetServiceErrorsIndex(index, serviceIndex);
+                                        <div class="text-xs text-gray-500 mb-2">No verification methods added. Add at least one for addToDidDocument operation.</div>
+                                    }
 
-                                        <div class="border border-gray-200 rounded p-2 bg-gray-50">
-                                            <div class="flex justify-between items-center mb-2">
-                                                <span class="text-xs font-medium text-gray-700">Service @(j + 1)</span>
+                                    <div class="space-y-2">
+                                        @for (int k = 0; k < operation.Document.VerificationMethods.Count; k++)
+                                        {
+                                            var methodIndex = k;
+                                            var method = operation.Document.VerificationMethods[k];
+                                            var methodErrorsIndex = GetMethodErrorsIndex(index, methodIndex);
 
-                                                <button
-                                                    @onclick="() => RemoveService(index, serviceIndex)"
-                                                    class="text-red-500 hover:text-red-700">
-                                                    <span class="material-symbols-outlined text-xs">delete</span>
-                                                </button>
+                                            <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-xs font-medium text-gray-700">Method @(k + 1)</span>
+
+                                                    <button
+                                                        @onclick="() => RemoveVerificationMethod(index, methodIndex)"
+                                                        class="text-red-500 hover:text-red-700">
+                                                        <span class="material-symbols-outlined text-xs">delete</span>
+                                                    </button>
+                                                </div>
+
+                                                <div class="space-y-2">
+                                                    <!-- Verification Method ID -->
+                                                    <ParameterSelector
+                                                        Label="Verification Method ID"
+                                                        Parameter="method.Id"
+                                                        OnChange="() => OnValueChanged()"
+                                                        OnInputValidation="(value) => ValidateMethodId(methodErrorsIndex, value)"
+                                                        ValidationError="@_methodIdErrors[methodErrorsIndex]"
+                                                        Placeholder="did:prism:example#key-1"
+                                                        TriggerParameters="TriggerParameters"/>
+                                                </div>
                                             </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (operationType == "removeFromDidDocument")
+                            {
+                                <!-- Verification Method to remove -->
+                                <div class="border border-gray-200 rounded p-2 mt-2">
+                                    <h4 class="text-xs font-medium text-gray-700 mb-2">Verification Method to Remove</h4>
 
-                                            <div class="space-y-2">
-                                                <!-- Service ID -->
-                                                <ParameterSelector
-                                                    Label="Service ID"
-                                                    Parameter="service.ServiceId"
-                                                    OnChange="() => OnValueChanged()"
-                                                    OnInputValidation="(value) => ValidateServiceId(serviceErrorsIndex, value)"
-                                                    ValidationError="@_serviceIdErrors[serviceErrorsIndex]"
-                                                    Placeholder="service-1"
-                                                    TriggerParameters="TriggerParameters"/>
+                                    @if (operation.Document.VerificationMethods.Count == 0)
+                                    {
+                                        // Initialize verification method for removal
+                                        AddVerificationMethod(index);
+                                    }
 
-                                                <!-- Type -->
-                                                <ParameterSelector
-                                                    Label="Type"
-                                                    Parameter="service.Type"
-                                                    OnChange="() => OnValueChanged()"
-                                                    OnInputValidation="(value) => ValidateServiceType(serviceErrorsIndex, value)"
-                                                    ValidationError="@_serviceTypeErrors[serviceErrorsIndex]"
-                                                    Placeholder="Custom service type"
-                                                    TriggerParameters="TriggerParameters"
-                                                    CanSwitchToCustomValue="true"
-                                                    IsCustomValue="@_isCustomServiceType[serviceErrorsIndex]"
-                                                    OnCustomValueToggle="(isCustom) => ToggleCustomServiceType(serviceErrorsIndex, isCustom)"
-                                                    IsDropdown="!_isCustomServiceType[serviceErrorsIndex]"
-                                                    Options="@_serviceTypeOptions"/>
+                                    @for (int k = 0; k < operation.Document.VerificationMethods.Count; k++)
+                                    {
+                                        var methodIndex = k;
+                                        var method = operation.Document.VerificationMethods[k];
+                                        var methodErrorsIndex = GetMethodErrorsIndex(index, methodIndex);
 
-                                                <!-- Endpoint -->
-                                                <ParameterSelector
-                                                    Label="Endpoint"
-                                                    Parameter="service.Endpoint"
-                                                    OnChange="() => OnValueChanged()"
-                                                    Placeholder="https://example.com"
-                                                    TriggerParameters="TriggerParameters"/>
-                                            </div>
+                                        <div class="space-y-2">
+                                            <!-- Verification Method ID to remove -->
+                                            <ParameterSelector
+                                                Label="Verification Method ID"
+                                                Parameter="method.Id"
+                                                OnChange="() => OnValueChanged()"
+                                                OnInputValidation="(value) => ValidateMethodId(methodErrorsIndex, value)"
+                                                ValidationError="@_methodIdErrors[methodErrorsIndex]"
+                                                Placeholder="did:prism:example#key-1"
+                                                TriggerParameters="TriggerParameters"/>
                                         </div>
                                     }
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Verification Methods for Secret Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-gray-700">New Keys (Secret Section)</h3>
+            <button
+                @onclick="AddSecretVerificationMethod"
+                class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                <span class="material-symbols-outlined text-sm mr-1">add</span>
+                Add Key
+            </button>
+        </div>
+
+        <div class="space-y-2">
+            @if (ActionInput.VerificationMethods.Count == 0)
+            {
+                <div class="text-xs text-gray-500 mb-2">No keys added. Keys are required when adding new verification methods.</div>
+            }
+
+            @for (int i = 0; i < ActionInput.VerificationMethods.Count; i++)
+            {
+                var index = i;
+                var verificationMethod = ActionInput.VerificationMethods[i];
+
+                <div class="border border-gray-200 rounded p-2 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-gray-700">Key @(i + 1)</span>
+
+                        <button
+                            @onclick="() => RemoveSecretVerificationMethod(index)"
+                            class="text-red-500 hover:text-red-700">
+                            <span class="material-symbols-outlined text-xs">delete</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- Key ID -->
+                        <ParameterSelector
+                            Label="Key ID"
+                            Parameter="verificationMethod.KeyId"
+                            OnChange="() => OnValueChanged()"
+                            OnInputValidation="(value) => ValidateSecretKeyId(index, value)"
+                            ValidationError="@_secretKeyIdErrors[index]"
+                            Placeholder="key-1"
+                            TriggerParameters="TriggerParameters"/>
+
+                        <!-- Purpose -->
+                        <ParameterSelector
+                            Label="Purpose"
+                            Parameter="verificationMethod.Purpose"
+                            OnChange="(p) => UpdateSecretPurpose(index, p)"
+                            TriggerParameters="TriggerParameters"
+                            IsDropdown="true"
+                            Options="@_purposeOptions"/>
+
+                        <!-- Curve -->
+                        <ParameterSelector
+                            Label="Curve"
+                            Parameter="verificationMethod.Curve"
+                            OnChange="() => OnValueChanged()"
+                            TriggerParameters="TriggerParameters"
+                            IsDropdown="true"
+                            Options="@_curveOptions"
+                            DisabledValue="@(GetDisabledCurveValue(verificationMethod))"/>
                     </div>
                 </div>
             }
@@ -394,14 +543,14 @@
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
     [Parameter] public IEnumerable<object>? FlowItems { get; set; }
 
-    private List<string> _keyIdErrors = new List<string>();
-    private List<string> _removeKeyIdErrors = new List<string>();
+    private List<string> _secretKeyIdErrors = new List<string>();
+    private List<string> _methodIdErrors = new List<string>();
 
     private List<string> _operationTypeOptions = new List<string>
     {
-        "Add",
-        "Remove",
-        "Set"
+        "setDidDocument",
+        "addToDidDocument",
+        "removeFromDidDocument"
     };
 
     private List<string> _purposeOptions = new List<string>
@@ -435,10 +584,16 @@
 
     protected override void OnInitialized()
     {
-        // Ensure we have at least one update operation
-        if (ActionInput.UpdateOperations.Count == 0)
+        // Initialize the Network parameter if it's null
+        if (ActionInput.Network == null)
         {
-            AddDefaultUpdateOperation();
+            ActionInput.Network = new ParameterReference { Source = ParameterSource.Static };
+        }
+
+        // Ensure we have at least one operation
+        if (ActionInput.Operations.Count == 0)
+        {
+            AddDefaultOperation();
         }
 
         InitializeErrorArrays();
@@ -446,18 +601,27 @@
 
     private void InitializeErrorArrays()
     {
-        // Initialize error tracking arrays
-        _keyIdErrors = new List<string>(new string[ActionInput.UpdateOperations.Count]);
-        _removeKeyIdErrors = new List<string>(new string[ActionInput.UpdateOperations.Count]);
+        // Initialize error tracking arrays for verification methods in the secret section
+        _secretKeyIdErrors = new List<string>(new string[ActionInput.VerificationMethods.Count]);
+
+        // Count total verification methods across all operations
+        int totalMethods = 0;
+        foreach (var operation in ActionInput.Operations)
+        {
+            totalMethods += operation.Document.VerificationMethods.Count;
+        }
+
+        // Initialize error tracking arrays for verification methods
+        _methodIdErrors = new List<string>(new string[totalMethods]);
 
         // Count total services across all operations
         int totalServices = 0;
-        foreach (var operation in ActionInput.UpdateOperations)
+        foreach (var operation in ActionInput.Operations)
         {
             if (operation.OperationType.Source == ParameterSource.Static &&
-                operation.OperationType.DefaultValue == "Set")
+                operation.OperationType.DefaultValue == "setDidDocument")
             {
-                totalServices += operation.Services.Count;
+                totalServices += operation.Document.Services.Count;
             }
         }
 
@@ -468,15 +632,15 @@
 
         // Check if any service has a custom type
         int serviceIndex = 0;
-        foreach (var operation in ActionInput.UpdateOperations)
+        foreach (var operation in ActionInput.Operations)
         {
             if (operation.OperationType.Source == ParameterSource.Static &&
-                operation.OperationType.DefaultValue == "Set")
+                operation.OperationType.DefaultValue == "setDidDocument")
             {
-                for (int i = 0; i < operation.Services.Count; i++)
+                for (int i = 0; i < operation.Document.Services.Count; i++)
                 {
-                    bool isCustom = operation.Services[i].Type.Source == ParameterSource.Static &&
-                                    !_serviceTypeOptions.Contains(operation.Services[i].Type.DefaultValue);
+                    bool isCustom = operation.Document.Services[i].Type.Source == ParameterSource.Static &&
+                                    !_serviceTypeOptions.Contains(operation.Document.Services[i].Type.DefaultValue);
 
                     if (serviceIndex < _isCustomServiceType.Count)
                     {
@@ -493,227 +657,94 @@
         }
     }
 
-    private void AddDefaultUpdateOperation()
+    private void AddDefaultOperation()
     {
-        var operation = new DIDUpdateOperation
+        var operation = new DIDDocumentOperation
         {
             OperationType = new ParameterReference
             {
                 Source = ParameterSource.Static,
-                DefaultValue = "Add"
+                DefaultValue = "setDidDocument"
+            },
+            Document = new DIDDocument
+            {
+                Services = new List<ServiceEndpoint>(),
+                VerificationMethods = new List<DIDVerificationMethodReference>()
             }
         };
 
-        // Initialize with proper defaults
-        UpdateOperationDefaults(operation);
-
-        ActionInput.UpdateOperations.Add(operation);
-
-        _keyIdErrors.Add(string.Empty);
-        _removeKeyIdErrors.Add(string.Empty);
+        ActionInput.Operations.Add(operation);
+        InitializeErrorArrays();
         StateHasChanged();
     }
 
-    private void AddUpdateOperation()
+    private void AddOperation()
     {
-        var operation = new DIDUpdateOperation
+        var operation = new DIDDocumentOperation
         {
             OperationType = new ParameterReference
             {
                 Source = ParameterSource.Static,
-                DefaultValue = "Add"
+                DefaultValue = "setDidDocument"
+            },
+            Document = new DIDDocument
+            {
+                Services = new List<ServiceEndpoint>(),
+                VerificationMethods = new List<DIDVerificationMethodReference>()
             }
         };
 
-        // Set default values based on operation type
-        UpdateOperationDefaults(operation);
-
-        ActionInput.UpdateOperations.Add(operation);
-        _keyIdErrors.Add(string.Empty);
-        _removeKeyIdErrors.Add(string.Empty);
-
+        ActionInput.Operations.Add(operation);
         InitializeErrorArrays();
         StateHasChanged();
         OnChange.InvokeAsync();
     }
 
-    private void RemoveUpdateOperation(int index)
+    private void RemoveOperation(int index)
     {
-        ActionInput.UpdateOperations.RemoveAt(index);
-        _keyIdErrors.RemoveAt(index);
-        _removeKeyIdErrors.RemoveAt(index);
-
+        ActionInput.Operations.RemoveAt(index);
         InitializeErrorArrays();
         StateHasChanged();
         OnChange.InvokeAsync();
-    }
-
-    private void UpdateOperationDefaults(DIDUpdateOperation operation)
-    {
-        if (operation.OperationType.Source == ParameterSource.Static)
-        {
-            var operationType = operation.OperationType.DefaultValue;
-
-            if (operationType == "Add")
-            {
-                // Always create a new VerificationMethod with default values
-                operation.VerificationMethod = new VerificationMethod
-                {
-                    KeyId = new ParameterReference
-                    {
-                        Source = ParameterSource.Static,
-                        DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
-                    },
-                    Purpose = new ParameterReference
-                    {
-                        Source = ParameterSource.Static,
-                        DefaultValue = "authentication"
-                    },
-                    Curve = new ParameterReference
-                    {
-                        Source = ParameterSource.Static,
-                        DefaultValue = "secp256k1"
-                    }
-                };
-                operation.KeyId = null;
-                operation.Services = new List<ServiceEndpoint>();
-            }
-            else if (operationType == "Remove")
-            {
-                operation.KeyId = new ParameterReference
-                {
-                    Source = ParameterSource.Static,
-                    DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
-                };
-                operation.VerificationMethod = null;
-                operation.Services = new List<ServiceEndpoint>();
-            }
-            else if (operationType == "Set")
-            {
-                operation.Services = new List<ServiceEndpoint>();
-                operation.VerificationMethod = null;
-                operation.KeyId = null;
-            }
-        }
     }
 
     private async Task UpdateOperationType(int index, ParameterReference parameter)
     {
         if (parameter.Source == ParameterSource.Static)
         {
-            var operation = ActionInput.UpdateOperations[index];
+            var operation = ActionInput.Operations[index];
             var oldType = operation.OperationType.DefaultValue;
             var newType = parameter.DefaultValue;
 
             if (oldType != newType)
             {
-                // If operation type changes, update the appropriate fields
-                UpdateOperationDefaults(operation);
+                // If the operation type is removeFromDidDocument, ensure we have a verification method to remove
+                if (newType == "removeFromDidDocument" && operation.Document.VerificationMethods.Count == 0)
+                {
+                    AddVerificationMethod(index);
+                }
             }
         }
 
+        InitializeErrorArrays();
         StateHasChanged();
         await OnChange.InvokeAsync();
-    }
-
-    private async Task UpdatePurpose(int index, ParameterReference parameter)
-    {
-        var operation = ActionInput.UpdateOperations[index];
-
-        if (operation.VerificationMethod != null)
-        {
-            // If it's a static value and it's keyAgreement, set curve to X25519
-            if (parameter.Source == ParameterSource.Static &&
-                parameter.DefaultValue == "keyAgreement" &&
-                operation.VerificationMethod.Curve.Source == ParameterSource.Static)
-            {
-                operation.VerificationMethod.Curve.DefaultValue = "X25519";
-            }
-            // If we're changing from keyAgreement and the curve is X25519, change it to secp256k1
-            else if (parameter.Source == ParameterSource.Static &&
-                     parameter.DefaultValue != "keyAgreement" &&
-                     operation.VerificationMethod.Curve.Source == ParameterSource.Static &&
-                     operation.VerificationMethod.Curve.DefaultValue == "X25519")
-            {
-                operation.VerificationMethod.Curve.DefaultValue = "secp256k1";
-            }
-        }
-
-        StateHasChanged();
-        await OnChange.InvokeAsync();
-    }
-
-    private string? GetDisabledCurveValue(VerificationMethod method)
-    {
-        // Only enforce X25519 for keyAgreement when both are static values
-        if (method.Purpose.Source == ParameterSource.Static &&
-            method.Purpose.DefaultValue == "keyAgreement")
-        {
-            return method.Curve.DefaultValue == "X25519" ? null : "X25519";
-        }
-
-        return method.Purpose.Source == ParameterSource.Static &&
-               method.Purpose.DefaultValue != "keyAgreement"
-            ? "X25519"
-            : null;
-    }
-
-    private void ValidateKeyId(int index, string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            _keyIdErrors[index] = "Key ID is required";
-        }
-        else if (!IsValidKeyId(value))
-        {
-            _keyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
-        }
-        else
-        {
-            _keyIdErrors[index] = string.Empty;
-        }
-
-        StateHasChanged();
-    }
-
-    private void ValidateRemoveKeyId(int index, string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            _removeKeyIdErrors[index] = "Key ID is required";
-        }
-        else if (!IsValidKeyId(value))
-        {
-            _removeKeyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
-        }
-        else
-        {
-            _removeKeyIdErrors[index] = string.Empty;
-        }
-
-        StateHasChanged();
-    }
-
-    private bool IsValidKeyId(string value)
-    {
-        // ASCII letters, numbers, and dashes only
-        return System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9-]+$");
     }
 
     // Service methods
     private async Task AddService(int operationIndex)
     {
-        var operation = ActionInput.UpdateOperations[operationIndex];
+        var operation = ActionInput.Operations[operationIndex];
 
         if (operation.OperationType.Source == ParameterSource.Static &&
-            operation.OperationType.DefaultValue == "Set")
+            operation.OperationType.DefaultValue == "setDidDocument")
         {
             var newService = new ServiceEndpoint
             {
                 ServiceId = new ParameterReference
                 {
                     Source = ParameterSource.Static,
-                    DefaultValue = $"service-{operation.Services.Count + 1}"
+                    DefaultValue = $"service-{operation.Document.Services.Count + 1}"
                 },
                 Type = new ParameterReference
                 {
@@ -727,7 +758,7 @@
                 }
             };
 
-            operation.Services.Add(newService);
+            operation.Document.Services.Add(newService);
 
             InitializeErrorArrays();
             StateHasChanged();
@@ -737,17 +768,17 @@
 
     private async Task RemoveService(int operationIndex, int serviceIndex)
     {
-        var operation = ActionInput.UpdateOperations[operationIndex];
+        var operation = ActionInput.Operations[operationIndex];
 
         if (operation.OperationType.Source == ParameterSource.Static &&
-            operation.OperationType.DefaultValue == "Set")
+            operation.OperationType.DefaultValue == "setDidDocument")
         {
-            operation.Services.RemoveAt(serviceIndex);
+            operation.Document.Services.RemoveAt(serviceIndex);
 
             // Update remaining service IDs to be sequential if they're static values
-            for (int i = 0; i < operation.Services.Count; i++)
+            for (int i = 0; i < operation.Document.Services.Count; i++)
             {
-                var service = operation.Services[i];
+                var service = operation.Document.Services[i];
                 if (service.ServiceId.Source == ParameterSource.Static &&
                     service.ServiceId.DefaultValue != null &&
                     service.ServiceId.DefaultValue.StartsWith("service-") &&
@@ -763,6 +794,105 @@
         }
     }
 
+    // Verification Method methods
+    private void AddVerificationMethod(int operationIndex)
+    {
+        var operation = ActionInput.Operations[operationIndex];
+        var operationType = operation.OperationType.Source == ParameterSource.Static 
+            ? operation.OperationType.DefaultValue 
+            : string.Empty;
+
+        // Create a default verification method reference
+        var defaultId = operationType == "removeFromDidDocument" ? 
+            $"did:prism:example#key-{operation.Document.VerificationMethods.Count + 1}" : 
+            $"did:prism:example#key-{operation.Document.VerificationMethods.Count + 1}";
+
+        var method = new DIDVerificationMethodReference
+        {
+            Id = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = defaultId
+            }
+        };
+
+        operation.Document.VerificationMethods.Add(method);
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    private void RemoveVerificationMethod(int operationIndex, int methodIndex)
+    {
+        var operation = ActionInput.Operations[operationIndex];
+        operation.Document.VerificationMethods.RemoveAt(methodIndex);
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    // Secret Verification Method methods
+    private void AddSecretVerificationMethod()
+    {
+        var method = new VerificationMethod
+        {
+            KeyId = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = $"key-{ActionInput.VerificationMethods.Count + 1}"
+            },
+            Purpose = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = "authentication"
+            },
+            Curve = new ParameterReference
+            {
+                Source = ParameterSource.Static,
+                DefaultValue = "secp256k1"
+            }
+        };
+
+        ActionInput.VerificationMethods.Add(method);
+        _secretKeyIdErrors.Add(string.Empty);
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    private void RemoveSecretVerificationMethod(int index)
+    {
+        ActionInput.VerificationMethods.RemoveAt(index);
+        _secretKeyIdErrors.RemoveAt(index);
+        InitializeErrorArrays();
+        StateHasChanged();
+        OnChange.InvokeAsync();
+    }
+
+    private async Task UpdateSecretPurpose(int index, ParameterReference parameter)
+    {
+        var verificationMethod = ActionInput.VerificationMethods[index];
+
+        // If it's a static value and it's keyAgreement, set curve to X25519
+        if (parameter.Source == ParameterSource.Static &&
+            parameter.DefaultValue == "keyAgreement" &&
+            verificationMethod.Curve.Source == ParameterSource.Static)
+        {
+            verificationMethod.Curve.DefaultValue = "X25519";
+        }
+        // If we're changing from keyAgreement and the curve is X25519, change it to secp256k1
+        else if (parameter.Source == ParameterSource.Static &&
+                 parameter.DefaultValue != "keyAgreement" &&
+                 verificationMethod.Curve.Source == ParameterSource.Static &&
+                 verificationMethod.Curve.DefaultValue == "X25519")
+        {
+            verificationMethod.Curve.DefaultValue = "secp256k1";
+        }
+
+        StateHasChanged();
+        await OnChange.InvokeAsync();
+    }
+
     private int GetServiceErrorsIndex(int operationIndex, int serviceIndex)
     {
         // Calculate the actual index in the errors arrays for a service
@@ -770,15 +900,29 @@
 
         for (int i = 0; i < operationIndex; i++)
         {
-            var operation = ActionInput.UpdateOperations[i];
+            var operation = ActionInput.Operations[i];
             if (operation.OperationType.Source == ParameterSource.Static &&
-                operation.OperationType.DefaultValue == "Set")
+                operation.OperationType.DefaultValue == "setDidDocument")
             {
-                index += operation.Services.Count;
+                index += operation.Document.Services.Count;
             }
         }
 
         return index + serviceIndex;
+    }
+
+    private int GetMethodErrorsIndex(int operationIndex, int methodIndex)
+    {
+        // Calculate the actual index in the errors arrays for a verification method
+        int index = 0;
+
+        for (int i = 0; i < operationIndex; i++)
+        {
+            var operation = ActionInput.Operations[i];
+            index += operation.Document.VerificationMethods.Count;
+        }
+
+        return index + methodIndex;
     }
 
     private async Task ToggleCustomServiceType(int index, bool isCustom)
@@ -791,12 +935,12 @@
         int currentServiceIndex = 0;
         bool found = false;
 
-        foreach (var operation in ActionInput.UpdateOperations)
+        foreach (var operation in ActionInput.Operations)
         {
             if (operation.OperationType.Source == ParameterSource.Static &&
-                operation.OperationType.DefaultValue == "Set")
+                operation.OperationType.DefaultValue == "setDidDocument")
             {
-                for (int i = 0; i < operation.Services.Count; i++)
+                for (int i = 0; i < operation.Document.Services.Count; i++)
                 {
                     if (currentServiceIndex == index)
                     {
@@ -814,18 +958,66 @@
             operationIndex++;
         }
 
-        if (found && operationIndex < ActionInput.UpdateOperations.Count)
+        if (found && operationIndex < ActionInput.Operations.Count)
         {
-            var operation = ActionInput.UpdateOperations[operationIndex];
+            var operation = ActionInput.Operations[operationIndex];
 
             // If switching from custom to predefined and it's a static value, set to the first predefined type
             if (!isCustom &&
-                operation.Services[serviceIndex].Type.Source == ParameterSource.Static &&
-                !_serviceTypeOptions.Contains(operation.Services[serviceIndex].Type.DefaultValue))
+                operation.Document.Services[serviceIndex].Type.Source == ParameterSource.Static &&
+                !_serviceTypeOptions.Contains(operation.Document.Services[serviceIndex].Type.DefaultValue))
             {
-                operation.Services[serviceIndex].Type.DefaultValue = _serviceTypeOptions[0];
+                operation.Document.Services[serviceIndex].Type.DefaultValue = _serviceTypeOptions[0];
                 await OnChange.InvokeAsync();
             }
+        }
+
+        StateHasChanged();
+    }
+
+    private string? GetDisabledCurveValue(VerificationMethod method)
+    {
+        // Only enforce X25519 for keyAgreement when both are static values
+        if (method.Purpose.Source == ParameterSource.Static &&
+            method.Purpose.DefaultValue == "keyAgreement")
+        {
+            return method.Curve.DefaultValue == "X25519" ? null : "X25519";
+        }
+
+        return method.Purpose.Source == ParameterSource.Static &&
+               method.Purpose.DefaultValue != "keyAgreement"
+            ? "X25519"
+            : null;
+    }
+
+    // Validation methods
+    private void ValidateSecretKeyId(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _secretKeyIdErrors[index] = "Key ID is required";
+        }
+        else if (!IsValidId(value))
+        {
+            _secretKeyIdErrors[index] = "Key ID can only contain ASCII letters, numbers, and dashes";
+        }
+        else
+        {
+            _secretKeyIdErrors[index] = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidateMethodId(int index, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _methodIdErrors[index] = "Method ID is required";
+        }
+        else
+        {
+            _methodIdErrors[index] = string.Empty;
         }
 
         StateHasChanged();
@@ -837,7 +1029,7 @@
         {
             _serviceIdErrors[index] = "Service ID is required";
         }
-        else if (!IsValidKeyId(value))
+        else if (!IsValidId(value))
         {
             _serviceIdErrors[index] = "Service ID can only contain ASCII letters, numbers, and dashes";
         }
@@ -861,6 +1053,12 @@
         }
 
         StateHasChanged();
+    }
+
+    private bool IsValidId(string value)
+    {
+        // ASCII letters, numbers, and dashes only
+        return System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9-]+$");
     }
 
     // DID Registrar methods
@@ -891,4 +1089,11 @@
         await OnValueChanged();
     }
 
+    private async Task OnNetworkSourceChanged()
+    {
+        ActionInput.Network.Path = string.Empty;
+        ActionInput.Network.ActionId = null;
+        ActionInput.Network.DefaultValue = string.Empty;
+        await OnValueChanged();
+    }
 }
