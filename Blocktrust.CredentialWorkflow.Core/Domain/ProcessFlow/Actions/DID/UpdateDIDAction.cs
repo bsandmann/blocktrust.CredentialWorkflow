@@ -1,5 +1,7 @@
 using Blocktrust.CredentialWorkflow.Core.Domain.Common;
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID;
@@ -48,6 +50,8 @@ public class UpdateDIDAction : ActionInput
     public List<DIDUpdateOperation> UpdateOperations { get; set; } = new List<DIDUpdateOperation>();
 }
 
+// Use a custom converter to ensure operation-specific fields are properly handled
+[JsonConverter(typeof(DIDUpdateOperationConverter))]
 public class DIDUpdateOperation
 {
     private ParameterReference _operationType;
@@ -75,4 +79,100 @@ public class DIDUpdateOperation
     // Helper property to determine what kind of operation this is (only for code logic, not serialized)
     [JsonIgnore]
     public string? OperationTypeValue => OperationType?.Source == ParameterSource.Static ? OperationType.DefaultValue : null;
+}
+
+/// <summary>
+/// Custom JSON converter to ensure proper serialization of DIDUpdateOperation based on operation type
+/// </summary>
+public class DIDUpdateOperationConverter : JsonConverter<DIDUpdateOperation>
+{
+    public override DIDUpdateOperation Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException("Expected start of object");
+        }
+
+        var operation = new DIDUpdateOperation();
+        
+        // Store the original JsonElement to read all properties
+        using var document = JsonDocument.ParseValue(ref reader);
+        var rootElement = document.RootElement;
+        
+        // Read operationType
+        if (rootElement.TryGetProperty("operationType", out var opTypeElement))
+        {
+            // Parse the operationType into ParameterReference
+            operation.OperationType = JsonSerializer.Deserialize<ParameterReference>(
+                opTypeElement.GetRawText(), 
+                options
+            ) ?? new ParameterReference { Source = ParameterSource.Static, DefaultValue = "Add" };
+        }
+        
+        // Determine the operation type value for selective deserialization
+        string? operationType = null;
+        if (operation.OperationType.Source == ParameterSource.Static)
+        {
+            operationType = operation.OperationType.DefaultValue;
+        }
+        
+        // Read fields based on operation type
+        if (operationType == "Add" && rootElement.TryGetProperty("verificationMethod", out var vmElement))
+        {
+            operation.VerificationMethod = JsonSerializer.Deserialize<VerificationMethod>(
+                vmElement.GetRawText(), 
+                options
+            );
+        }
+        else if (operationType == "Remove" && rootElement.TryGetProperty("keyId", out var keyIdElement))
+        {
+            operation.KeyId = JsonSerializer.Deserialize<ParameterReference>(
+                keyIdElement.GetRawText(), 
+                options
+            );
+        }
+        
+        // Always read services
+        if (rootElement.TryGetProperty("services", out var servicesElement))
+        {
+            operation.Services = JsonSerializer.Deserialize<List<ServiceEndpoint>>(
+                servicesElement.GetRawText(), 
+                options
+            ) ?? new List<ServiceEndpoint>();
+        }
+        
+        return operation;
+    }
+
+    public override void Write(Utf8JsonWriter writer, DIDUpdateOperation value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        
+        // Always write operationType
+        writer.WritePropertyName("operationType");
+        JsonSerializer.Serialize(writer, value.OperationType, options);
+        
+        // Write fields based on operation type
+        if (value.OperationType.Source == ParameterSource.Static)
+        {
+            var operationType = value.OperationType.DefaultValue;
+            
+            if (operationType == "Add" && value.VerificationMethod != null)
+            {
+                writer.WritePropertyName("verificationMethod");
+                JsonSerializer.Serialize(writer, value.VerificationMethod, options);
+            }
+            else if (operationType == "Remove" && value.KeyId != null)
+            {
+                writer.WritePropertyName("keyId");
+                JsonSerializer.Serialize(writer, value.KeyId, options);
+            }
+        }
+        
+        // Always write services
+        writer.WritePropertyName("services");
+        JsonSerializer.Serialize(writer, value.Services, options);
+        
+        writer.WriteEndObject();
+    }
 }

@@ -515,12 +515,33 @@
             OperationType = new ParameterReference
             {
                 Source = ParameterSource.Static,
+                Path = "",
                 DefaultValue = "Add"
-            }
+            },
+            // For Add operations, we always start with a VerificationMethod
+            VerificationMethod = new VerificationMethod
+            {
+                KeyId = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                },
+                Purpose = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = "authentication"
+                },
+                Curve = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = "secp256k1"
+                }
+            },
+            Services = new List<ServiceEndpoint>()
         };
-
-        // Initialize with proper defaults
-        UpdateOperationDefaults(operation);
 
         ActionInput.UpdateOperations.Add(operation);
 
@@ -536,12 +557,33 @@
             OperationType = new ParameterReference
             {
                 Source = ParameterSource.Static,
+                Path = "",
                 DefaultValue = "Add"
-            }
+            },
+            // For Add operations, we always start with a VerificationMethod
+            VerificationMethod = new VerificationMethod
+            {
+                KeyId = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                },
+                Purpose = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = "authentication"
+                },
+                Curve = new ParameterReference
+                {
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = "secp256k1"
+                }
+            },
+            Services = new List<ServiceEndpoint>()
         };
-
-        // Set default values based on operation type
-        UpdateOperationDefaults(operation);
 
         ActionInput.UpdateOperations.Add(operation);
         _keyIdErrors.Add(string.Empty);
@@ -613,56 +655,85 @@
     {
         if (parameter.Source == ParameterSource.Static)
         {
-            var operation = ActionInput.UpdateOperations[index];
-            var oldType = operation.OperationType.DefaultValue;
-            var newType = parameter.DefaultValue;
-
-            if (oldType != newType)
+            // Get the current operation and verify we have the right index
+            if (index >= ActionInput.UpdateOperations.Count)
             {
-                operation.OperationType.DefaultValue = newType;
-                
-                // Reset all fields first
-                operation.VerificationMethod = null;
-                operation.KeyId = null;
-                operation.Services = new List<ServiceEndpoint>();
-                
-                // Then set only the necessary ones for the new operation type
-                if (newType == "Remove")
+                return;
+            }
+            
+            var operation = ActionInput.UpdateOperations[index];
+            var oldType = operation.OperationType?.DefaultValue ?? "null";
+            var newType = parameter.DefaultValue ?? "null";
+
+
+            // Always create a completely new ParameterReference to avoid reference issues
+            operation.OperationType = new ParameterReference 
+            {
+                Source = ParameterSource.Static,
+                Path = "",
+                DefaultValue = newType
+            };
+            
+
+            // Completely reset all fields
+            operation.VerificationMethod = null;
+            operation.KeyId = null;
+            operation.Services = new List<ServiceEndpoint>();
+            
+            // Set only necessary fields based on operation type
+            if (newType == "Remove")
+            {
+                // For Remove operation, we only need KeyId
+                operation.KeyId = new ParameterReference
                 {
-                    // For Remove operation, we only need KeyId
-                    operation.KeyId = new ParameterReference
+                    Source = ParameterSource.Static,
+                    Path = "",
+                    DefaultValue = $"key-{index + 1}"
+                };
+                // Ensure VerificationMethod is null for Remove
+                operation.VerificationMethod = null;
+            }
+            else if (newType == "Add")
+            {
+                // For Add operation, we only need VerificationMethod
+                operation.VerificationMethod = new VerificationMethod
+                {
+                    KeyId = new ParameterReference
                     {
                         Source = ParameterSource.Static,
+                        Path = "",
                         DefaultValue = $"key-{index + 1}"
-                    };
-                }
-                else if (newType == "Add")
-                {
-                    // For Add operation, we only need VerificationMethod
-                    operation.VerificationMethod = new VerificationMethod
+                    },
+                    Purpose = new ParameterReference
                     {
-                        KeyId = new ParameterReference
-                        {
-                            Source = ParameterSource.Static,
-                            DefaultValue = $"key-{index + 1}"
-                        },
-                        Purpose = new ParameterReference
-                        {
-                            Source = ParameterSource.Static,
-                            DefaultValue = "authentication"
-                        },
-                        Curve = new ParameterReference
-                        {
-                            Source = ParameterSource.Static,
-                            DefaultValue = "secp256k1"
-                        }
-                    };
-                }
-                // For "Set" operation, services will be initialized as an empty list already
+                        Source = ParameterSource.Static,
+                        Path = "",
+                        DefaultValue = "authentication"
+                    },
+                    Curve = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        Path = "",
+                        DefaultValue = "secp256k1"
+                    }
+                };
+                // Ensure KeyId is null for Add
+                operation.KeyId = null;
+            }
+            else if (newType == "Set")
+            {
+                // For Set operation, we only need services
+                operation.Services = new List<ServiceEndpoint>();
+                // Ensure other fields are null
+                operation.VerificationMethod = null;
+                operation.KeyId = null;
             }
         }
 
+        // Force a full refresh
         StateHasChanged();
+        
+        // Make sure the parent component knows about this change
         await OnChange.InvokeAsync();
     }
 

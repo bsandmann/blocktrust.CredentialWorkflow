@@ -272,7 +272,7 @@ public class UpdateDIDActionProcessor : IActionProcessor
                 else if (operationType == "removeFromDidDocument")
                 {
                     var id = await ParameterResolver.GetParameterFromExecutionContext(
-                        operation.VerificationMethod.KeyId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                        operation.KeyId, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
 
                     var prismDid = did.Split('#');
                     if (prismDid.Length > 1)

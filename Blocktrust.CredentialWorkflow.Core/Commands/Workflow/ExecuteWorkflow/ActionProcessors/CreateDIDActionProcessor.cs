@@ -227,8 +227,6 @@ public class CreateDIDActionProcessor : IActionProcessor
                 }
                 else if (string.IsNullOrEmpty(currentState))
                 {
-                    // Handle cases where the state might be missing, maybe log a warning but continue polling.
-                    Console.WriteLine($"Warning: Job status state is null or empty for job ID {jobId}. Continuing poll.");
                 }
                 // else: Handle any other unexpected states if necessary, potentially logging them.
 
