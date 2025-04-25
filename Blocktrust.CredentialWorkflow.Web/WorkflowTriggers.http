@@ -55,6 +55,12 @@ Content-Type: application/json
 {
 }
 
+### POST request to WorkflowController with JSON for DID deactivation
+POST https://localhost:7209/api/workflow/1c8ecc41-fced-4cd3-fef8-08dd84142555
+Content-Type: application/json
+
+{
+}
 
 
 

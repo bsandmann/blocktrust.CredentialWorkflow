@@ -113,6 +113,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             EActionType.CustomValidation => _serviceProvider.GetService<CustomValidationProcessor>(),
             EActionType.CreateDID => _serviceProvider.GetService<CreateDIDActionProcessor>(),
             EActionType.UpdateDID => _serviceProvider.GetService<UpdateDIDActionProcessor>(),
+            EActionType.DeleteDID => _serviceProvider.GetService<DeactivateDIDActionProcessor>(),
             _ => null
         };
     }

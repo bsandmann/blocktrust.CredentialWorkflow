@@ -284,10 +284,20 @@
             throw;
         }
     }
+    
+    // Debug method to see the actual action creation
+    private void DebugAction(EActionType actionType, WorkflowAction action)
+    {
+        Console.WriteLine($"Creating action for type: {actionType}");
+        Console.WriteLine($"Action type: {action.Type}");
+        Console.WriteLine($"Input type: {action.Input?.GetType().Name}");
+    }
 
     private WorkflowAction CreateNewAction(EActionType actionType)
     {
-        return new WorkflowAction
+        Console.WriteLine($"Creating action for type: {actionType}");
+        
+        var action = new WorkflowAction
         {
             Type = actionType,
             Input = actionType switch
@@ -425,6 +435,11 @@
             },
             RunAfter = new List<Guid>()
         };
+        
+        // Debug the created action
+        DebugAction(actionType, action);
+        
+        return action;
     }
 
     private Trigger CreateNewTrigger(ETriggerType triggerType, string? template = null)

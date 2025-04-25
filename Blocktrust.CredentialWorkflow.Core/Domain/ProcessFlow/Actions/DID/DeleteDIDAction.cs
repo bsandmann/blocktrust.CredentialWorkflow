@@ -1,10 +1,7 @@
-using Blocktrust.CredentialWorkflow.Core.Domain.Common;
-
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID;
 
-public class DeleteDIDAction : ActionInput
+// DeleteDIDAction inherits from DeactivateDIDAction to simplify the codebase
+// This allows us to use the UI term "Delete" while implementing it as "Deactivate"
+public class DeleteDIDAction : DeactivateDIDAction
 {
-    public Guid Id { get; set; }
-    
-    // Empty for now, we'll add configurable properties later
 }

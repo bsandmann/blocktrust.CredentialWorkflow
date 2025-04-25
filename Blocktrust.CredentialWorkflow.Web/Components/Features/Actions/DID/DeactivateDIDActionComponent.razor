@@ -1,0 +1,225 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Core.Prism
+@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.DID
+
+<div class="p-1 text-sm">
+    <!-- DID Registrar Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">DID Registrar</h3>
+
+        <div class="mb-2">
+            <div class="flex items-center">
+                <input type="radio" id="useTenantRegistrar"
+                       name="registrarSource"
+                       checked="@ActionInput.UseTenantRegistrar"
+                       @onchange="() => SetRegistrarSource(true)"
+                       class="mr-2"/>
+                <label for="useTenantRegistrar" class="text-xs">Use from tenant settings</label>
+            </div>
+            <div class="flex items-center mt-0.5">
+                <input type="radio" id="useCustomRegistrar"
+                       name="registrarSource"
+                       checked="@(!ActionInput.UseTenantRegistrar)"
+                       @onchange="() => SetRegistrarSource(false)"
+                       class="mr-2"/>
+                <label for="useCustomRegistrar" class="text-xs">Configure custom registrar</label>
+            </div>
+        </div>
+
+        @if (!ActionInput.UseTenantRegistrar)
+        {
+            <div class="space-y-2">
+                <!-- Registrar URL -->
+                <div class="space-y-2">
+                    <!-- Registrar URL -->
+                    <div class="p-1.5 border rounded-md">
+                        <ParameterSelector
+                            Label="OPN Registrar URL"
+                            Parameter="ActionInput.RegistrarUrl"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter registrar URL"
+                            TriggerParameters="TriggerParameters"/>
+                    </div>
+
+                    <!-- Wallet ID -->
+                    <div class="p-1.5 border rounded-md">
+                        <ParameterSelector
+                            Label="Wallet ID"
+                            Parameter="ActionInput.WalletId"
+                            OnChange="() => OnValueChanged()"
+                            Placeholder="Enter wallet ID"
+                            TriggerParameters="TriggerParameters"/>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- DID Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">DID</h3>
+
+        <div class="space-y-2">
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Did.Source"
+                        @bind:after="OnDidSourceChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.Did.Source == ParameterSource.Static)
+                {
+                    <input type="text"
+                           class="w-2/3 rounded border px-2 py-1 text-xs"
+                           placeholder="Enter DID (did:prism:...)"
+                           @bind="ActionInput.Did.DefaultValue"
+                           @bind:after="OnValueChanged"/>
+                }
+                else if (ActionInput.Did.Source == ParameterSource.TriggerInput)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Did.Path"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select trigger parameter</option>
+                        @if (TriggerParameters?.Any() == true)
+                        {
+                            @foreach (var param in TriggerParameters)
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                    </select>
+                }
+                else if (ActionInput.Did.Source == ParameterSource.ActionOutcome)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Did.ActionId"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select previous action</option>
+                        @if (FlowItems != null)
+                        {
+                            @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                            {
+                                if (item is WorkflowAction actionItem)
+                                {
+                                    <option value="@actionItem.Input.Id">
+                                        @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                    </option>
+                                }
+                            }
+                        }
+                    </select>
+                }
+            </div>
+            @if (ActionInput.Did.Source == ParameterSource.Static &&
+                 !string.IsNullOrEmpty(ActionInput.Did.DefaultValue) &&
+                 !ActionInput.Did.DefaultValue.StartsWith("did:prism:"))
+            {
+                <div class="text-red-500 text-xs">DID must be in format 'did:prism:...'</div>
+            }
+        </div>
+
+        <!-- Master Key Secret Input (Optional) -->
+        <div class="mt-4 space-y-2">
+            <h4 class="text-xs font-medium text-gray-700">MasterKey Secret (base64, optional)</h4>
+            <div class="flex space-x-2">
+                <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.MasterKeySecret.Source"
+                        @bind:after="OnMasterKeySecretSourceChanged">
+                    <option value="@ParameterSource.Static">Static Value</option>
+                    <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                    <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+                </select>
+
+                @if (ActionInput.MasterKeySecret.Source == ParameterSource.Static)
+                {
+                    <input type="text"
+                           class="w-2/3 rounded border px-2 py-1 text-xs"
+                           placeholder="Enter base64 encoded master key secret"
+                           @bind="ActionInput.MasterKeySecret.DefaultValue"
+                           @bind:after="OnValueChanged"/>
+                }
+                else if (ActionInput.MasterKeySecret.Source == ParameterSource.TriggerInput)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.MasterKeySecret.Path"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select trigger parameter</option>
+                        @if (TriggerParameters?.Any() == true)
+                        {
+                            @foreach (var param in TriggerParameters)
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                    </select>
+                }
+                else if (ActionInput.MasterKeySecret.Source == ParameterSource.ActionOutcome)
+                {
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.MasterKeySecret.ActionId"
+                            @bind:after="OnValueChanged">
+                        <option value="">Select previous action</option>
+                        @if (FlowItems != null)
+                        {
+                            @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                            {
+                                if (item is WorkflowAction actionItem)
+                                {
+                                    <option value="@actionItem.Input.Id">
+                                        @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                    </option>
+                                }
+                            }
+                        }
+                    </select>
+                }
+            </div>
+            @if (ActionInput.MasterKeySecret.Source == ParameterSource.Static &&
+                 !string.IsNullOrEmpty(ActionInput.MasterKeySecret.DefaultValue) &&
+                 !PrismEncoding.IsValidBase64(ActionInput.MasterKeySecret.DefaultValue))
+            {
+                <div class="text-red-500 text-xs">Value must be a valid base64 encoded string</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DeactivateDIDAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+
+    // DID Registrar methods
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task SetRegistrarSource(bool useTenant)
+    {
+        ActionInput.UseTenantRegistrar = useTenant;
+        await OnChange.InvokeAsync();
+    }
+
+    private async Task OnDidSourceChanged()
+    {
+        ActionInput.Did.Path = string.Empty;
+        ActionInput.Did.ActionId = null;
+        ActionInput.Did.DefaultValue = string.Empty;
+        await OnValueChanged();
+    }
+
+    private async Task OnMasterKeySecretSourceChanged()
+    {
+        ActionInput.MasterKeySecret.Path = string.Empty;
+        ActionInput.MasterKeySecret.ActionId = null;
+        ActionInput.MasterKeySecret.DefaultValue = string.Empty;
+        await OnValueChanged();
+    }
+}

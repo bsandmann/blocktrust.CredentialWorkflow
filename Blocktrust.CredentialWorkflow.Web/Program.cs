@@ -86,6 +86,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddTransient<CustomValidationProcessor>();
 builder.Services.AddTransient<CreateDIDActionProcessor>();
 builder.Services.AddTransient<UpdateDIDActionProcessor>();
+builder.Services.AddTransient<DeactivateDIDActionProcessor>();
 builder.Services.AddTransient<DIDCommActionProcessor>();
 builder.Services.AddTransient<EmailActionProcessor>();
 builder.Services.AddTransient<IssueW3CCredentialProcessor>();

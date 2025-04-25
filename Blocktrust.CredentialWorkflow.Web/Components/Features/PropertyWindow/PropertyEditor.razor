@@ -4,6 +4,8 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Triggers
@@ -189,7 +191,14 @@
                 }
                 break;
             case EActionType.DeleteDID:
-                // We'll implement this later
+                @if (action.Input is DeleteDIDAction deleteDIDAction)
+                {
+                    <DeactivateDIDActionComponent
+                        ActionInput="deleteDIDAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"
+                        FlowItems="FlowItems"/>
+                }
                 break;
         }
     }

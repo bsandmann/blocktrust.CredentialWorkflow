@@ -272,6 +272,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             string baseUrl,
             string did,
             string walletId,
+            string masterKey,
             CancellationToken cancellationToken = default)
         {
             var validationFailure = ValidateDeactivateParameters(baseUrl, did, walletId);
@@ -282,7 +283,8 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
 
             var options = new RegistrarOptions
             {
-                WalletId = walletId
+                WalletId = walletId,
+                MasterKeySecretString = masterKey
             };
             
             var body = new { options };
