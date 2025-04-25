@@ -201,7 +201,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 return Result.Fail("At least one update operation must be supplied.");
             }
             
-            var options = new { walletId, storeSecrets = true, returnSecrets = true };
+            var options = new { walletId, storeSecrets = true, returnSecrets = true, masterKeySecret };
             object body;
             
             // Include masterKeySecret if provided
@@ -210,8 +210,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 body = new
                 {
                     options,
-                    updateOperations,
-                    masterKeySecret
+                    updateOperations
                 };
             }
             else

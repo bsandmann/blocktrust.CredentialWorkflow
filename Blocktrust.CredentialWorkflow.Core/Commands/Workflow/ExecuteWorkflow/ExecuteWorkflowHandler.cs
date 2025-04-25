@@ -112,6 +112,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             EActionType.W3cValidation => _serviceProvider.GetService<W3cValidationProcessor>(),
             EActionType.CustomValidation => _serviceProvider.GetService<CustomValidationProcessor>(),
             EActionType.CreateDID => _serviceProvider.GetService<CreateDIDActionProcessor>(),
+            EActionType.UpdateDID => _serviceProvider.GetService<UpdateDIDActionProcessor>(),
             _ => null
         };
     }

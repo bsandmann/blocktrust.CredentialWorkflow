@@ -109,4 +109,39 @@ public static class PrismEncoding
         sb.Append(ByteArrayToHex(y));
         return sb.ToString();
     }
+
+    public static bool IsValidBase64(string base64String)
+    {
+        // If the string is empty or null, it's not valid base64
+        if (string.IsNullOrEmpty(base64String))
+            return false;
+
+        // Try to convert from base64 to check validity
+        try
+        {
+            string s = base64String;
+            s = s.Replace('-', '+'); // 62nd char of encoding
+            s = s.Replace('_', '/'); // 63rd char of encoding
+            switch (s.Length % 4) // Pad with trailing '='s
+            {
+                case 0: break; // No pad chars in this case
+                case 2:
+                    s += "==";
+                    break; // Two pad chars
+                case 3:
+                    s += "=";
+                    break; // One pad char
+                default:
+                    throw new Exception(
+                        "Illegal base64url string!");
+            }
+
+            Convert.FromBase64String(s); // Standard base64 decoder
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

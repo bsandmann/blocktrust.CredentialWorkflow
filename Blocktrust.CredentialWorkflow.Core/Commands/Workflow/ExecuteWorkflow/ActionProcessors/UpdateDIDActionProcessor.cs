@@ -8,6 +8,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.A
 
 using System.Diagnostics;
 using System.Text.Json;
+using Prism;
 using Services;
 using Action = Domain.ProcessFlow.Actions.Action;
 
@@ -91,7 +92,7 @@ public class UpdateDIDActionProcessor : IActionProcessor
                     return Result.Fail(errorMessage);
                 }
             }
-            
+
             // Get DID to update
             did = await ParameterResolver.GetParameterFromExecutionContext(
                 input.Did, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
@@ -102,31 +103,24 @@ public class UpdateDIDActionProcessor : IActionProcessor
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
-            
+
             if (!did.StartsWith("did:prism:"))
             {
                 var errorMessage = "DID must be in format 'did:prism:...'";
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
-            
+
             // Get Master Key Secret (optional)
             var masterKeySecret = await ParameterResolver.GetParameterFromExecutionContext(
                 input.MasterKeySecret, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-            
+
             // Validate Base64 format if provided
-            if (!string.IsNullOrWhiteSpace(masterKeySecret))
+            if (string.IsNullOrWhiteSpace(masterKeySecret) || !PrismEncoding.IsValidBase64(masterKeySecret))
             {
-                try 
-                {
-                    Convert.FromBase64String(masterKeySecret);
-                }
-                catch 
-                {
-                    var errorMessage = "Master Key Secret must be a valid base64 encoded string.";
-                    actionOutcome.FinishOutcomeWithFailure(errorMessage);
-                    return Result.Fail(errorMessage);
-                }
+                var errorMessage = "Master Key Secret must be a valid base64 encoded string.";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
             }
 
             // Process update operations
