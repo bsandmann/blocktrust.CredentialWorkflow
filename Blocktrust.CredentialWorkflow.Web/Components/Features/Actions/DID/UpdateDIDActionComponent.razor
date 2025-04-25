@@ -211,9 +211,7 @@
             {
                 var index = i;
                 var operation = ActionInput.UpdateOperations[i];
-                var operationType = operation.OperationType.Source == ParameterSource.Static
-                    ? operation.OperationType.DefaultValue
-                    : null;
+                var operationType = operation.OperationTypeValue;
 
                 <div class="border border-gray-200 rounded p-2 bg-gray-50">
                     <div class="flex justify-between items-center mb-2">
@@ -244,8 +242,25 @@
 
                                 @if (operation.VerificationMethod == null)
                                 {
-                                    // Initialize verification method with defaults
-                                    UpdateOperationDefaults(operation);
+                                    // For Add operations, we must have a VerificationMethod
+                                    operation.VerificationMethod = new VerificationMethod
+                                    {
+                                        KeyId = new ParameterReference
+                                        {
+                                            Source = ParameterSource.Static,
+                                            DefaultValue = $"key-{index + 1}"
+                                        },
+                                        Purpose = new ParameterReference
+                                        {
+                                            Source = ParameterSource.Static,
+                                            DefaultValue = "authentication"
+                                        },
+                                        Curve = new ParameterReference
+                                        {
+                                            Source = ParameterSource.Static,
+                                            DefaultValue = "secp256k1"
+                                        }
+                                    };
                                 }
 
                                 <!-- Key ID -->
@@ -553,16 +568,22 @@
         if (operation.OperationType.Source == ParameterSource.Static)
         {
             var operationType = operation.OperationType.DefaultValue;
+            int count = ActionInput.UpdateOperations.Count;
+            
+            // Reset all fields
+            operation.VerificationMethod = null;
+            operation.KeyId = null;
+            operation.Services = new List<ServiceEndpoint>();
 
+            // Set only the fields needed for this operation type
             if (operationType == "Add")
             {
-                // Always create a new VerificationMethod with default values
                 operation.VerificationMethod = new VerificationMethod
                 {
                     KeyId = new ParameterReference
                     {
                         Source = ParameterSource.Static,
-                        DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                        DefaultValue = $"key-{count + 1}"
                     },
                     Purpose = new ParameterReference
                     {
@@ -575,25 +596,16 @@
                         DefaultValue = "secp256k1"
                     }
                 };
-                operation.KeyId = null;
-                operation.Services = new List<ServiceEndpoint>();
             }
             else if (operationType == "Remove")
             {
                 operation.KeyId = new ParameterReference
                 {
                     Source = ParameterSource.Static,
-                    DefaultValue = $"key-{ActionInput.UpdateOperations.Count + 1}"
+                    DefaultValue = $"key-{count + 1}"
                 };
-                operation.VerificationMethod = null;
-                operation.Services = new List<ServiceEndpoint>();
             }
-            else if (operationType == "Set")
-            {
-                operation.Services = new List<ServiceEndpoint>();
-                operation.VerificationMethod = null;
-                operation.KeyId = null;
-            }
+            // For "Set" operation, services is already initialized as an empty list
         }
     }
 
@@ -607,8 +619,46 @@
 
             if (oldType != newType)
             {
-                // If operation type changes, update the appropriate fields
-                UpdateOperationDefaults(operation);
+                operation.OperationType.DefaultValue = newType;
+                
+                // Reset all fields first
+                operation.VerificationMethod = null;
+                operation.KeyId = null;
+                operation.Services = new List<ServiceEndpoint>();
+                
+                // Then set only the necessary ones for the new operation type
+                if (newType == "Remove")
+                {
+                    // For Remove operation, we only need KeyId
+                    operation.KeyId = new ParameterReference
+                    {
+                        Source = ParameterSource.Static,
+                        DefaultValue = $"key-{index + 1}"
+                    };
+                }
+                else if (newType == "Add")
+                {
+                    // For Add operation, we only need VerificationMethod
+                    operation.VerificationMethod = new VerificationMethod
+                    {
+                        KeyId = new ParameterReference
+                        {
+                            Source = ParameterSource.Static,
+                            DefaultValue = $"key-{index + 1}"
+                        },
+                        Purpose = new ParameterReference
+                        {
+                            Source = ParameterSource.Static,
+                            DefaultValue = "authentication"
+                        },
+                        Curve = new ParameterReference
+                        {
+                            Source = ParameterSource.Static,
+                            DefaultValue = "secp256k1"
+                        }
+                    };
+                }
+                // For "Set" operation, services will be initialized as an empty list already
             }
         }
 

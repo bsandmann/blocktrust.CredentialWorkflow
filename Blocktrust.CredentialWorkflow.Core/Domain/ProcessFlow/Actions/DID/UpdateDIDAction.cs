@@ -59,12 +59,20 @@ public class DIDUpdateOperation
         set => _operationType = value;
     }
 
+    // Only serialize VerificationMethod when it's actually used (for Add operations)
     [JsonPropertyName("verificationMethod")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public VerificationMethod? VerificationMethod { get; set; }
 
+    // Only serialize KeyId when it's actually used (for Remove operations)
     [JsonPropertyName("keyId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ParameterReference? KeyId { get; set; }
 
     [JsonPropertyName("services")]
     public List<ServiceEndpoint> Services { get; set; } = new List<ServiceEndpoint>();
+
+    // Helper property to determine what kind of operation this is (only for code logic, not serialized)
+    [JsonIgnore]
+    public string? OperationTypeValue => OperationType?.Source == ParameterSource.Static ? OperationType.DefaultValue : null;
 }
