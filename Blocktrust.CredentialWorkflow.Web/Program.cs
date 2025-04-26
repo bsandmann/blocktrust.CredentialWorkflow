@@ -92,6 +92,7 @@ builder.Services.AddTransient<EmailActionProcessor>();
 builder.Services.AddTransient<IssueW3CCredentialProcessor>();
 builder.Services.AddTransient<VerifyW3CCredentialProcessor>();
 builder.Services.AddTransient<W3cValidationProcessor>();
+builder.Services.AddTransient<JwtTokenGeneratorActionProcessor>();
 
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(

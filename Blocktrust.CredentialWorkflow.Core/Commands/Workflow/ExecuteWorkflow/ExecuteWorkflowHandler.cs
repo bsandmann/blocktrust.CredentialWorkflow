@@ -114,6 +114,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             EActionType.CreateDID => _serviceProvider.GetService<CreateDIDActionProcessor>(),
             EActionType.UpdateDID => _serviceProvider.GetService<UpdateDIDActionProcessor>(),
             EActionType.DeleteDID => _serviceProvider.GetService<DeactivateDIDActionProcessor>(),
+            EActionType.JwtTokenGenerator => _serviceProvider.GetService<JwtTokenGeneratorActionProcessor>(),
             _ => null
         };
     }
