@@ -162,32 +162,8 @@ public class DIDCommController : ControllerBase
         var qr = QrCode.EncodeText(invitationUrl, QrCode.Ecc.Medium);
         string svg = qr.ToSvgString(4);
 
-        // --- HTML Generation ---
-        // Use string interpolation ($"") or a StringBuilder for better readability
-        // Using a raw string literal (@"") simplifies handling quotes and newlines
-        string htmlContent = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset=""utf-8"" />
-    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>DIDComm Out-of-band invitation</title>
-</head>
-<body>
-    <h1>DIDComm Out-of-band invitation</h1>
-    
-    <p>Scan the QR Code below or use the following invitation URL:</p>
-    
-    <p>
-        <a href=""{System.Net.WebUtility.HtmlEncode(invitationUrl)}"" target=""_blank"">{System.Net.WebUtility.HtmlEncode(invitationUrl)}</a>
-    </p>
-    
-    <div style='max-width:400px'>
-        {svg}
-    </div>
-
-</body>
-</html>";
+        // Generate HTML using helper method
+        string htmlContent = GenerateOutOfBandInvitationHtml(invitationUrl, svg);
         // --- End HTML Generation ---
 
         // Return as HTML content
@@ -683,5 +659,49 @@ public class DIDCommController : ControllerBase
                 return Ok();
             }
         }
+    }
+    
+    /// <summary>
+    /// Generates a styled HTML page for displaying DIDComm Out-of-band invitation with QR code
+    /// </summary>
+    /// <param name="invitationUrl">The invitation URL to be displayed and encoded in the QR code</param>
+    /// <param name="svg">The SVG string representation of the QR code</param>
+    /// <returns>An HTML string with Tailwind-style formatting</returns>
+    private string GenerateOutOfBandInvitationHtml(string invitationUrl, string svg)
+    {
+        // Using raw string literal for better readability of HTML template
+        return $@"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""utf-8"" />
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>DIDComm Out-of-band invitation</title>
+    <script src=""https://cdn.tailwindcss.com""></script>
+</head>
+<body class=""bg-gray-50 text-gray-900"">
+    <div class=""min-h-screen p-4 pt-12 flex justify-center"">
+        <div class=""max-w-md w-full bg-white rounded-lg shadow-md p-6 space-y-6"">
+            <div class=""text-center"">
+                <h1 class=""text-2xl font-bold text-slate-800 mb-4"">DIDComm Out-of-band invitation</h1>
+                
+                <p class=""text-gray-600 mb-4"">Scan the QR Code below or use the following invitation URL:</p>
+                
+                <div class=""bg-gray-100 rounded p-3 mb-6 overflow-auto text-sm text-gray-800 break-all"">
+                    <a href=""{System.Net.WebUtility.HtmlEncode(invitationUrl)}"" 
+                       target=""_blank"" 
+                       class=""text-blue-600 hover:text-blue-800 hover:underline"">
+                        {System.Net.WebUtility.HtmlEncode(invitationUrl)}
+                    </a>
+                </div>
+                
+                <div class=""mx-auto"" style=""max-width:400px"">
+                    {svg}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>";
     }
 }
