@@ -15,7 +15,7 @@
 
 @attribute [AllowAnonymous]
 
-<PageTitle>@(formTitle ?? "Dynamic Form")</PageTitle>
+<PageTitle>@(string.IsNullOrEmpty(formTitle) ? "Dynamic Form" : formTitle)</PageTitle>
 
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-2xl mx-auto py-8 px-4 sm:px-6">
@@ -64,6 +64,10 @@
                 <div class="p-6">
                     <div class="pb-5 mb-5 border-b border-gray-200">
                         <h3 class="text-lg font-medium leading-6 text-gray-900">@formTitle</h3>
+                        @if (!string.IsNullOrEmpty(formDescription))
+                        {
+                            <p class="mt-2 text-sm text-gray-600">@formDescription</p>
+                        }
                     </div>
                     
                     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
@@ -93,6 +97,10 @@
                 <div class="p-6">
                     <div class="pb-5 mb-5 border-b border-gray-200">
                         <h3 class="text-lg font-medium leading-6 text-gray-900">@formTitle</h3>
+                        @if (!string.IsNullOrEmpty(formDescription))
+                        {
+                            <p class="mt-2 text-sm text-gray-600">@formDescription</p>
+                        }
                     </div>
 
                     <div class="space-y-6">
@@ -173,6 +181,7 @@
     private bool isSuccess = false;
     private string? error;
     private string? formTitle;
+    private string? formDescription;
     private List<FormField> formFields = new();
     private bool isWorkflowInactive = false;
 
@@ -211,7 +220,19 @@
         if (workflow.WorkflowState == EWorkflowState.Inactive)
         {
             isWorkflowInactive = true;
-            formTitle = workflow.Name;
+            
+            // Try to extract form settings even for inactive workflows
+            var inactiveTrigger = workflow.ProcessFlow?.Triggers?.FirstOrDefault().Value;
+            if (inactiveTrigger?.Type == ETriggerType.Form && inactiveTrigger.Input is TriggerInputForm inactiveFormTrigger)
+            {
+                formTitle = !string.IsNullOrEmpty(inactiveFormTrigger.Title) ? inactiveFormTrigger.Title : workflow.Name;
+                formDescription = inactiveFormTrigger.Description;
+            }
+            else
+            {
+                formTitle = workflow.Name;
+            }
+            
             return (true, null);
         }
         
@@ -231,7 +252,9 @@
             return (false, "Invalid form trigger configuration.");
         }
 
-        formTitle = workflow.Name;
+        // Use custom form title if available, otherwise use workflow name
+        formTitle = !string.IsNullOrEmpty(formTrigger.Title) ? formTrigger.Title : workflow.Name;
+        formDescription = formTrigger.Description;
         formFields.Clear();
 
         foreach (var param in formTrigger.Parameters)

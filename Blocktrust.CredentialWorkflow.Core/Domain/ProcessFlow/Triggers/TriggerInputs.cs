@@ -34,6 +34,12 @@ public class TriggerInputManual : TriggerInput
 
 public class TriggerInputForm : TriggerInput
 {
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+    
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+    
     [JsonPropertyName("parameters")]
     public Dictionary<string, ParameterDefinition> Parameters { get; set; }
 

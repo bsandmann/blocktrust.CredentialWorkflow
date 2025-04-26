@@ -18,8 +18,32 @@
                 @FormUrl
             </div>
         </div>
-        <!-- Fields Section -->
+        <!-- Form Title and Description Section -->
         <div class="pt-3 border-t">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-sm font-medium">Form Settings</h4>
+                <div class="text-xs text-gray-500">Optional title and description</div>
+            </div>
+            <div class="space-y-3 mb-6">
+                <div class="bg-white border rounded-lg p-3">
+                    <input type="text"
+                           class="w-full rounded border-gray-300 px-2 py-1 text-sm mb-2"
+                           placeholder="Form title (optional)"
+                           @bind="TriggerInput.Title"
+                           @bind:event="oninput"
+                           @onchange="async () => await OnChange.InvokeAsync()"/>
+                    <textarea class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                              placeholder="Form description (optional)"
+                              rows="2"
+                              @bind="TriggerInput.Description"
+                              @bind:event="oninput"
+                              @onchange="async () => await OnChange.InvokeAsync()"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fields Section -->
+        <div class="pt-3 mt-4 border-t">
             <div class="flex justify-between items-center mb-3">
                 <h4 class="text-sm font-medium">Form Fields</h4>
                 <div class="text-xs text-gray-500">Field name and description are required</div>
