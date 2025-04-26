@@ -350,6 +350,53 @@
                                                 </div>
                                             </div>
                                             break;
+                                            
+                                        case JwtTokenGeneratorAction jwtAction:
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Audience:</span> 
+                                                        @GetParameterValue(jwtAction.Audience)
+                                                    </p>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Subject:</span> 
+                                                        @GetParameterValue(jwtAction.Subject)
+                                                    </p>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Expiration:</span> 
+                                                        @(jwtAction.Expiration.Source == ParameterSource.Static ? $"{jwtAction.Expiration.DefaultValue} seconds" : GetParameterValue(jwtAction.Expiration))
+                                                    </p>
+                                                </div>
+                                                
+                                                @if (jwtAction.ClaimsFromPreviousAction)
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Claims</p>
+                                                        <div class="bg-gray-50 rounded-md p-2">
+                                                            <p class="text-xs text-gray-600">
+                                                                Using claims from previous action
+                                                                @(jwtAction.PreviousActionId.HasValue ? $" (ID: {jwtAction.PreviousActionId})" : "")
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (jwtAction.Claims.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Claims</p>
+                                                        <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                                            @foreach (var claim in jwtAction.Claims)
+                                                            {
+                                                                <div class="flex items-center justify-between text-xs">
+                                                                    <span class="text-gray-700">@claim.Key</span>
+                                                                    <span class="text-gray-500">@GetClaimValue(claim.Value)</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                            break;
                                     }
                                 }
                             </div>
