@@ -38,6 +38,13 @@ public class FormService : IFormService
             }
 
             var workflow = workflowResult.Value;
+            
+            // Check if workflow is inactive
+            if (workflow.WorkflowState == Domain.Enums.EWorkflowState.Inactive)
+            {
+                return Result.Fail<Guid>("The workflow is currently deactivated");
+            }
+            
             var trigger = workflow.ProcessFlow?.Triggers.FirstOrDefault().Value;
                 
             if (trigger?.Type != ETriggerType.Form || !(trigger.Input is TriggerInputForm formTrigger))

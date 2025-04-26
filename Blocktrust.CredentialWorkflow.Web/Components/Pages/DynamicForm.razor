@@ -1,5 +1,6 @@
 @page "/form/{WorkflowId:guid}"
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using Blocktrust.CredentialWorkflow.Core.Domain.Enums
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using MediatR
 @using Microsoft.AspNetCore.Authorization
@@ -55,6 +56,35 @@
                                 Submit Another Response
                             </button>
                         </div>
+                    </div>
+                </div>
+            }
+            else if (isWorkflowInactive)
+            {
+                <div class="p-6">
+                    <div class="pb-5 mb-5 border-b border-gray-200">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">@formTitle</h3>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <span class="material-symbols-outlined text-yellow-400">warning</span>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Form Not Available</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    This form is currently deactivated. Please contact the administrator to activate it.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-5">
+                        <button disabled="true"
+                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed opacity-50">
+                            <span>Submit</span>
+                        </button>
                     </div>
                 </div>
             }
@@ -144,6 +174,7 @@
     private string? error;
     private string? formTitle;
     private List<FormField> formFields = new();
+    private bool isWorkflowInactive = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -175,6 +206,15 @@
         }
 
         var workflow = workflowResult.Value;
+        
+        // Check if workflow is inactive
+        if (workflow.WorkflowState == EWorkflowState.Inactive)
+        {
+            isWorkflowInactive = true;
+            formTitle = workflow.Name;
+            return (true, null);
+        }
+        
         if (workflow.ProcessFlow?.Triggers == null || !workflow.ProcessFlow.Triggers.Any())
         {
             return (false, "This form is not properly configured.");
