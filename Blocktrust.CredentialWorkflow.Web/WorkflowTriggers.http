@@ -62,6 +62,19 @@ Content-Type: application/json
 {
 }
 
+### POST request to WorkflowController with JSON for DID create + upate
+POST https://localhost:7209/api/workflow/c7472793-5902-4da2-6963-08dd84bcbdd9
+Content-Type: application/json
+
+{
+}
+
+### POST request to WorkflowController with JSON for DID create + upate
+POST https://localhost:7209/api/workflow/22ff0934-dd96-4b39-dd51-08dd84c50e2b
+Content-Type: application/json
+
+{
+}
 
 
 

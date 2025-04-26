@@ -126,7 +126,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 ReturnSecrets = true,
                 StoreSecrets = true
             };
-            
+
             var body = new
             {
                 options = options,
@@ -139,7 +139,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
 
             return await SendAsync(url, body, cancellationToken);
         }
-        
+
         public async Task<Result<RegistrarResponseDto>> UpdateDidAsync(
             string baseUrl,
             string walletId,
@@ -160,23 +160,23 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             {
                 return Result.Fail("At least one update operation must be supplied.");
             }
-            
+
             var options = new RegistrarOptions
             {
                 WalletId = walletId
             };
-            
+
             var body = new
             {
                 options = options,
                 updateOperations
             };
-            
+
             var url = Combine(baseUrl, "/api/v1/registrar/update");
 
             return await SendAsync(url, body, cancellationToken);
         }
-        
+
         public async Task<Result<RegistrarResponseDto>> UpdateDidAsync(
             string baseUrl,
             string did,
@@ -186,7 +186,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
         {
             return await UpdateDidAsync(baseUrl, did, walletId, updateOperations, null, cancellationToken);
         }
-        
+
         public async Task<Result<RegistrarResponseDto>> UpdateDidAsync(
             string baseUrl,
             string did,
@@ -199,7 +199,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             {
                 return Result.Fail("BaseUrl must not be empty.");
             }
-            
+
             if (string.IsNullOrWhiteSpace(did))
             {
                 return Result.Fail("DID must not be empty.");
@@ -214,19 +214,19 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
             {
                 return Result.Fail("At least one update operation must be supplied.");
             }
-            
+
             var options = new RegistrarOptions
             {
                 WalletId = walletId,
                 MasterKeySecretString = masterKeySecret
             };
-            
+
             var body = new
             {
                 options,
                 updateOperations
             };
-            
+
             var url = Combine(baseUrl, $"/api/v1/registrar/update/{Uri.EscapeDataString(did)}");
 
             return await SendAsync(url, body, cancellationToken);
@@ -249,7 +249,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
 
             return await SendAsync(url, body, cancellationToken);
         }
-        
+
         public async Task<Result<RegistrarResponseDto>> GetUpdateResultAsync(
             string baseUrl,
             string jobId,
@@ -286,7 +286,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 WalletId = walletId,
                 MasterKeySecretString = masterKey
             };
-            
+
             var body = new { options };
             var url = Combine(baseUrl, $"/api/v1/registrar/deactivate/{Uri.EscapeDataString(did)}");
 
@@ -542,16 +542,27 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                 })
             };
 
-            var didDocSection = new Dictionary<string, object>
+            Dictionary<string, object> didDocSection;
+            if (services.Any())
             {
-                ["@context"] = new[] { DefaultContext1, DefaultContext2 },
-                ["service"] = services.Select(s => new Dictionary<string, object>
+                didDocSection = new Dictionary<string, object>
                 {
-                    ["id"] = s["serviceId"],
-                    ["type"] = s["type"],
-                    ["serviceEndpoint"] = s["endpoint"]
-                }).ToList<object>()
-            };
+                    ["@context"] = new[] { DefaultContext1, DefaultContext2 },
+                    ["service"] = services.Select(s => new Dictionary<string, object>
+                    {
+                        ["id"] = s["serviceId"],
+                        ["type"] = s["type"],
+                        ["serviceEndpoint"] = s["endpoint"]
+                    }).ToList<object>()
+                };
+            }
+            else
+            {
+                didDocSection = new Dictionary<string, object>
+                {
+                    ["@context"] = new[] { DefaultContext1, DefaultContext2 },
+                };
+            }
 
             var options = new RegistrarOptions
             {
