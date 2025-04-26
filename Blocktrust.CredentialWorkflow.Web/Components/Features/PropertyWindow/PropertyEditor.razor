@@ -5,6 +5,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.JWT
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
@@ -15,6 +16,7 @@
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Issuance
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Validation
+@using Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.JWT
 
 <div class="bg-white p-2 rounded-lg shadow-md">
     <div class="flex items-start mb-2">
@@ -198,6 +200,19 @@
                         OnChange="OnChange"
                         TriggerParameters="TriggerParameters"
                         FlowItems="FlowItems"/>
+                }
+                break;
+            case EActionType.JwtTokenGenerator:
+                @if (action.Input is JwtTokenGeneratorAction jwtTokenGeneratorAction)
+                {
+                    <JwtTokenGeneratorComponent
+                        ActionInput="jwtTokenGeneratorAction"
+                        OnChange="OnChange"
+                        TriggerParameters="TriggerParameters"
+                        FlowItems="FlowItems"
+                        PreviousActions="@(FlowItems?.OfType<WorkflowAction>()
+                                       .Where(a => a.Input.Id != action.Input.Id)
+                                       .ToDictionary(a => a.Input.Id.ToString(), a => $"Action {a.Input.Id}"))" />
                 }
                 break;
         }

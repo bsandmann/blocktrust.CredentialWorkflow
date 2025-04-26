@@ -4,6 +4,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.JWT
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
@@ -127,6 +128,14 @@
                                     OnClick="@(action => HandleItemClick(EActionType.Email, action))"
                                     ShowAddButton="true"/>
                     </MenuGroup>
+                    
+                    <!-- JWT Group -->
+                    <MenuGroup Label="JWT" Icon="vpn_key" IsExpanded="@_isJwtExpanded"
+                               OnToggle="@(() => ToggleGroup("jwt"))">
+                        <MenuButton Icon="token" Label="JWT Token Generator"
+                                    OnClick="@(action => HandleItemClick(EActionType.JwtTokenGenerator, action))"
+                                    ShowAddButton="true"/>
+                    </MenuGroup>
                 </div>
             </div>
         }
@@ -174,6 +183,7 @@
     private bool _isVerifyCredentialExpanded;
     private bool _isValidationExpanded;
     private bool _isOutgoingRequestExpanded;
+    private bool _isJwtExpanded;
 
     private void ToggleGroup(string group)
     {
@@ -202,6 +212,9 @@
                 break;
             case "outgoingRequest":
                 _isOutgoingRequestExpanded = !_isOutgoingRequestExpanded;
+                break;
+            case "jwt":
+                _isJwtExpanded = !_isJwtExpanded;
                 break;
         }
     }
@@ -430,6 +443,33 @@
                 EActionType.DeleteDID => new DeleteDIDAction
                 {
                     Id = Guid.NewGuid()
+                },
+                EActionType.JwtTokenGenerator => new JwtTokenGeneratorAction
+                {
+                    Id = Guid.NewGuid(),
+                    Issuer = new ParameterReference 
+                    { 
+                        Source = ParameterSource.AppSettings,
+                        Path = "HostUrl" 
+                    },
+                    Audience = new ParameterReference 
+                    { 
+                        Source = ParameterSource.Static,
+                        DefaultValue = "" 
+                    },
+                    Subject = new ParameterReference 
+                    { 
+                        Source = ParameterSource.Static,
+                        DefaultValue = "" 
+                    },
+                    Expiration = new ParameterReference 
+                    { 
+                        Source = ParameterSource.Static,
+                        DefaultValue = "3600" 
+                    },
+                    Claims = new Dictionary<string, ClaimValue>(),
+                    ClaimsFromPreviousAction = false,
+                    PreviousActionId = null
                 },
                 _ => throw new ArgumentException($"Action type {actionType} is not implemented.")
             },

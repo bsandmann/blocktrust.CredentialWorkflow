@@ -1,0 +1,530 @@
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.JWT
+@using Blocktrust.CredentialWorkflow.Web.Common
+@using Blocktrust.CredentialWorkflow.Web.Services
+@using Microsoft.AspNetCore.Http
+@namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.JWT
+@inject AppStateService AppStateService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="p-1 text-sm">
+    <!-- Issuer (iss) Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">Issuer (iss)</h3>
+        <div class="bg-gray-100 rounded p-2 text-xs">
+            <span>@GetIssuerDisplayValue()</span>
+            <p class="text-gray-500 mt-1">Automatically configured based on host URL and tenant ID</p>
+        </div>
+    </div>
+    
+    <!-- Audience (aud) Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">Audience (aud)</h3>
+        <div class="flex space-x-2">
+            <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                    @bind="ActionInput.Audience.Source"
+                    @bind:after="OnAudienceSourceChanged">
+                <option value="@ParameterSource.Static">Static Value</option>
+                <option value="@ParameterSource.TriggerInput">From Trigger</option>
+            </select>
+            @if (ActionInput.Audience.Source == ParameterSource.Static)
+            {
+                <input type="url" class="w-2/3 rounded border px-2 py-1 text-xs @(_isValidAudience ? "" : "border-red-500")"
+                       @bind="ActionInput.Audience.DefaultValue"
+                       @bind:after="ValidateAudience"
+                       placeholder="https://example.com"/>
+            }
+            else
+            {
+                <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Audience.Path"
+                        @bind:after="OnValueChanged">
+                    <option value="">Select trigger parameter</option>
+                    @if (TriggerParameters?.Any() == true)
+                    {
+                        @foreach (var param in TriggerParameters)
+                        {
+                            <option value="@param">@param</option>
+                        }
+                    }
+                </select>
+            }
+        </div>
+        @if (!_isValidAudience && ActionInput.Audience.Source == ParameterSource.Static)
+        {
+            <p class="text-xs text-red-500 mt-1">Please enter a valid URL</p>
+        }
+    </div>
+    
+    <!-- Subject (sub) Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">Subject (sub)</h3>
+        <div class="flex space-x-2">
+            <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                    @bind="ActionInput.Subject.Source"
+                    @bind:after="OnSubjectSourceChanged">
+                <option value="@ParameterSource.Static">Static Value</option>
+                <option value="@ParameterSource.TriggerInput">From Trigger</option>
+                <option value="@ParameterSource.ActionOutcome">From Previous Action</option>
+            </select>
+            @if (ActionInput.Subject.Source == ParameterSource.Static)
+            {
+                <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs"
+                       @bind="ActionInput.Subject.DefaultValue"
+                       @bind:after="OnValueChanged"
+                       placeholder="Subject identifier"/>
+            }
+            else if (ActionInput.Subject.Source == ParameterSource.TriggerInput)
+            {
+                <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Subject.Path"
+                        @bind:after="OnValueChanged">
+                    <option value="">Select trigger parameter</option>
+                    @if (TriggerParameters?.Any() == true)
+                    {
+                        @foreach (var param in TriggerParameters)
+                        {
+                            <option value="@param">@param</option>
+                        }
+                    }
+                </select>
+            }
+            else if (ActionInput.Subject.Source == ParameterSource.ActionOutcome)
+            {
+                <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Subject.Path"
+                        @bind:after="OnValueChanged">
+                    <option value="">Select previous action</option>
+                    @if (PreviousActions?.Any() == true)
+                    {
+                        @foreach (var action in PreviousActions)
+                        {
+                            <option value="@action.Key">@action.Value</option>
+                        }
+                    }
+                </select>
+            }
+        </div>
+    </div>
+    
+    <!-- Expiration (exp) Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <h3 class="font-medium text-gray-700 mb-1">Expiration (exp)</h3>
+        <div class="flex space-x-2">
+            <select class="w-1/3 rounded border px-2 py-1 text-xs"
+                    @bind="ActionInput.Expiration.Source"
+                    @bind:after="OnExpirationSourceChanged">
+                <option value="@ParameterSource.Static">Static Value</option>
+                <option value="@ParameterSource.TriggerInput">From Trigger</option>
+            </select>
+            @if (ActionInput.Expiration.Source == ParameterSource.Static)
+            {
+                <input type="number" class="w-2/3 rounded border px-2 py-1 text-xs @(_isValidExpiration ? "" : "border-red-500")"
+                       @bind="ActionInput.Expiration.DefaultValue"
+                       @bind:after="ValidateExpiration"
+                       placeholder="Seconds"/>
+            }
+            else
+            {
+                <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.Expiration.Path"
+                        @bind:after="OnValueChanged">
+                    <option value="">Select trigger parameter</option>
+                    @if (TriggerParameters?.Any() == true)
+                    {
+                        @foreach (var param in TriggerParameters)
+                        {
+                            <option value="@param">@param</option>
+                        }
+                    }
+                </select>
+            }
+        </div>
+        @if (!_isValidExpiration && ActionInput.Expiration.Source == ParameterSource.Static)
+        {
+            <p class="text-xs text-red-500 mt-1">Please enter a valid number of seconds</p>
+        }
+        <p class="text-xs text-gray-500 mt-1">Seconds from current time when the token will expire</p>
+    </div>
+    
+    <!-- Claims Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-2 mb-2">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-gray-700">Claims</h3>
+            <div class="flex items-center space-x-2">
+                <select class="rounded border px-2 py-1 text-xs"
+                        @bind="_claimsSource"
+                        @bind:after="OnClaimsSourceChanged">
+                    <option value="manual">Define Manually</option>
+                    <option value="trigger">From Trigger</option>
+                    <option value="previousAction">From Previous Action</option>
+                </select>
+                
+                @if (_claimsSource == "manual" || _claimsSource == "trigger")
+                {
+                    <button 
+                        @onclick="AddNewClaim" 
+                        class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs flex items-center">
+                        <span class="material-symbols-outlined text-sm mr-1">add</span>
+                        Add Claim
+                    </button>
+                }
+            </div>
+        </div>
+        
+        @if (_claimsSource == "previousAction")
+        {
+            <div class="bg-gray-100 rounded p-2 text-xs">
+                <p class="text-gray-700">All claims are used from the credential processed in the previous action</p>
+                <select class="w-full mt-2 rounded border px-2 py-1 text-xs"
+                        @bind="ActionInput.PreviousActionId"
+                        @bind:after="OnValueChanged">
+                    <option value="">Select previous action</option>
+                    @if (PreviousActions?.Any() == true)
+                    {
+                        @foreach (var action in PreviousActions)
+                        {
+                            <option value="@Guid.Parse(action.Key)">@action.Value</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            @if (ActionInput.Claims.Count == 0)
+            {
+                <div class="text-xs text-gray-500 mb-2">No claims added yet</div>
+            }
+            
+            @foreach (var claim in ActionInput.Claims)
+            {
+                <div class="p-2 border rounded-md mb-2 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <input type="text" class="w-full rounded border px-2 py-1 text-xs bg-white"
+                               placeholder="Claim Key"
+                               value="@claim.Key"
+                               @onchange="@(e => UpdateClaimKey(claim.Key, e.Value?.ToString() ?? string.Empty))"/>
+                        <button class="ml-2 text-red-500 hover:text-red-700"
+                                @onclick="@(() => RemoveClaim(claim.Key))">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                    <div class="flex space-x-2">
+                        @if (_claimsSource == "manual")
+                        {
+                            <input type="text" class="w-full rounded border px-2 py-1 text-xs bg-white"
+                                   placeholder="Value"
+                                   @bind="claim.Value.Value"
+                                   @bind:after="OnValueChanged"/>
+                        }
+                        else if (_claimsSource == "trigger")
+                        {
+                            <select class="w-full rounded border px-2 py-1 text-xs bg-white"
+                                    @bind="claim.Value.ParameterReference!.Path"
+                                    @bind:after="OnValueChanged">
+                                <option value="">Select trigger parameter</option>
+                                @if (TriggerParameters?.Any() == true)
+                                {
+                                    @foreach (var param in TriggerParameters)
+                                    {
+                                        <option value="@param">@param</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="" disabled>No parameters available</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public JwtTokenGeneratorAction ActionInput { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public Dictionary<string, string>? PreviousActions { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+    
+    private bool _isValidAudience = true;
+    private bool _isValidExpiration = true;
+    private string _claimsSource = "manual";
+    
+    protected override void OnInitialized()
+    {
+        // Set initial claims source based on the ActionInput
+        if (ActionInput.ClaimsFromPreviousAction)
+        {
+            _claimsSource = "previousAction";
+        }
+        else if (ActionInput.Claims.Count > 0)
+        {
+            // Check first claim to determine if it's static or from trigger
+            var firstClaim = ActionInput.Claims.FirstOrDefault();
+            if (firstClaim.Value != null && firstClaim.Value.Type == ClaimValueType.TriggerProperty)
+            {
+                _claimsSource = "trigger";
+            }
+            else
+            {
+                _claimsSource = "manual";
+            }
+        }
+        
+        // Validate initial values
+        ValidateAudience();
+        ValidateExpiration();
+    }
+    
+    private string GetIssuerDisplayValue()
+    {
+        string host = HttpContextAccessor?.HttpContext?.Request.Host.Value ?? "";
+        string scheme = HttpContextAccessor?.HttpContext?.Request.Scheme ?? "https";
+        string hostUrl = !string.IsNullOrEmpty(host) ? $"{scheme}://{host}" : "https://localhost";
+        
+        string tenantId = AppStateService?.Tenant?.TenantId.ToString() ?? "tenant-id";
+        
+        return $"{hostUrl}/{tenantId}";
+    }
+    
+    private async Task OnValueChanged()
+    {
+        await OnChange.InvokeAsync();
+    }
+    
+    private async Task ValidateAudience()
+    {
+        if (ActionInput.Audience.Source == ParameterSource.Static)
+        {
+            _isValidAudience = !string.IsNullOrWhiteSpace(ActionInput.Audience.DefaultValue) &&
+                              Uri.TryCreate(ActionInput.Audience.DefaultValue, UriKind.Absolute, out _);
+        }
+        else
+        {
+            _isValidAudience = true;
+        }
+        
+        await OnValueChanged();
+    }
+    
+    private async Task ValidateExpiration()
+    {
+        if (ActionInput.Expiration.Source == ParameterSource.Static)
+        {
+            _isValidExpiration = !string.IsNullOrWhiteSpace(ActionInput.Expiration.DefaultValue) &&
+                                int.TryParse(ActionInput.Expiration.DefaultValue, out var seconds) &&
+                                seconds > 0;
+        }
+        else
+        {
+            _isValidExpiration = true;
+        }
+        
+        await OnValueChanged();
+    }
+    
+    private async Task OnAudienceSourceChanged()
+    {
+        if (ActionInput.Audience.Source == ParameterSource.TriggerInput)
+        {
+            ActionInput.Audience.Path = "";
+            ActionInput.Audience.DefaultValue = "";
+        }
+        else
+        {
+            ActionInput.Audience.Path = "";
+            ActionInput.Audience.DefaultValue = "";
+        }
+        
+        await ValidateAudience();
+    }
+    
+    private async Task OnSubjectSourceChanged()
+    {
+        if (ActionInput.Subject.Source == ParameterSource.TriggerInput)
+        {
+            ActionInput.Subject.Path = "";
+            ActionInput.Subject.DefaultValue = "";
+        }
+        else if (ActionInput.Subject.Source == ParameterSource.Static)
+        {
+            ActionInput.Subject.Path = "";
+            ActionInput.Subject.DefaultValue = "";
+        }
+        else if (ActionInput.Subject.Source == ParameterSource.ActionOutcome)
+        {
+            ActionInput.Subject.Path = "";
+            ActionInput.Subject.DefaultValue = "";
+        }
+        
+        await OnValueChanged();
+    }
+    
+    private async Task OnExpirationSourceChanged()
+    {
+        if (ActionInput.Expiration.Source == ParameterSource.TriggerInput)
+        {
+            ActionInput.Expiration.Path = "";
+            ActionInput.Expiration.DefaultValue = "";
+        }
+        else
+        {
+            ActionInput.Expiration.Path = "";
+            ActionInput.Expiration.DefaultValue = "3600";
+        }
+        
+        await ValidateExpiration();
+    }
+    
+    private async Task OnClaimsSourceChanged()
+    {
+        switch (_claimsSource)
+        {
+            case "manual":
+                ActionInput.ClaimsFromPreviousAction = false;
+                ActionInput.PreviousActionId = null;
+                
+                // Convert all claims to static if any exist
+                foreach (var key in ActionInput.Claims.Keys.ToList())
+                {
+                    ActionInput.Claims[key] = new ClaimValue
+                    {
+                        Type = ClaimValueType.Static,
+                        Value = "",
+                        ParameterReference = null
+                    };
+                }
+                
+                // Add a default claim if none exist
+                if (ActionInput.Claims.Count == 0)
+                {
+                    AddDefaultClaim();
+                }
+                break;
+                
+            case "trigger":
+                ActionInput.ClaimsFromPreviousAction = false;
+                ActionInput.PreviousActionId = null;
+                
+                // Convert all claims to trigger properties if any exist
+                foreach (var key in ActionInput.Claims.Keys.ToList())
+                {
+                    ActionInput.Claims[key] = new ClaimValue
+                    {
+                        Type = ClaimValueType.TriggerProperty,
+                        Value = "",
+                        ParameterReference = new ParameterReference
+                        {
+                            Source = ParameterSource.TriggerInput,
+                            Path = ""
+                        }
+                    };
+                }
+                
+                // Add a default claim if none exist
+                if (ActionInput.Claims.Count == 0)
+                {
+                    AddDefaultClaim();
+                }
+                break;
+                
+            case "previousAction":
+                ActionInput.ClaimsFromPreviousAction = true;
+                ActionInput.Claims.Clear();
+                break;
+        }
+        
+        await OnValueChanged();
+    }
+    
+    private void AddDefaultClaim()
+    {
+        string newClaimKey = "claim1";
+        
+        if (_claimsSource == "manual")
+        {
+            ActionInput.Claims[newClaimKey] = new ClaimValue
+            {
+                Type = ClaimValueType.Static,
+                Value = ""
+            };
+        }
+        else if (_claimsSource == "trigger")
+        {
+            ActionInput.Claims[newClaimKey] = new ClaimValue
+            {
+                Type = ClaimValueType.TriggerProperty,
+                Value = "",
+                ParameterReference = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = ""
+                }
+            };
+        }
+    }
+    
+    private async Task AddNewClaim()
+    {
+        string newClaimKey = $"claim{ActionInput.Claims.Count + 1}";
+        
+        // Find a unique key
+        while (ActionInput.Claims.ContainsKey(newClaimKey))
+        {
+            var number = int.Parse(newClaimKey.Substring(5));
+            newClaimKey = $"claim{number + 1}";
+        }
+        
+        if (_claimsSource == "manual")
+        {
+            ActionInput.Claims[newClaimKey] = new ClaimValue
+            {
+                Type = ClaimValueType.Static,
+                Value = ""
+            };
+        }
+        else if (_claimsSource == "trigger")
+        {
+            ActionInput.Claims[newClaimKey] = new ClaimValue
+            {
+                Type = ClaimValueType.TriggerProperty,
+                Value = "",
+                ParameterReference = new ParameterReference
+                {
+                    Source = ParameterSource.TriggerInput,
+                    Path = ""
+                }
+            };
+        }
+        
+        await OnValueChanged();
+    }
+    
+    private async Task UpdateClaimKey(string oldKey, string newKey)
+    {
+        if (string.IsNullOrWhiteSpace(newKey))
+        {
+            return;
+        }
+        
+        if (oldKey != newKey && !ActionInput.Claims.ContainsKey(newKey))
+        {
+            var value = ActionInput.Claims[oldKey];
+            ActionInput.Claims.Remove(oldKey);
+            ActionInput.Claims[newKey] = value;
+            await OnValueChanged();
+        }
+    }
+    
+    private async Task RemoveClaim(string key)
+    {
+        ActionInput.Claims.Remove(key);
+        await OnValueChanged();
+    }
+}

@@ -4,6 +4,7 @@ using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Issuance;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation;
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.JWT;
 
 namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 
@@ -32,6 +33,9 @@ namespace Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
 [JsonDerivedType(typeof(CreateDIDAction), typeDiscriminator: "createDID")]
 [JsonDerivedType(typeof(UpdateDIDAction), typeDiscriminator: "updateDID")]
 [JsonDerivedType(typeof(DeleteDIDAction), typeDiscriminator: "deleteDID")]
+
+// JWT
+[JsonDerivedType(typeof(JwtTokenGeneratorAction), typeDiscriminator: "jwtTokenGenerator")]
 
 public abstract class ActionInput
 {

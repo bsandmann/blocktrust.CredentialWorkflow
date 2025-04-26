@@ -15,5 +15,6 @@ public enum EActionType
     CustomValidation,
     CreateDID,
     UpdateDID,
-    DeleteDID
+    DeleteDID,
+    JwtTokenGenerator
 }
