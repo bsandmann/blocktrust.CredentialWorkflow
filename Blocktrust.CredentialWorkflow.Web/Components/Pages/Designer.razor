@@ -117,7 +117,7 @@
                 @if (showToast)
                 {
                     <div
-                        class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+                        class="fixed top-4 inset-x-0 mx-auto max-w-md bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
                         @toastMessage
                     </div>
                 }

@@ -4,7 +4,9 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Verification
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Validation
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.DID
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Common
 @using Action = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 
 <div class="h-full w-full bg-white p-4 rounded-lg shadow-md flex flex-col">
@@ -13,7 +15,7 @@
             @if (showToast)
             {
                 <div
-                    class="fixed top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
+                    class="fixed top-4 inset-x-0 mx-auto max-w-md bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 @(showToast ? "opacity-100" : "opacity-0")">
                     @toastMessage
                 </div>
             }
@@ -81,6 +83,21 @@
                                         case DIDCommAction didCommAction:
                                             <p class="text-xs text-gray-600 mt-1">
                                                 @(didCommAction.Type == EDIDCommType.Message ? "BasicMessage" : didCommAction.Type == EDIDCommType.CredentialIssuance ? "Credential-Presentation" : didCommAction.Type.ToString())
+                                            </p>
+                                            break;
+                                        case CreateDIDAction createDidAction:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                @createDidAction.VerificationMethods.Count verification method(s), @createDidAction.Services.Count service(s)
+                                            </p>
+                                            break;
+                                        case UpdateDIDAction updateDidAction:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                @updateDidAction.UpdateOperations.Count operation(s) on @GetParameterValue(updateDidAction.Did)
+                                            </p>
+                                            break;
+                                        case DeactivateDIDAction deactivateDidAction:
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Deactivating @GetParameterValue(deactivateDidAction.Did)
                                             </p>
                                             break;
                                     }
@@ -212,6 +229,121 @@
                                                 </div>
                                             </div>
                                             break;
+                                            
+                                        case CreateDIDAction createDidAction:
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Registrar:</span> 
+                                                        @(createDidAction.UseTenantRegistrar ? "Using tenant's registrar" : "Custom registrar")
+                                                    </p>
+                                                </div>
+                                                
+                                                @if (createDidAction.VerificationMethods.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Verification Methods</p>
+                                                        <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                                            @foreach (var method in createDidAction.VerificationMethods)
+                                                            {
+                                                                <div class="flex items-center justify-between text-xs">
+                                                                    <span class="text-gray-700">@GetParameterValue(method.KeyId)</span>
+                                                                    <span class="text-gray-500">
+                                                                        @GetParameterValue(method.Purpose) / @GetParameterValue(method.Curve)
+                                                                    </span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                                
+                                                @if (createDidAction.Services.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Services</p>
+                                                        <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                                            @foreach (var service in createDidAction.Services)
+                                                            {
+                                                                <div class="flex items-center justify-between text-xs">
+                                                                    <span class="text-gray-700">@GetParameterValue(service.ServiceId)</span>
+                                                                    <span class="text-gray-500">@GetParameterValue(service.Type)</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                            break;
+                                            
+                                        case UpdateDIDAction updateDidAction:
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">DID:</span> @GetParameterValue(updateDidAction.Did)
+                                                    </p>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Registrar:</span> 
+                                                        @(updateDidAction.UseTenantRegistrar ? "Using tenant's registrar" : "Custom registrar")
+                                                    </p>
+                                                </div>
+                                                
+                                                @if (updateDidAction.UpdateOperations.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <p class="text-xs font-medium text-gray-700 mb-1">Update Operations</p>
+                                                        <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                                            @foreach (var operation in updateDidAction.UpdateOperations)
+                                                            {
+                                                                <div class="flex items-center justify-between text-xs">
+                                                                    <span class="text-gray-700">@GetParameterValue(operation.OperationType)</span>
+                                                                    @if (operation.OperationTypeValue == "Add" && operation.VerificationMethod != null)
+                                                                    {
+                                                                        <span class="text-gray-500">
+                                                                            Add @GetParameterValue(operation.VerificationMethod.KeyId)
+                                                                        </span>
+                                                                    }
+                                                                    else if (operation.OperationTypeValue == "Remove" && operation.KeyId != null)
+                                                                    {
+                                                                        <span class="text-gray-500">
+                                                                            Remove @GetParameterValue(operation.KeyId)
+                                                                        </span>
+                                                                    }
+                                                                    else if (operation.OperationTypeValue == "Set")
+                                                                    {
+                                                                        <span class="text-gray-500">
+                                                                            @operation.Services.Count service(s)
+                                                                        </span>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                            break;
+                                            
+                                        case DeactivateDIDAction deactivateDidAction:
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">DID to deactivate:</span> @GetParameterValue(deactivateDidAction.Did)
+                                                    </p>
+                                                    <p class="text-xs text-gray-600">
+                                                        <span class="font-medium text-gray-700">Registrar:</span> 
+                                                        @(deactivateDidAction.UseTenantRegistrar ? "Using tenant's registrar" : "Custom registrar")
+                                                    </p>
+                                                    
+                                                    @if (!string.IsNullOrEmpty(deactivateDidAction.MasterKeySecret.DefaultValue) || 
+                                                        deactivateDidAction.MasterKeySecret.Source != ParameterSource.Static)
+                                                    {
+                                                        <p class="text-xs text-gray-600">
+                                                            <span class="font-medium text-gray-700">Master Key Secret:</span> 
+                                                            @(deactivateDidAction.MasterKeySecret.Source == ParameterSource.Static ? "Set" : GetParameterValue(deactivateDidAction.MasterKeySecret))
+                                                        </p>
+                                                    }
+                                                </div>
+                                            </div>
+                                            break;
                                     }
                                 }
                             </div>
@@ -268,6 +400,37 @@
     private bool showError;
     private string? toastMessage;
     private bool showToast;
+    
+    private string GetParameterValue(ParameterReference paramRef)
+    {
+        if (paramRef == null)
+            return "unknown";
+            
+        if (paramRef.Source == ParameterSource.Static)
+        {
+            var value = paramRef.DefaultValue;
+            // If it's a DID, truncate it to make it more readable
+            if (!string.IsNullOrEmpty(value) && value.StartsWith("did:"))
+            {
+                return value.Length <= 20 ? value : value.Substring(0, 17) + "...";
+            }
+            return string.IsNullOrEmpty(value) ? "not set" : value;
+        }
+        else if (paramRef.Source == ParameterSource.TriggerInput)
+        {
+            return $"from trigger: {paramRef.Path}";
+        }
+        else if (paramRef.Source == ParameterSource.ActionOutcome)
+        {
+            return $"from previous action";
+        }
+        else if (paramRef.Source == ParameterSource.AppSettings)
+        {
+            return "from app settings";
+        }
+        
+        return "dynamic";
+    }
 
     protected override void OnParametersSet()
     {
