@@ -13,6 +13,7 @@ using Blocktrust.Common.Models.DidDoc;
 using Blocktrust.Common.Resolver;
 using Common;
 using Core.Commands.DIDComm.ProcessMessage;
+using Core.Prism;
 using DIDComm;
 using DIDComm.Common.Types;
 using DIDComm.Message.Attachments;
@@ -21,8 +22,11 @@ using DIDComm.Model.PackEncryptedParamsModels;
 using DIDComm.Model.UnpackParamsModels;
 using Mediator.Client.Commands.ForwardMessage;
 using Mediator.Common;
+using Mediator.Common.Commands.CreatePeerDid;
 using Mediator.Common.Models.CredentialOffer;
+using Mediator.Common.Models.OutOfBand;
 using Mediator.Common.Protocols;
+using Net.Codecrete.QrCodeGenerator;
 
 [ApiController]
 [AllowAnonymous]
@@ -86,6 +90,113 @@ public class DIDCommController : ControllerBase
         }
 
         return Ok(workflowPlatformPeerDid);
+    }
+
+    /// <summary>
+    /// DIDComm workflow status check endpoint - Returns configuration information for DIDComm
+    /// </summary>
+    /// <param name="workflowGuidId">The ID of the workflow to check</param>
+    /// <returns>The configured PeerDID for the workflow</returns>
+    [HttpGet("api/workflow/{workflowGuidId:Guid}/didcomm/oob")]
+    public async Task<ActionResult> DIDCommStatusEndpointOob(Guid workflowGuidId)
+    {
+        var getWorkflowRequest = new GetWorkflowByIdRequest(workflowGuidId);
+        var getWorkflowResult = await _mediator.Send(getWorkflowRequest);
+        if (getWorkflowResult.IsFailed)
+        {
+            return BadRequest(new { success = false, message = "Workflow not found", details = getWorkflowResult.Errors });
+        }
+
+        if (getWorkflowResult.Value.WorkflowState == EWorkflowState.Inactive)
+        {
+            return Ok(new { success = false, message = "The workflow is inactive" });
+        }
+
+        // Check if the workflow has triggers
+        var processFlow = getWorkflowResult.Value.ProcessFlow;
+        if (processFlow is null || !processFlow.Triggers.Any())
+        {
+            return Ok(new { success = false, message = "The workflow does not have a trigger" });
+        }
+
+        // Ensure that the trigger is a DIDComm request trigger
+        var trigger = processFlow.Triggers.First().Value;
+        if (trigger.Type != ETriggerType.WalletInteraction)
+        {
+            return Ok(new { success = false, message = "The workflow trigger is not a DIDComm (WalletInteraction) trigger" });
+        }
+
+        // Extract the PeerDID from the WalletInteractionTrigger
+        var triggerInput = (TriggerInputWalletInteraction)trigger.Input;
+        var workflowPlatformPeerDid = triggerInput.PeerDid;
+        if (string.IsNullOrEmpty(workflowPlatformPeerDid))
+        {
+            return Ok(new { success = false, message = "No PeerDID configured for this workflow" });
+        }
+
+        var hostUrl = string.Concat(_httpContextAccessor!.HttpContext.Request.Scheme, "://", _httpContextAccessor.HttpContext.Request.Host);
+        var msg = new OobModel()
+        {
+            Type = ProtocolConstants.OutOfBand2Invitation,
+            Id = Guid.NewGuid().ToString(),
+            From = workflowPlatformPeerDid,
+            Body = new OobBodyModel()
+            {
+                GoalCode = "connect",
+                Goal = "Request connection through the blocktrust workflow platform",
+                Accept = new List<string>() { "didcomm/v2" },
+                Label = "Blocktrust Workflow Platform",
+            },
+            Attachments = null
+        };
+        var jsonSerializerOptions = new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            IgnoreNullValues = true
+        };
+        var json = JsonSerializer.Serialize(msg, jsonSerializerOptions);
+        var base64Url = PrismEncoding.ByteArrayToBase64(Encoding.UTF8.GetBytes(json));
+
+        var invitationUrl = string.Concat(hostUrl, "?_oob=", base64Url);
+
+        var qr = QrCode.EncodeText(invitationUrl, QrCode.Ecc.Medium);
+        string svg = qr.ToSvgString(4);
+
+        // --- HTML Generation ---
+        // Use string interpolation ($"") or a StringBuilder for better readability
+        // Using a raw string literal (@"") simplifies handling quotes and newlines
+        string htmlContent = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"" />
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>DIDComm Out-of-band invitation</title>
+</head>
+<body>
+    <h1>DIDComm Out-of-band invitation</h1>
+    
+    <p>Scan the QR Code below or use the following invitation URL:</p>
+    
+    <p>
+        <a href=""{System.Net.WebUtility.HtmlEncode(invitationUrl)}"" target=""_blank"">{System.Net.WebUtility.HtmlEncode(invitationUrl)}</a>
+    </p>
+    
+    <div style='max-width:400px'>
+        {svg}
+    </div>
+
+</body>
+</html>";
+        // --- End HTML Generation ---
+
+        // Return as HTML content
+        return new ContentResult
+        {
+            Content = htmlContent,
+            ContentType = "text/html",
+            StatusCode = StatusCodes.Status200OK // Microsoft.AspNetCore.Http.StatusCodes
+        };
     }
 
     /// <summary>
