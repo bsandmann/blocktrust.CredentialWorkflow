@@ -22,7 +22,7 @@
         <div class="pt-3 border-t">
             <div class="flex justify-between items-center mb-3">
                 <h4 class="text-sm font-medium">Form Fields</h4>
-                <div class="text-xs text-gray-500">All fields are required by default</div>
+                <div class="text-xs text-gray-500">Field name and description are required</div>
             </div>
             <!-- Fields List -->
             <div class="space-y-3">
@@ -34,7 +34,7 @@
                             {
                                 <input type="text"
                                        class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
-                                       placeholder="Field name"
+                                       placeholder="Field name *"
                                        @bind="param.Name"
                                        @bind:event="oninput"
                                        @onchange="async () => await HandleFieldChange(param)"/>
@@ -75,7 +75,7 @@
                             <div class="space-y-2">
                                 <input type="text"
                                        class="w-full rounded border-gray-300 px-2 py-1 text-sm"
-                                       placeholder="Description"
+                                       placeholder="Description *"
                                        @bind="param.Description"
                                        @bind:event="oninput"
                                        @onchange="async () => await HandleFieldChange(param)"/>
@@ -85,6 +85,11 @@
                                        @bind="param.DefaultValue"
                                        @bind:event="oninput"
                                        @onchange="async () => await HandleFieldChange(param)"/>
+                                
+                                @if (!string.IsNullOrEmpty(param.ValidationMessage))
+                                {
+                                    <div class="text-red-500 text-xs mt-1">@param.ValidationMessage</div>
+                                }
                             </div>
                         }
                         else
@@ -187,11 +192,25 @@
 
     private async Task HandleFieldChange(FormField field)
     {
-        if (!string.IsNullOrWhiteSpace(field.Name))
+        field.ValidationMessage = null;
+        
+        if (string.IsNullOrWhiteSpace(field.Name))
         {
-            UpdateTriggerInput();
-            await OnChange.InvokeAsync();
+            field.ValidationMessage = "Field name is required";
+            StateHasChanged();
+            return;
         }
+        
+        if (string.IsNullOrWhiteSpace(field.Description))
+        {
+            field.ValidationMessage = "Description is required";
+            StateHasChanged();
+            return;
+        }
+        
+        // If we get here, validation passed
+        UpdateTriggerInput();
+        await OnChange.InvokeAsync();
     }
 
     private void CancelEdit(FormField field)
@@ -243,5 +262,6 @@
         public string? DefaultValue { get; set; }
         public bool IsEditing { get; set; }
         public string? OriginalName { get; set; } // Track original name for edit operations
+        public string? ValidationMessage { get; set; } // For validation messages
     }
 }
