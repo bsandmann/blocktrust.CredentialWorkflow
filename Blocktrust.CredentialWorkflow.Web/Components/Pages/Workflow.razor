@@ -18,6 +18,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Http
+@using Blocktrust.CredentialWorkflow.Web.Components.Features
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -145,7 +146,7 @@
                                     </button>
                                 }
 
-                                <button @onclick="() => DeleteWorkflow(workflow.WorkflowId)"
+                                <button @onclick="() => ShowDeleteConfirmation(workflow.WorkflowId, workflow.Name)"
                                         @onclick:stopPropagation="true"
                                         class="text-red-600 hover:text-red-900 mr-2">
                                     <span class="material-symbols-outlined">delete</span>
@@ -263,6 +264,17 @@
     </div>
 }
 
+@if (showDeleteConfirmation)
+{
+    <ConfirmDialog 
+        Title="Delete Workflow"
+        Message="@($"Are you sure you want to delete the workflow '{workflowToDeleteName}'? This action cannot be undone.")"
+        ConfirmText="Delete"
+        CancelText="Cancel"
+        OnConfirm="ConfirmDeleteWorkflow"
+        OnCancel="CancelDeleteWorkflow" />
+}
+
 @code {
     private readonly CancellationTokenSource cts = new();
     private List<WorkflowSummary> workflowSummaries = new();
@@ -270,6 +282,11 @@
     private bool isJsonImportModalOpen;
     private string jsonInput = "";
     private string errorMessage = "";
+    
+    // Delete confirmation dialog
+    private bool showDeleteConfirmation;
+    private Guid workflowToDeleteId;
+    private string workflowToDeleteName = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -369,11 +386,18 @@
         NavigateToWorkflow(workflowResult.Value.WorkflowId);
     }
 
-    private async Task DeleteWorkflow(Guid workflowId)
+    private void ShowDeleteConfirmation(Guid workflowId, string workflowName)
+    {
+        workflowToDeleteId = workflowId;
+        workflowToDeleteName = workflowName;
+        showDeleteConfirmation = true;
+    }
+    
+    private async Task ConfirmDeleteWorkflow()
     {
         try
         {
-            var deleteResult = await Mediator.Send(new DeleteWorkflowRequest(workflowId));
+            var deleteResult = await Mediator.Send(new DeleteWorkflowRequest(workflowToDeleteId));
             if (deleteResult.IsFailed)
             {
                 errorMessage = "Failed to delete the workflow. Please try again.";
@@ -383,11 +407,21 @@
                 await LoadWorkflowSummaries();
                 errorMessage = ""; // Clear error message on successful delete
             }
+            
+            // Hide confirmation dialog
+            showDeleteConfirmation = false;
         }
         catch (Exception)
         {
             errorMessage = "An unexpected error occurred while deleting the workflow. Please try again later.";
+            showDeleteConfirmation = false;
         }
+    }
+    
+    private void CancelDeleteWorkflow()
+    {
+        // Hide confirmation dialog without taking action
+        showDeleteConfirmation = false;
     }
 
     private void OpenJsonImportModal()
