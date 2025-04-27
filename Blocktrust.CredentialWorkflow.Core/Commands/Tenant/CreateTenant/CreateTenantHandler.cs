@@ -24,14 +24,15 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, Result<G
             return Result.Fail("The tenant name must be provided");
         }
 
-        // Generate JWT security key
-        string jwtSecurityKey = JwtKeyGeneratorService.GenerateHmacSha256SecretKeyString();
+        // Generate RSA key pair for JWT
+        var (privateKeyXml, publicKeyXml) = JwtKeyGeneratorService.GenerateRsaKeyPairXml();
 
         var tenant = await _context.TenantEntities.AddAsync(new TenantEntity()
         {
             Name = request.Name,
             CreatedUtc = DateTime.UtcNow,
-            JwtSecurityKey = jwtSecurityKey
+            JwtPrivateKey = privateKeyXml,
+            JwtPublicKey = publicKeyXml
         }, cancellationToken: cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);

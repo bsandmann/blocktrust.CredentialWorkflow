@@ -175,14 +175,14 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                 return Result.Fail(errorMessage);
             }
 
-            if (string.IsNullOrEmpty(tenantResult.Value.Tenant.JwtSecurityKey))
+            if (string.IsNullOrEmpty(tenantResult.Value.Tenant.JwtPrivateKey))
             {
-                var errorMessage = $"Could not retrieve tenant JWT SecurityKey";
+                var errorMessage = $"Could not retrieve tenant JWT private key";
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
 
-            var mySecureKey = JwtKeyGeneratorService.GetSecurityKeyFromBase64String(tenantResult.Value.Tenant.JwtSecurityKey);
+            var mySecureKey = JwtKeyGeneratorService.GetRsaPrivateKeyFromXml(tenantResult.Value.Tenant.JwtPrivateKey);
 
             try
             {
@@ -194,7 +194,7 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                     subject: subject, // e.g., "did:example:12345"
                     audience: audience, // e.g., "https://my-api.example.com"
                     signingKey: mySecureKey, // Your securely loaded Signing Key object
-                    signingAlgorithm: SecurityAlgorithms.HmacSha256, // e.g., SecurityAlgorithms.RsaSha256
+                    signingAlgorithm: SecurityAlgorithms.RsaSha256, // e.g., SecurityAlgorithms.RsaSha256
                     expirationMinutes: expirationMinutes,
                     additionalClaims: claimsList
                 );

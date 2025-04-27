@@ -26,9 +26,14 @@ public record TenantEntity
     [Unicode(true)] [MaxLength(100)] public string? WalletId { get; set; }
     
     /// <summary>
-    /// JWT security key for signing tokens
+    /// JWT private key for signing tokens (RSA private key in XML format)
     /// </summary>
-    [Unicode(true)] [MaxLength(255)] public string? JwtSecurityKey { get; set; }
+    [Unicode(true)] [MaxLength(4000)] public string? JwtPrivateKey { get; set; }
+    
+    /// <summary>
+    /// JWT public key for validating tokens (RSA public key in XML format)
+    /// </summary>
+    [Unicode(true)] [MaxLength(2000)] public string? JwtPublicKey { get; set; }
 
     /// <summary>
     /// A tenant can have many workflows

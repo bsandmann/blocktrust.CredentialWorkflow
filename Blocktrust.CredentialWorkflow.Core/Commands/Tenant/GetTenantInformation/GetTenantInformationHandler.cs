@@ -44,12 +44,14 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
         var tenantEntity = await _context.TenantEntities
             .FirstOrDefaultAsync(p => p.TenantEntityId == request.TenantEntityId, cancellationToken);
 
-        if (string.IsNullOrEmpty(tenantEntity?.JwtSecurityKey))
+        if (string.IsNullOrEmpty(tenantEntity?.JwtPrivateKey) || string.IsNullOrEmpty(tenantEntity?.JwtPublicKey))
         {
-            string jwtSecurityKey = JwtKeyGeneratorService.GenerateHmacSha256SecretKeyString();
+            // Generate new RSA key pair if missing
+            var (privateKeyXml, publicKeyXml) = JwtKeyGeneratorService.GenerateRsaKeyPairXml();
             if (tenantEntity != null)
             {
-                tenantEntity.JwtSecurityKey = jwtSecurityKey;
+                tenantEntity.JwtPrivateKey = privateKeyXml;
+                tenantEntity.JwtPublicKey = publicKeyXml;
                 _context.TenantEntities.Update(tenantEntity);
                 await _context.SaveChangesAsync(cancellationToken);
             }
@@ -63,7 +65,8 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                 TenantId = request.TenantEntityId,
                 OpnRegistrarUrl = tenantEntity?.OpnRegistrarUrl,
                 WalletId = tenantEntity?.WalletId,
-                JwtSecurityKey = tenantEntity?.JwtSecurityKey
+                JwtPrivateKey = tenantEntity?.JwtPrivateKey,
+                JwtPublicKey = tenantEntity?.JwtPublicKey
             },
             WorkflowSummaries = result.WorkflowSummaries.Select(p => new WorkflowSummary()
             {

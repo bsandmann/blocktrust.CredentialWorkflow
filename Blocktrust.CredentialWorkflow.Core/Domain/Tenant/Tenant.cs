@@ -12,5 +12,7 @@ public record Tenant
     
     public string? WalletId { get; init; }
     
-    public string? JwtSecurityKey { get; init; }
+    public string? JwtPrivateKey { get; init; }
+    
+    public string? JwtPublicKey { get; init; }
 }
