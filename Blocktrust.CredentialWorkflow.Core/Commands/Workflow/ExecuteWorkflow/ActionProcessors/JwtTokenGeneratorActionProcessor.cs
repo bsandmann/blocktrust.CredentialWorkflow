@@ -69,19 +69,32 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
+            
+            // Ensure we have a positive value
+            if (expirationSeconds <= 0)
+            {
+                var errorMessage = "Expiration time must be positive.";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
+            }
+            
+            // Calculate expiration in minutes (rounded up to ensure token lives at least as long as requested)
+            int expirationMinutes = (int)Math.Ceiling(expirationSeconds / 60.0);
 
             // Get claims
             var claims = new Dictionary<string, string>();
 
             if (input.ClaimsFromPreviousAction && input.PreviousActionId.HasValue)
             {
-                var outcomeJson = context.ActionOutcomes.FirstOrDefault()?.OutcomeJson;
-                if (string.IsNullOrWhiteSpace(outcomeJson))
+                var previousOutcome = context.ActionOutcomes.FirstOrDefault(o => o.ActionId == input.PreviousActionId.Value);
+                if (previousOutcome == null || string.IsNullOrWhiteSpace(previousOutcome.OutcomeJson))
                 {
-                    var errorMessage = "Cannot find valid previous action outcome.";
+                    var errorMessage = $"Cannot find valid previous action outcome for action ID {input.PreviousActionId.Value}.";
                     actionOutcome.FinishOutcomeWithFailure(errorMessage);
                     return Result.Fail(errorMessage);
                 }
+                
+                var outcomeJson = previousOutcome.OutcomeJson;
 
                 if (outcomeJson.StartsWith("ey"))
                 {
@@ -173,23 +186,26 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
 
             try
             {
+                // Convert Dictionary<string, string> to IEnumerable<Claim>
+                var claimsList = claims.Select(c => new Claim(c.Key, c.Value)).ToList();
+                
                 string token = GenerateJwtToken(
                     issuer: issuer, // e.g., "https://my-prototype.example.com"
                     subject: subject, // e.g., "did:example:12345"
                     audience: audience, // e.g., "https://my-api.example.com"
                     signingKey: mySecureKey, // Your securely loaded Signing Key object
                     signingAlgorithm: SecurityAlgorithms.HmacSha256, // e.g., SecurityAlgorithms.RsaSha256
-                    expirationMinutes: 15, // e.g., 15
-                    additionalClaims: claims
+                    expirationMinutes: expirationMinutes,
+                    additionalClaims: claimsList
                 );
                 actionOutcome.FinishOutcomeWithSuccess(token);
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                // Log the error
-                // Return appropriate error response
-                throw; // Or handle gracefully
+                var errorMessage = $"Error generating JWT token: {ex.Message}";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
             }
         }
         catch (Exception ex)
@@ -198,10 +214,6 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
             actionOutcome.FinishOutcomeWithFailure(errorMessage);
             return Result.Fail(errorMessage);
         }
-
-        //TODO
-        actionOutcome.FinishOutcomeWithFailure("");
-        return Result.Fail("");
     }
 
     /// <summary>
