@@ -11,8 +11,10 @@
 @using System.Text.Json
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ChangeWorkflowState
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
+@using JsonException = System.Text.Json.JsonException
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowSummaries
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
+@using Blocktrust.CredentialWorkflow.Core.Domain.Template
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
 
@@ -23,6 +25,7 @@
 @inject ISchemaValidationService _schemaValidationService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Workflow> Logger
+@inject TemplateService TemplateService
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
@@ -186,6 +189,57 @@
     }
 </div>
 
+<!-- Templates Section -->
+<div class="container mx-auto p-6 mt-10">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Templates</h2>
+
+    @if (templates.Any())
+    {
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var template in templates)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@template.Name</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-500">@template.Description</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button @onclick="() => CreateWorkflowFromTemplate(template)" @onclick:stopPropagation="true"
+                                    class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                                Create from Template
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white shadow-md rounded-lg p-6 text-center">
+            <p class="text-gray-600">No templates available.</p>
+        </div>
+    }
+</div>
+
 @if (isJsonImportModalOpen)
 {
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
@@ -219,6 +273,7 @@
 @code {
     private readonly CancellationTokenSource cts = new();
     private List<WorkflowSummary> workflowSummaries = new();
+    private List<Template> templates = new();
     private bool isJsonImportModalOpen;
     private string jsonInput = "";
     private string errorMessage = "";
@@ -233,6 +288,7 @@
             }
 
             await LoadWorkflowSummaries();
+            await LoadTemplates();
         }
         catch (Exception)
         {
@@ -421,6 +477,71 @@
         catch (Exception)
         {
             errorMessage = "An unexpected error occurred while importing the workflow. Please try again later.";
+        }
+    }
+
+    private async Task LoadTemplates()
+    {
+        try
+        {
+            var templatesResult = TemplateService.ListTemplates();
+            if (templatesResult.IsFailed)
+            {
+                errorMessage = "Failed to load templates. Please try again later.";
+            }
+            else
+            {
+                templates = templatesResult.Value;
+                errorMessage = "";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred while loading templates. Please try again later.";
+        }
+    }
+    
+    private async Task CreateWorkflowFromTemplate(Template template)
+    {
+        try
+        {
+            // Get template with processed placeholders, including tenant-specific GUIDs
+            var templateResult = TemplateService.GetTemplateById(template.Id, AppStateService.Tenant.TenantId);
+            if (templateResult.IsFailed)
+            {
+                errorMessage = "Failed to load template details. Please try again.";
+                return;
+            }
+            
+            var processedTemplate = templateResult.Value;
+            
+            // Convert template body to ProcessFlow
+            var processFlow = ProcessFlow.DeserializeFromJson(processedTemplate.TemplateBody);
+            
+            // Create workflow from template
+            var workflowResult = await Mediator.Send(
+                new CreateWorkflowRequest(
+                    AppStateService.Tenant.TenantId, 
+                    $"{processedTemplate.Name} - {DateTime.UtcNow:yyyy-MM-dd HH:mm}", 
+                    processFlow)
+            );
+            
+            if (workflowResult.IsFailed)
+            {
+                errorMessage = "Failed to create workflow from template. Please try again.";
+                return;
+            }
+            
+            // Navigate to the newly created workflow
+            NavigateToWorkflow(workflowResult.Value.WorkflowId);
+        }
+        catch (JsonException)
+        {
+            errorMessage = "The template contains invalid JSON format. Please contact an administrator.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while creating workflow from template: {ex.Message}";
         }
     }
 

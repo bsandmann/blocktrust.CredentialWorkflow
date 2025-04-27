@@ -78,6 +78,8 @@ builder.Services.AddHostedService<RecurringWorkflowBackgroundService>();
 
 builder.Services.AddSingleton<ITriggerValidationService, HttpTriggerValidationService>();
 
+builder.Services.AddSingleton<TemplateService>();
+
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
 builder.Services.AddScoped<IFormService, FormService>();
 

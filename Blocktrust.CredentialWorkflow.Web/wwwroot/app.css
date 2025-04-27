@@ -637,10 +637,6 @@ video {
   right: 0.5rem;
 }
 
-.right-4 {
-  right: 1rem;
-}
-
 .top-0 {
   top: 0px;
 }
@@ -1369,6 +1365,11 @@ video {
   background-color: rgb(229 231 235 / var(--tw-bg-opacity));
 }
 
+.bg-gray-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(156 163 175 / var(--tw-bg-opacity));
+}
+
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
@@ -1466,11 +1467,6 @@ video {
 .bg-yellow-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 249 195 / var(--tw-bg-opacity));
-}
-
-.bg-gray-400 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(156 163 175 / var(--tw-bg-opacity));
 }
 
 .bg-yellow-50 {
@@ -1857,11 +1853,6 @@ video {
   color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 
-.text-yellow-800 {
-  --tw-text-opacity: 1;
-  color: rgb(133 77 14 / var(--tw-text-opacity));
-}
-
 .text-yellow-400 {
   --tw-text-opacity: 1;
   color: rgb(250 204 21 / var(--tw-text-opacity));
@@ -1870,6 +1861,11 @@ video {
 .text-yellow-700 {
   --tw-text-opacity: 1;
   color: rgb(161 98 7 / var(--tw-text-opacity));
+}
+
+.text-yellow-800 {
+  --tw-text-opacity: 1;
+  color: rgb(133 77 14 / var(--tw-text-opacity));
 }
 
 .underline {
@@ -2089,14 +2085,14 @@ a {
   background-color: rgb(51 65 85 / var(--tw-bg-opacity));
 }
 
-.hover\:bg-slate-300:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(203 213 225 / var(--tw-bg-opacity));
-}
-
 .hover\:text-blue-700:hover {
   --tw-text-opacity: 1;
   color: rgb(29 78 216 / var(--tw-text-opacity));
+}
+
+.hover\:text-blue-800:hover {
+  --tw-text-opacity: 1;
+  color: rgb(30 64 175 / var(--tw-text-opacity));
 }
 
 .hover\:text-blue-900:hover {
@@ -2142,11 +2138,6 @@ a {
 .hover\:text-slate-700:hover {
   --tw-text-opacity: 1;
   color: rgb(51 65 85 / var(--tw-text-opacity));
-}
-
-.hover\:text-blue-800:hover {
-  --tw-text-opacity: 1;
-  color: rgb(30 64 175 / var(--tw-text-opacity));
 }
 
 .hover\:opacity-80:hover {
@@ -2253,12 +2244,12 @@ a {
     grid-column: span 3 / span 3;
   }
 
-  .md\:grid-cols-5 {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .md\:grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
