@@ -30,7 +30,7 @@
             </select>
             @if (ActionInput.Audience.Source == ParameterSource.Static)
             {
-                <input type="url" class="w-2/3 rounded border px-2 py-1 text-xs @(_isValidAudience ? "" : "border-red-500")"
+                <input type="text" class="w-2/3 rounded border px-2 py-1 text-xs @(_isValidAudience ? "" : "border-red-500")"
                        @bind="ActionInput.Audience.DefaultValue"
                        @bind:after="ValidateAudience"
                        placeholder="https://example.com"/>
@@ -53,7 +53,7 @@
         </div>
         @if (!_isValidAudience && ActionInput.Audience.Source == ParameterSource.Static)
         {
-            <p class="text-xs text-red-500 mt-1">Please enter a valid URL</p>
+            <p class="text-xs text-red-500 mt-1">Audience is required</p>
         }
     </div>
     
@@ -316,8 +316,16 @@
     {
         if (ActionInput.Audience.Source == ParameterSource.Static)
         {
-            _isValidAudience = !string.IsNullOrWhiteSpace(ActionInput.Audience.DefaultValue) &&
-                              Uri.TryCreate(ActionInput.Audience.DefaultValue, UriKind.Absolute, out _);
+            // If empty, consider it invalid
+            if (string.IsNullOrWhiteSpace(ActionInput.Audience.DefaultValue))
+            {
+                _isValidAudience = false;
+            }
+            // Otherwise, any non-empty string is valid for audience - it's more flexible than just URLs
+            else
+            {
+                _isValidAudience = true;
+            }
         }
         else
         {

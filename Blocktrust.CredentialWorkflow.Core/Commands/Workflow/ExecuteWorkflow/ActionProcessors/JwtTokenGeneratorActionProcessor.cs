@@ -6,6 +6,8 @@ using System.Text.Json;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 
+using Services;
+using VerifiableCredential;
 using Action = Domain.ProcessFlow.Actions.Action;
 
 public class JwtTokenGeneratorActionProcessor : IActionProcessor
@@ -69,9 +71,53 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
 
             if (input.ClaimsFromPreviousAction && input.PreviousActionId.HasValue)
             {
-                // TODO: Get claims from previous action
-                // This is where you would extract claims from the previous action's outcome
-                // For now, this is left as a placeholder to be implemented manually
+                var outcomeJson = context.ActionOutcomes.FirstOrDefault()?.OutcomeJson;
+                if (string.IsNullOrWhiteSpace(outcomeJson))
+                {
+                    var errorMessage = "Cannot find valid previous action outcome.";
+                    actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                    return Result.Fail(errorMessage);
+                }
+
+                if (outcomeJson.StartsWith("ey"))
+                {
+                    var credentialResult = JwtParser.Parse(outcomeJson);
+                    if (credentialResult.IsFailed)
+                    {
+                        var errorMessage = $"Could not parse credential from previous action outcome: {credentialResult.Errors.FirstOrDefault()?.Message}";
+                        actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                        return Result.Fail(errorMessage);
+                    }
+
+                    var credential = credentialResult.Value;
+                    if (credential.VerifiableCredentials.FirstOrDefault() != null)
+                    {
+                        var subjects = credential.VerifiableCredentials.FirstOrDefault().CredentialSubjects;
+                        if (subjects != null)
+                        {
+                            foreach (var claim in subjects.FirstOrDefault().AdditionalData)
+                            {
+                                var key = claim.Key;
+                                var claimValue = claim.Value;
+
+                                if (claimValue is string stringValue)
+                                {
+                                    claims[key] = stringValue;
+                                }
+                                else if (claimValue is JsonElement jsonElement)
+                                {
+                                    claims[key] = jsonElement.ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var errorMessage = "Unexpected outcome format from previous action.";
+                    actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                    return Result.Fail(errorMessage);
+                }
             }
             else
             {
