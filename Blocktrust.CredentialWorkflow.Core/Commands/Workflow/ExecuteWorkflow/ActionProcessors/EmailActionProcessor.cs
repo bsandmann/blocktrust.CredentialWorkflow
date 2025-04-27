@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.SendEmailAction;
 using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions;
@@ -90,6 +91,13 @@ public class EmailActionProcessor : IActionProcessor
             if (!string.IsNullOrEmpty(param.Key))
             {
                 var paramValue = param.Value ?? string.Empty;
+                
+                // Check if the parameter value is JSON and beautify it if necessary
+                if (IsJson(paramValue))
+                {
+                    paramValue = BeautifyJson(paramValue);
+                }
+                
                 var key = param.Key.Trim();
                 // Replace {{paramName}} pattern with the value
                 processedTemplate = Regex.Replace(
@@ -101,5 +109,51 @@ public class EmailActionProcessor : IActionProcessor
         }
 
         return processedTemplate;
+    }
+    
+    private static bool IsJson(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+            
+        input = input.Trim();
+        
+        // Quick check for JSON structure
+        if (!(input.StartsWith("{") && input.EndsWith("}")) && 
+            !(input.StartsWith("[") && input.EndsWith("]")))
+            return false;
+            
+        try
+        {
+            // Attempt to parse as JSON
+            using (JsonDocument.Parse(input))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    private static string BeautifyJson(string jsonString)
+    {
+        try
+        {
+            // Parse and format the JSON with indentation
+            using var jsonDocument = JsonDocument.Parse(jsonString);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            
+            return JsonSerializer.Serialize(jsonDocument.RootElement, options);
+        }
+        catch
+        {
+            // If there's any error in formatting, return the original string
+            return jsonString;
+        }
     }
 }

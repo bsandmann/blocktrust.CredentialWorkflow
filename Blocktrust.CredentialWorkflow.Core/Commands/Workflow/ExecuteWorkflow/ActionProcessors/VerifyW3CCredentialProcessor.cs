@@ -51,7 +51,7 @@ public class VerifyW3CCredentialProcessor : IActionProcessor
         }
 
         var verificationResult = verifyResult.Value;
-        actionOutcome.FinishOutcomeWithSuccess($"Credential verified. IsValid={verificationResult.IsValid}");
+        actionOutcome.FinishOutcomeWithSuccess($"Credential verified. IsValid={verificationResult.IsValid}. Credential checked: {credentialStr}");
         return Result.Ok();
     }
 }

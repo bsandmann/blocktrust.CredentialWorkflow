@@ -27,29 +27,32 @@
 
 @if (AppStateService.IsInitialized)
 {
-    <div class="flex flex-col min-h-screen">
-        <!-- Top bar -->
-        <div class="bg-gray-100 p-4 flex items-center border-b-2 border-slate-200">
-            <select value="@selectedWorkflowId" @onchange="OnWorkflowSelectionChanged"
-                    class="max-w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
-                @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
-                {
-                    <option value="@workflow.WorkflowId">@workflow.Name</option>
-                }
-            </select>
-        </div>
+    <div class="container mx-auto p-6">
+        <div class="flex flex-col">
+            <!-- Top bar -->
+            <div class="bg-gray-100 p-4 flex items-center rounded-t-lg border border-slate-200">
+                <select value="@selectedWorkflowId" @onchange="OnWorkflowSelectionChanged"
+                        class="max-w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                    @foreach (var workflow in AppStateService.WorkflowSummaries.OrderByDescending(w => w.UpdatedUtc))
+                    {
+                        <option value="@workflow.WorkflowId">@workflow.Name</option>
+                    }
+                </select>
+                <button @onclick="LoadWorkflowOutcomes" class="ml-2 p-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                    <span class="material-symbols-outlined text-slate-600">refresh</span>
+                </button>
+            </div>
 
-        <!-- Main content area -->
-        <div class="flex-1 p-4 overflow-x-auto">
-            @if (workflowOutcomes.Any())
-            {
-                <div class="min-w-fit bg-white rounded-lg shadow-sm border border-slate-200">
+            <!-- Main content area -->
+            <div class="bg-white shadow-md rounded-b-lg overflow-hidden border-x border-b border-slate-200">
+                @if (workflowOutcomes.Any())
+                {
                     <div class="overflow-x-auto">
-                        <table class="w-full">
+                        <table class="min-w-full">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">State</th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-700 whitespace-nowrap">State</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-700 whitespace-nowrap">
                                         <div class="flex items-center cursor-pointer" @onclick="() => SortByStarted()">
                                             Started
                                             @if (sortField == "Started")
@@ -60,7 +63,7 @@
                                             }
                                         </div>
                                     </th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-slate-700 whitespace-nowrap">
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-700 whitespace-nowrap">
                                         <div class="flex items-center cursor-pointer" @onclick="() => SortByEnded()">
                                             Ended
                                             @if (sortField == "Ended")
@@ -233,14 +236,14 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-8">
-                    <p class="text-slate-600">No outcomes found for the selected workflow.</p>
-                </div>
-            }
+                }
+                else
+                {
+                    <div class="text-center py-8">
+                        <p class="text-slate-600">No outcomes found for the selected workflow.</p>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 }

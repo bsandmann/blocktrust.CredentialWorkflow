@@ -7,6 +7,7 @@ using System.Text.Json;
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 
 using System.IdentityModel.Tokens.Jwt;
+using System.Security;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Services;
@@ -69,7 +70,7 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
-            
+
             // Ensure we have a positive value
             if (expirationSeconds <= 0)
             {
@@ -77,7 +78,7 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                 actionOutcome.FinishOutcomeWithFailure(errorMessage);
                 return Result.Fail(errorMessage);
             }
-            
+
             // Calculate expiration in minutes (rounded up to ensure token lives at least as long as requested)
             int expirationMinutes = (int)Math.Ceiling(expirationSeconds / 60.0);
 
@@ -93,8 +94,33 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                     actionOutcome.FinishOutcomeWithFailure(errorMessage);
                     return Result.Fail(errorMessage);
                 }
-                
+
                 var outcomeJson = previousOutcome.OutcomeJson;
+                if (outcomeJson.Contains("Credential checked:"))
+                {
+                    // The referenced action is a verification action
+                    var jwt = outcomeJson.Split("Credential checked: ");
+                    if (jwt.Length == 2 && jwt[1].StartsWith("ey"))
+                    {
+                        outcomeJson = jwt[1];
+                        if (subject.StartsWith("Credential verified"))
+                        {
+                            var credentialResult = JwtParser.Parse(outcomeJson);
+                            if (credentialResult.IsFailed)
+                            {
+                                var errorMessage = $"Could not parse credential from previous action outcome: {credentialResult.Errors.FirstOrDefault()?.Message}";
+                                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                                return Result.Fail(errorMessage);
+                            }
+
+                            var presubject = credentialResult.Value.VerifiableCredentials.FirstOrDefault().CredentialSubjects.FirstOrDefault().Id;
+                            if (presubject is not null)
+                            {
+                                subject = presubject.ToString();
+                            }
+                        }
+                    }
+                }
 
                 if (outcomeJson.StartsWith("ey"))
                 {
@@ -188,7 +214,7 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
             {
                 // Convert Dictionary<string, string> to IEnumerable<Claim>
                 var claimsList = claims.Select(c => new Claim(c.Key, c.Value)).ToList();
-                
+
                 string token = GenerateJwtToken(
                     issuer: issuer, // e.g., "https://my-prototype.example.com"
                     subject: subject, // e.g., "did:example:12345"
