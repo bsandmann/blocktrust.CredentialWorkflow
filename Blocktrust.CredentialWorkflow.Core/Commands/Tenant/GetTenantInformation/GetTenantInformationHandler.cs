@@ -5,6 +5,7 @@ using Domain.Workflow;
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Services;
 
 public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationRequest, Result<GetTenantInformationResponse>>
 {
@@ -42,7 +43,18 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
 
         var tenantEntity = await _context.TenantEntities
             .FirstOrDefaultAsync(p => p.TenantEntityId == request.TenantEntityId, cancellationToken);
-        
+
+        if (string.IsNullOrEmpty(tenantEntity?.JwtSecurityKey))
+        {
+            string jwtSecurityKey = JwtKeyGeneratorService.GenerateHmacSha256SecretKeyString();
+            if (tenantEntity != null)
+            {
+                tenantEntity.JwtSecurityKey = jwtSecurityKey;
+                _context.TenantEntities.Update(tenantEntity);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         return Result.Ok(new GetTenantInformationResponse()
         {
             Tenant = new Tenant()
