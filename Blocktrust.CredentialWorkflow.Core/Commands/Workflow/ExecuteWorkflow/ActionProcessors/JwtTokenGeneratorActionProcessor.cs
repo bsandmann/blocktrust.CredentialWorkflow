@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Services;
+using Tenant.GetTenantInformation;
 using VerifiableCredential;
 using Action = Domain.ProcessFlow.Actions.Action;
 
@@ -152,26 +153,44 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
                 }
             }
 
-            // try
-            // {
-            //     string token = GenerateJwtToken(
-            //         issuer: issuer, // e.g., "https://my-prototype.example.com"
-            //         subject: subject, // e.g., "did:example:12345"
-            //         audience: audience, // e.g., "https://my-api.example.com"
-            //         signingKey: mySecureKey, // Your securely loaded Signing Key object
-            //         signingAlgorithm: algorithm, // e.g., SecurityAlgorithms.RsaSha256
-            //         expirationMinutes: 15, // e.g., 15
-            //         additionalClaims: claims
-            //     );
-            //     actionOutcome.FinishOutcomeWithSuccess(token);
-            //     return Result.Ok();
-            // }
-            // catch (Exception ex)
-            // {
-            //     // Log the error
-            //     // Return appropriate error response
-            //     throw; // Or handle gracefully
-            // }
+            var tenantId = context.Workflow.TenantId;
+            var tenantResult = await _mediator.Send(new GetTenantInformationRequest(tenantId));
+            if (tenantResult.IsFailed)
+            {
+                var errorMessage = $"Could not retrieve tenant information: {tenantResult.Errors.FirstOrDefault()?.Message}";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
+            }
+
+            if (string.IsNullOrEmpty(tenantResult.Value.Tenant.JwtSecurityKey))
+            {
+                var errorMessage = $"Could not retrieve tenant JWT SecurityKey";
+                actionOutcome.FinishOutcomeWithFailure(errorMessage);
+                return Result.Fail(errorMessage);
+            }
+
+            var mySecureKey = JwtKeyGeneratorService.GetSecurityKeyFromBase64String(tenantResult.Value.Tenant.JwtSecurityKey);
+
+            try
+            {
+                string token = GenerateJwtToken(
+                    issuer: issuer, // e.g., "https://my-prototype.example.com"
+                    subject: subject, // e.g., "did:example:12345"
+                    audience: audience, // e.g., "https://my-api.example.com"
+                    signingKey: mySecureKey, // Your securely loaded Signing Key object
+                    signingAlgorithm: SecurityAlgorithms.HmacSha256, // e.g., SecurityAlgorithms.RsaSha256
+                    expirationMinutes: 15, // e.g., 15
+                    additionalClaims: claims
+                );
+                actionOutcome.FinishOutcomeWithSuccess(token);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                // Return appropriate error response
+                throw; // Or handle gracefully
+            }
         }
         catch (Exception ex)
         {

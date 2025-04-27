@@ -24,6 +24,11 @@ public record TenantEntity
     /// Wallet ID for DID registration
     /// </summary>
     [Unicode(true)] [MaxLength(100)] public string? WalletId { get; set; }
+    
+    /// <summary>
+    /// JWT security key for signing tokens
+    /// </summary>
+    [Unicode(true)] [MaxLength(255)] public string? JwtSecurityKey { get; set; }
 
     /// <summary>
     /// A tenant can have many workflows

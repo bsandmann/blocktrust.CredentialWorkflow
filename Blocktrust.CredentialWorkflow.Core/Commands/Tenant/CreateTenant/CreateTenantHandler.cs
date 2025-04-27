@@ -3,6 +3,7 @@
 using Entities.Tenant;
 using FluentResults;
 using MediatR;
+using Services;
 
 public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, Result<Guid>>
 {
@@ -23,10 +24,14 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, Result<G
             return Result.Fail("The tenant name must be provided");
         }
 
+        // Generate JWT security key
+        string jwtSecurityKey = JwtKeyGeneratorService.GenerateHmacSha256SecretKeyString();
+
         var tenant = await _context.TenantEntities.AddAsync(new TenantEntity()
         {
             Name = request.Name,
-            CreatedUtc = DateTime.UtcNow
+            CreatedUtc = DateTime.UtcNow,
+            JwtSecurityKey = jwtSecurityKey
         }, cancellationToken: cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);

@@ -50,7 +50,8 @@ public class GetTenantInformationHandler : IRequestHandler<GetTenantInformationR
                 Name = result.TenantName,
                 TenantId = request.TenantEntityId,
                 OpnRegistrarUrl = tenantEntity?.OpnRegistrarUrl,
-                WalletId = tenantEntity?.WalletId
+                WalletId = tenantEntity?.WalletId,
+                JwtSecurityKey = tenantEntity?.JwtSecurityKey
             },
             WorkflowSummaries = result.WorkflowSummaries.Select(p => new WorkflowSummary()
             {

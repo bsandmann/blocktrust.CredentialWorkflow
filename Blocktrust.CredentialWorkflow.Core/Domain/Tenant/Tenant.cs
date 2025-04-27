@@ -11,4 +11,6 @@ public record Tenant
     public string? OpnRegistrarUrl { get; init; }
     
     public string? WalletId { get; init; }
+    
+    public string? JwtSecurityKey { get; init; }
 }
