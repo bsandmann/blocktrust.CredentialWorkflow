@@ -43,6 +43,25 @@
                             These keys are automatically generated for your tenant and are used for JWT token signing and verification.
                             The private key is used to sign tokens, while the public key can be shared with relying parties to verify the tokens.
                         </p>
+                        
+                        <!-- JWKS Endpoint Information -->
+                        <div class="bg-slate-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-medium text-slate-800 mb-2">JWKS Endpoint</h4>
+                            <p class="text-slate-600 mb-2">
+                                Your public key is available in JWKS format at the following URL:
+                            </p>
+                            <div class="mb-2">
+                                <a href="/@tenantId/.well-known/jwks.json" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="text-blue-600 hover:text-blue-800 font-mono text-sm break-all">
+                                    /@tenantId/.well-known/jwks.json
+                                </a>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-2">
+                                You can share this URL with applications that need to verify JWT tokens issued by this system.
+                            </p>
+                        </div>
 
                         <!-- Public Key Section -->
                         <div class="mb-6">
@@ -127,6 +146,7 @@
             isLoading = false;
         }
     }
+    
 
     private string ConvertXmlKeyToPem(string? xmlKey, bool isPrivate)
     {
