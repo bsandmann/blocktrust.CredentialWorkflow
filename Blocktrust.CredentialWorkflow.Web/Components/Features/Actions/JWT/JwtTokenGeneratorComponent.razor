@@ -258,6 +258,10 @@
     
     protected override void OnInitialized()
     {
+        // Ensure the issuer is properly set as a static value with the combined host/tenant
+        // This will ensure it's saved correctly even if GetIssuerDisplayValue isn't called
+        string issuerValue = GetIssuerDisplayValue();
+        
         // Set initial claims source based on the ActionInput
         if (ActionInput.ClaimsFromPreviousAction)
         {
@@ -280,6 +284,9 @@
         // Validate initial values
         ValidateAudience();
         ValidateExpiration();
+        
+        // Notify parent that we've updated the issuer
+        OnChange.InvokeAsync();
     }
     
     private string GetIssuerDisplayValue()
@@ -290,7 +297,14 @@
         
         string tenantId = AppStateService?.Tenant?.TenantId.ToString() ?? "tenant-id";
         
-        return $"{hostUrl}/{tenantId}";
+        var issuerValue = $"{hostUrl}/{tenantId}";
+        
+        // Update the Issuer field in the ActionInput to use Static source with the combined value
+        ActionInput.Issuer.Source = ParameterSource.Static;
+        ActionInput.Issuer.DefaultValue = issuerValue;
+        ActionInput.Issuer.Path = "";
+        
+        return issuerValue;
     }
     
     private async Task OnValueChanged()

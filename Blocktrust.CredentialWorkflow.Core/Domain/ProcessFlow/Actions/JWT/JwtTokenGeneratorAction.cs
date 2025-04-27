@@ -8,8 +8,8 @@ public class JwtTokenGeneratorAction : ActionInput
     [JsonPropertyName("issuer")]
     public ParameterReference Issuer { get; set; } = new ParameterReference
     {
-        Source = ParameterSource.AppSettings,
-        Path = "HostUrl"
+        Source = ParameterSource.Static,
+        DefaultValue = ""
     };
     
     [JsonPropertyName("audience")]

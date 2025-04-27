@@ -75,32 +75,32 @@ public class JwtTokenGeneratorActionProcessor : IActionProcessor
             }
             else
             {
-                // Process manually defined claims
-                // foreach (var claimPair in input.Claims)
-                // {
-                //     var key = claimPair.Key;
-                //     var claimValue = claimPair.Value;
-                //
-                //     string resolvedValue;
-                //     if (claimValue.Type == ClaimValueType.Static)
-                //     {
-                //         resolvedValue = claimValue.Value;
-                //     }
-                //     else if (claimValue.Type == ClaimValueType.TriggerProperty && claimValue.ParameterReference \!= null)
-                //     {
-                //         resolvedValue = await ParameterResolver.GetParameterFromExecutionContext(
-                //             claimValue.ParameterReference, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
-                //     }
-                //     else
-                //     {
-                //         continue; // Skip invalid claim
-                //     }
-                //
-                //     if (\!string.IsNullOrEmpty(resolvedValue))
-                //     {
-                //         claims[key] = resolvedValue;
-                //     }
-                // }
+                //Process manually defined claims
+                foreach (var claimPair in input.Claims)
+                {
+                    var key = claimPair.Key;
+                    var claimValue = claimPair.Value;
+
+                    string resolvedValue;
+                    if (claimValue.Type == ClaimValueType.Static)
+                    {
+                        resolvedValue = claimValue.Value;
+                    }
+                    else if (claimValue.Type == ClaimValueType.TriggerProperty && claimValue.ParameterReference != null)
+                    {
+                        resolvedValue = await ParameterResolver.GetParameterFromExecutionContext(
+                            claimValue.ParameterReference, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                    }
+                    else
+                    {
+                        continue; // Skip invalid claim
+                    }
+
+                    if (!string.IsNullOrEmpty(resolvedValue))
+                    {
+                        claims[key] = resolvedValue;
+                    }
+                }
             }
 
             // TODO: Generate the actual JWT token

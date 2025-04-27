@@ -76,6 +76,16 @@ Content-Type: application/json
 {
 }
 
+### POST request to WorkflowController with Jwt
+POST https://localhost:7209/api/workflow/07320b43-61cc-4088-0f40-08dd84f67440
+Content-Type: application/json
+
+{
+  "subjectDid": "did:prism:85958de731e812d7cb30133660abc528ece48baeccc6c76a2a20c8e3c93f1ac2",
+  "name": "björn",
+  "age": "12"
+}
+
 
 
 
