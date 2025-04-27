@@ -17,6 +17,7 @@
 @using Blocktrust.CredentialWorkflow.Core.Domain.Template
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Http
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -26,6 +27,7 @@
 @inject IJSRuntime JSRuntime
 @inject ILogger<Workflow> Logger
 @inject TemplateService TemplateService
+@inject IHttpContextAccessor HttpContextAccessor
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
@@ -505,8 +507,22 @@
     {
         try
         {
-            // Get template with processed placeholders, including tenant-specific GUIDs
-            var templateResult = TemplateService.GetTemplateById(template.Id, AppStateService.Tenant.TenantId);
+            // Get the current host URL
+            var request = HttpContextAccessor.HttpContext?.Request;
+            string hostUrl = null;
+            
+            if (request != null)
+            {
+                hostUrl = $"{request.Scheme}://{request.Host}";
+            }
+            else
+            {
+                // Fallback if HttpContextAccessor is not available - use NavigationManager
+                hostUrl = NavigationManager.BaseUri.TrimEnd('/');
+            }
+            
+            // Get template with processed placeholders, including tenant-specific GUIDs and host URL
+            var templateResult = TemplateService.GetTemplateById(template.Id, AppStateService.Tenant.TenantId, hostUrl);
             if (templateResult.IsFailed)
             {
                 errorMessage = "Failed to load template details. Please try again.";
@@ -522,7 +538,7 @@
             var workflowResult = await Mediator.Send(
                 new CreateWorkflowRequest(
                     AppStateService.Tenant.TenantId, 
-                    $"{processedTemplate.Name} - {DateTime.UtcNow:yyyy-MM-dd HH:mm}", 
+                    $"From Template: {processedTemplate.Name}",
                     processFlow)
             );
             
