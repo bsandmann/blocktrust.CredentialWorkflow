@@ -33,7 +33,7 @@ public class EmailService : IEmailService
             throw new Exception("SendGrid API key is not configured");
         }
 
-        var client = new SendGridClient(_emailSettings.SendGridKey);
+        var client = CreateSendGridClient(_emailSettings.SendGridKey);
         var msg = new SendGridMessage
         {
             From = new EmailAddress(_emailSettings.SendGridFromEmail, _emailSettings.DefaultFromName),
@@ -71,6 +71,17 @@ public class EmailService : IEmailService
             var paramName = match.Groups[1].Value;
             return parameters.TryGetValue(paramName, out var value) ? value : match.Value;
         });
+    }
+    
+    /// <summary>
+    /// Creates a SendGrid client with the given API key.
+    /// This is protected and virtual to allow mocking in tests.
+    /// </summary>
+    /// <param name="apiKey">The SendGrid API key</param>
+    /// <returns>A SendGrid client</returns>
+    protected virtual ISendGridClient CreateSendGridClient(string apiKey)
+    {
+        return new SendGridClient(apiKey);
     }
 }
 
