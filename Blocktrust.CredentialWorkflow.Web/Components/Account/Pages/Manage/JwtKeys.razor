@@ -1,0 +1,178 @@
+@page "/Account/Manage/JwtKeys"
+
+@using System.Security.Cryptography
+@using System.Text
+@using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.GetTenantInformation
+@using Blocktrust.CredentialWorkflow.Core.Domain.Tenant
+@using MediatR
+
+@inject IMediator Mediator
+@inject IdentityUserAccessor UserAccessor
+
+<PageTitle>JWT Keys</PageTitle>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h2 class="font-museo text-3xl font-semibold text-slate-800">JWT Keys</h2>
+            <p class="mt-2 text-slate-600">View your RSA key pair for JWT signatures.</p>
+        </div>
+
+        <StatusMessage Message="@message"/>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-6">
+            <div class="grid gap-8 md:grid-cols-1">
+                @if (isLoading)
+                {
+                    <div class="text-center p-4">
+                        <p>Loading keys...</p>
+                    </div>
+                }
+                else if (tenant == null)
+                {
+                    <div class="text-center p-4">
+                        <p class="text-red-500">Unable to load tenant information.</p>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">RSA Keys</h3>
+                        <p class="text-slate-600 mb-4">
+                            These keys are automatically generated for your tenant and are used for JWT token signing and verification.
+                            The private key is used to sign tokens, while the public key can be shared with relying parties to verify the tokens.
+                        </p>
+
+                        <!-- Public Key Section -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-medium text-slate-800 mb-2">Public Key (PEM Format)</h4>
+                            <div class="bg-slate-50 rounded-lg p-4 overflow-x-auto">
+                                <pre class="font-mono text-sm whitespace-pre-wrap break-all">@publicKeyPem</pre>
+                            </div>
+                        </div>
+
+                        <!-- Private Key Section -->
+                        <div>
+                            <h4 class="text-lg font-medium text-slate-800 mb-2">Private Key (PEM Format)</h4>
+                            <div class="bg-slate-50 rounded-lg p-4 overflow-x-auto">
+                                <pre class="font-mono text-sm whitespace-pre-wrap break-all">@privateKeyPem</pre>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? message;
+    private bool isLoading = true;
+    private Tenant? tenant;
+    private string privateKeyPem = string.Empty;
+    private string publicKeyPem = string.Empty;
+    private Guid tenantId;
+    
+    [CascadingParameter] 
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+            tenantId = user.TenantEntityId.Value;
+            await LoadTenantInformation();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error loading user information: {ex.Message}";
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadTenantInformation()
+    {
+        try
+        {
+            var result = await Mediator.Send(new GetTenantInformationRequest(tenantId));
+            
+            if (result.IsSuccess)
+            {
+                tenant = result.Value.Tenant;
+                
+                if (tenant != null)
+                {
+                    // Convert XML keys to PEM format
+                    privateKeyPem = ConvertXmlKeyToPem(tenant.JwtPrivateKey, true);
+                    publicKeyPem = ConvertXmlKeyToPem(tenant.JwtPublicKey, false);
+                }
+                else
+                {
+                    message = "Tenant information not found.";
+                }
+            }
+            else
+            {
+                message = $"Error loading tenant information: {string.Join(", ", result.Errors)}";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string ConvertXmlKeyToPem(string? xmlKey, bool isPrivate)
+    {
+        if (string.IsNullOrWhiteSpace(xmlKey))
+        {
+            return "No key available";
+        }
+
+        try
+        {
+            using RSA rsa = RSA.Create();
+            rsa.FromXmlString(xmlKey);
+            
+            byte[] keyBytes;
+            string header;
+            string footer;
+
+            if (isPrivate)
+            {
+                keyBytes = rsa.ExportRSAPrivateKey();
+                header = "-----BEGIN RSA PRIVATE KEY-----";
+                footer = "-----END RSA PRIVATE KEY-----";
+            }
+            else
+            {
+                keyBytes = rsa.ExportRSAPublicKey();
+                header = "-----BEGIN RSA PUBLIC KEY-----";
+                footer = "-----END RSA PUBLIC KEY-----";
+            }
+
+            // Convert to base64 with line breaks every 64 characters
+            string base64 = Convert.ToBase64String(keyBytes);
+            var result = new StringBuilder();
+            result.AppendLine(header);
+            
+            for (int i = 0; i < base64.Length; i += 64)
+            {
+                result.AppendLine(base64.Substring(i, Math.Min(64, base64.Length - i)));
+            }
+            
+            result.AppendLine(footer);
+            return result.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error converting key to PEM format: {ex.Message}";
+        }
+    }
+}
