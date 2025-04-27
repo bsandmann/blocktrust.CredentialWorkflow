@@ -74,7 +74,8 @@
             "Http",
             "Email",
             "LogOutcome",
-            "PostOutcome"
+            "PostOutcome",
+            "JwtTokenGenerator"
           ]
         },
         "input": {
@@ -89,14 +90,10 @@
           "additionalProperties": true
         },
         "runAfter": {
-          "type": "object",
-          "description": "Mapping of preceding trigger or action IDs to an array of statuses.",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": ["succeeded", "failed"]
-            }
+          "type": "array",
+          "description": "Array of preceding trigger or action IDs",
+          "items": {
+            "type": "string"
           }
         }
       },

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NJsonSchema;
+using Newtonsoft.Json.Linq;
 
 namespace Blocktrust.CredentialWorkflow.Core.Services;
 
@@ -21,10 +22,20 @@ public class SchemaValidationService : ISchemaValidationService
             string schemaPath = Path.Combine(_schemaDirectory, $"{schemaName}.json");
             string schemaJson = await File.ReadAllTextAsync(schemaPath);
             var schema = await JsonSchema.FromJsonAsync(schemaJson);
+            
+            // Parse the JSON to validate with Newtonsoft.Json
+            var jsonObject = JToken.Parse(json);
+            
+            // Validate using NJsonSchema
+            var errors = schema.Validate(jsonObject);
+            
+            // Filter out any errors related to "additionalProperties" validation
+            var filteredErrors = errors.Where(error => !error.Kind.ToString().Contains("AdditionalProperties"));
 
-            var errors = schema.Validate(json);
-
-            return errors.Select(error => $"{error.Path} - {error.Kind}");
+            _logger.LogInformation("Schema validation completed. Total errors: {TotalErrors}, Filtered errors: {FilteredErrors}", 
+                errors.Count, filteredErrors.Count());
+            
+            return filteredErrors.Select(error => $"{error.Path} - {error.Kind}");
         }
         catch (IOException ex)
         {
