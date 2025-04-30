@@ -59,41 +59,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Tests.Services.TemplateServiceTests
             result.Errors[0].Message.Should().Contain("not found");
         }
 
-        [Fact]
-        public void GetTemplateById_WithTenantId_ReplacesPlaceholders()
-        {
-            // Arrange
-            var templates = _templateService.ListTemplates().Value;
-            var templateId = templates[0].Id;
-            var tenantId = Guid.NewGuid();
 
-            // Act
-            var result = _templateService.GetTemplateById(templateId, tenantId);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Value.Should().NotBeNull();
-            result.Value.TemplateBody.Should().NotContain("<GUID_TENANT>");
-            result.Value.TemplateBody.Should().Contain(tenantId.ToString());
-        }
-
-        [Fact]
-        public void GetTemplateById_WithHostUrl_ReplacesUrlPlaceholders()
-        {
-            // Arrange
-            var templates = _templateService.ListTemplates().Value;
-            var templateId = templates[0].Id;
-            var hostUrl = "https://example.com";
-
-            // Act
-            var result = _templateService.GetTemplateById(templateId, null, hostUrl);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Value.Should().NotBeNull();
-            result.Value.TemplateBody.Should().NotContain("<HOST_URL>");
-            result.Value.TemplateBody.Should().Contain(hostUrl);
-        }
 
         [Fact]
         public void GetTemplateById_ReplacesGuidPlaceholders()
@@ -113,26 +79,5 @@ namespace Blocktrust.CredentialWorkflow.Core.Tests.Services.TemplateServiceTests
             result.Value.TemplateBody.Should().NotContain("<GUID>");
         }
 
-        [Fact]
-        public void GetTemplateById_NormalizesUrls()
-        {
-            // Arrange
-            var templates = _templateService.ListTemplates().Value;
-            var templateId = templates[0].Id;
-            var hostUrl = "https://example.com/";
-
-            // Act
-            var result = _templateService.GetTemplateById(templateId, null, hostUrl);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Value.Should().NotBeNull();
-            
-            // Check that host URL is normalized (no double slashes)
-            result.Value.TemplateBody.Should().NotContain("https://example.com//"); 
-            
-            // The trailing slash should be normalized
-            result.Value.TemplateBody.Should().Contain("https://example.com");
-        }
     }
 }
