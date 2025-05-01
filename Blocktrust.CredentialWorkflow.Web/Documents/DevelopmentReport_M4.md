@@ -10,6 +10,8 @@ Similar to the DID Registrar, we also needed to implement a new setting inside t
 
 The Form Action was actually started a while ago, but we did some refinements on it for this milestone. It is pretty straightforward. We considered implementing some kind of additional protection against unauthorized access, but decided against it for now, as the knowledge of the endpoint and the form itself is already a good layer of protection, since we are using a randomly created GUID for the workflow path anyway.
 
+We also implemented the new templating system. It works quite well but is also quite static, meaning that the templates are provide by us and don't allow the user to create and manage their own templates. Since we see the templates more as examples, rather than templates to speed up the workflow, we decided that this would be fine. Exspecially since the user can export their own worklows. So, if the user has a worklfow that he want to ducplicate and use a templare for their own work, it can be exported and imported right away - this does create a new workflow, similar to cloning it. So are more complicated templates system it not really needed here as it does not offer real benefits.
+
 We added tests for all the new components and actions and are pretty happy with the overall test coverage.
 Making the video is always a good test for actual usability, and we found a few things that we can improve in the UI for the next milestone—like displaying the trigger/action ID in the UI, as well as referencing previous actions by name, and so on. We already have a long list of mostly minor improvements that we will implement in the next milestone.
 
