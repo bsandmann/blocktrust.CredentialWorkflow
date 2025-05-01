@@ -1,0 +1,16 @@
+# Development Report for Milestone 4
+
+The focus of this milestone was primarily the integration of the new Actions to create DIDs, update DIDs, and deactivate DIDs.
+The work went relatively smoothly, and we were able to complete the integration of these Actions in a short time. The main reason was that we are very familiar with the topic of DIDs, as we are working on the OpenPrismNode in parallel and have been involved with this particular technical topic for three years in some form or another.
+The workflow platform calls the OPN using the Universal Registrar specification [see here](https://identity.foundation/did-registration/). To enable this feature, we had to implement a new setting inside the tenant to save the private wallet ID and the endpoint of the OPN.
+
+The other action we integrated was the JWT Token Generator. I think we found a good middle ground between the complexity of the JWT Token and the usability of the Action. The JWT Token is a very complex topic, and there are many different ways to create them. We decided to go with a simple approach and not implement different OAuth2 flows, refresh tokens, etc., as this would be overkill for the current use cases.
+As I mentioned in the last report, we are not sure if there is a real use case for some of these actions anyway, so we found a good balance between usability, complexity, and the question of whether it is really needed.
+Similar to the DID Registrar, we also needed to implement a new setting inside the tenant to save the JWT Token issuer and the private key used to sign the token. The JWT Token is signed with the private key of the tenant and can be verified with the tenants public key. Currently, the keys are auto-generated with the creation of the tenant, but we are considering implementing a way to upload your own private key or refresh the key pairs. This would be a nice feature, but we are not sure if it is really needed. We will see if there is demand for that in the future.
+
+The Form Action was actually started a while ago, but we did some refinements on it for this milestone. It is pretty straightforward. We considered implementing some kind of additional protection against unauthorized access, but decided against it for now, as the knowledge of the endpoint and the form itself is already a good layer of protection, since we are using a randomly created GUID for the workflow path anyway.
+
+We added tests for all the new components and actions and are pretty happy with the overall test coverage.
+Making the video is always a good test for actual usability, and we found a few things that we can improve in the UI for the next milestone—like displaying the trigger/action ID in the UI, as well as referencing previous actions by name, and so on. We already have a long list of mostly minor improvements that we will implement in the next milestone.
+
+Otherwise, there isn't too much to report this time around, as we are more and more getting into refinement and no big architectural decisions are needed anymore.
