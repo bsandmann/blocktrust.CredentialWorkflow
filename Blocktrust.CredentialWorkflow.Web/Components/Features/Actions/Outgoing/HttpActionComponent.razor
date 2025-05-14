@@ -1,5 +1,7 @@
 ﻿@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Outgoing
 @using Blocktrust.CredentialWorkflow.Core.Domain.Common
+@using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions
+@using WorkflowAction = Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Actions.Action
 @namespace Blocktrust.CredentialWorkflow.Web.Components.Features.Actions.Outgoing
 
 <div class="p-4 text-sm">
@@ -39,10 +41,37 @@
                 }
                 else
                 {
-                    <ParameterSourceSelect Source="ActionInput.Endpoint.Source"
-                                         Path="ActionInput.Endpoint.Path"
-                                         TriggerParameters="TriggerParameters"
-                                         OnChange="OnValueChanged"/>
+                    <select class="w-2/3 rounded border px-2 py-1 text-xs"
+                            @bind="ActionInput.Endpoint.Path"
+                            @bind:after="OnValueChanged">
+                        @if (ActionInput.Endpoint.Source == ParameterSource.TriggerInput)
+                        {
+                            @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                            {
+                                <option value="@param">@param</option>
+                            }
+                        }
+                        else if (ActionInput.Endpoint.Source == ParameterSource.ActionOutcome)
+                        {
+                            <option value="">Select previous action</option>
+                            @if (FlowItems != null)
+                            {
+                                @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                                {
+                                    if (item is WorkflowAction actionItem)
+                                    {
+                                        <option value="@actionItem.Input.Id">
+                                            @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                        </option>
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <option value="">Select output</option>
+                        }
+                    </select>
                 }
             </div>
         </div>
@@ -66,17 +95,37 @@
                            placeholder="Header name" />
 
                     <select class="w-1/4 rounded border px-2 py-1 text-xs"
-                            @bind="header.Value.Source">
+                            @bind="header.Value.Source"
+                            @bind:after="OnValueChanged">
                         <option value="@ParameterSource.Static">Static</option>
                         <option value="@ParameterSource.TriggerInput">Trigger Input</option>
-                        <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
                     </select>
 
-                    <ParameterSourceSelect Source="header.Value.Source"
-                                         Path="header.Value.Path"
-                                         TriggerParameters="TriggerParameters"
-                                         OnChange="OnValueChanged"
-                                         Class="w-1/2"/>
+                    @if (header.Value.Source == ParameterSource.Static)
+                    {
+                        <input type="text" class="w-1/2 rounded border px-2 py-1 text-xs"
+                               @bind="header.Value.Path"
+                               @bind:after="OnValueChanged"
+                               placeholder="Enter value" />
+                    }
+                    else
+                    {
+                        <select class="w-1/2 rounded border px-2 py-1 text-xs"
+                                @bind="header.Value.Path"
+                                @bind:after="OnValueChanged">
+                            @if (header.Value.Source == ParameterSource.TriggerInput)
+                            {
+                                @foreach (var param in TriggerParameters ?? Array.Empty<string>())
+                                {
+                                    <option value="@param">@param</option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="">Select source</option>
+                            }
+                        </select>
+                    }
 
                     <button class="text-red-500 hover:text-red-700"
                             @onclick="() => RemoveHeader(header.Key)">
@@ -90,43 +139,91 @@
         @if (ActionInput.Method != "GET" && ActionInput.Method != "DELETE")
         {
             <div class="p-2 border rounded-md">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xs font-medium text-gray-700">Request Body</label>
-                    <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
-                            @onclick="AddBodyField">
-                        Add Field
-                    </button>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Request Body</label>
+                <div class="text-xs text-gray-500 mb-2">
+                    Enter request body as text. You can reference parameters using {{paramName}} syntax.
                 </div>
-
-                @foreach (var field in ActionInput.Body)
-                {
-                    <div class="flex items-center space-x-2 mt-2">
-                        <input type="text" class="w-1/4 rounded border px-2 py-1 text-xs"
-                               value="@field.Key"
-                               @onchange="@(e => UpdateBodyFieldKey(field.Key, e.Value?.ToString() ?? string.Empty))"
-                               placeholder="Field name" />
-
-                        <select class="w-1/4 rounded border px-2 py-1 text-xs"
-                                @bind="field.Value.Source">
-                            <option value="@ParameterSource.Static">Static</option>
-                            <option value="@ParameterSource.TriggerInput">Trigger Input</option>
-                            <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
-                        </select>
-
-                        <ParameterSourceSelect Source="field.Value.Source"
-                                             Path="field.Value.Path"
-                                             TriggerParameters="TriggerParameters"
-                                             OnChange="OnValueChanged"
-                                             Class="w-1/2"/>
-
-                        <button class="text-red-500 hover:text-red-700"
-                                @onclick="() => RemoveBodyField(field.Key)">
-                            <span class="material-symbols-outlined text-sm">delete</span>
-                        </button>
-                    </div>
-                }
+                <textarea class="w-full rounded border px-2 py-1 text-xs min-h-[100px]"
+                          @bind="RequestBodyText"
+                          @bind:after="UpdateBodyFromText"
+                          placeholder='{"example": "value", "dynamic": "{{paramName}}"}'></textarea>
             </div>
         }
+
+        <!-- Parameters -->
+        <div class="p-2 border rounded-md">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-medium text-gray-700">Parameters</label>
+                <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors duration-200"
+                        @onclick="AddParameter">
+                    Add Parameter
+                </button>
+            </div>
+            <div class="text-xs text-gray-500 mb-2">
+                Use these parameters in the request body by typing {{paramName}}
+            </div>
+            @foreach (var param in ActionInput.Parameters)
+            {
+                <div class="flex items-center space-x-2 mt-2">
+                    <input type="text" class="w-1/4 rounded border px-2 py-1 text-xs"
+                           value="@param.Key"
+                           @onchange="@(e => UpdateParameterKey(param.Key, e.Value?.ToString() ?? string.Empty))"
+                           placeholder="Parameter name" />
+                    <select class="w-1/4 rounded border px-2 py-1 text-xs"
+                            @bind="param.Value.Source"
+                            @bind:after="OnValueChanged">
+                        <option value="@ParameterSource.Static">Static</option>
+                        <option value="@ParameterSource.TriggerInput">Trigger Input</option>
+                        <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
+                    </select>
+                    @if (param.Value.Source == ParameterSource.Static)
+                    {
+                        <input type="text" class="w-1/2 rounded border px-2 py-1 text-xs"
+                               @bind="param.Value.Path"
+                               @bind:after="OnValueChanged"
+                               placeholder="Enter value" />
+                    }
+                    else
+                    {
+                        <select class="w-1/2 rounded border px-2 py-1 text-xs"
+                                @bind="param.Value.Path"
+                                @bind:after="OnValueChanged">
+                            @if (param.Value.Source == ParameterSource.TriggerInput)
+                            {
+                                @foreach (var triggerParam in TriggerParameters ?? Array.Empty<string>())
+                                {
+                                    <option value="@triggerParam">@triggerParam</option>
+                                }
+                            }
+                            else if (param.Value.Source == ParameterSource.ActionOutcome)
+                            {
+                                <option value="">Select previous action</option>
+                                @if (FlowItems != null)
+                                {
+                                    @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                                    {
+                                        if (item is WorkflowAction actionItem)
+                                        {
+                                            <option value="@actionItem.Input.Id">
+                                                @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                            </option>
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <option value="">Select source</option>
+                            }
+                        </select>
+                    }
+                    <button class="text-red-500 hover:text-red-700"
+                            @onclick="() => RemoveParameter(param.Key)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
@@ -134,6 +231,30 @@
     [Parameter] public HttpAction ActionInput { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
     [Parameter] public IEnumerable<string>? TriggerParameters { get; set; }
+    [Parameter] public IEnumerable<object>? FlowItems { get; set; }
+
+    private string RequestBodyText { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Extract the body content, if an entry called "__body" exists in the Body dictionary
+        if (ActionInput.Body.ContainsKey("__body"))
+        {
+            RequestBodyText = ActionInput.Body["__body"].Path;
+        }
+    }
+
+    private async Task UpdateBodyFromText()
+    {
+        // Store the body text in a special key in the Body dictionary
+        ActionInput.Body["__body"] = new ParameterReference
+        {
+            Source = ParameterSource.Static,
+            Path = RequestBodyText
+        };
+        
+        await OnChange.InvokeAsync();
+    }
 
     private async Task OnValueChanged()
     {
@@ -152,7 +273,7 @@
 
     private async Task UpdateHeaderKey(string oldKey, string newKey)
     {
-        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey) && !ActionInput.Headers.ContainsKey(newKey))
         {
             var value = ActionInput.Headers[oldKey];
             ActionInput.Headers.Remove(oldKey);
@@ -167,30 +288,30 @@
         await OnChange.InvokeAsync();
     }
 
-    private async Task AddBodyField()
+    private async Task AddParameter()
     {
-        var fieldName = $"field{ActionInput.Body.Count + 1}";
-        ActionInput.Body[fieldName] = new ParameterReference
+        var paramName = $"param{ActionInput.Parameters.Count + 1}";
+        ActionInput.Parameters[paramName] = new ParameterReference
         {
             Source = ParameterSource.Static
         };
         await OnChange.InvokeAsync();
     }
 
-    private async Task UpdateBodyFieldKey(string oldKey, string newKey)
+    private async Task UpdateParameterKey(string oldKey, string newKey)
     {
-        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey))
+        if (oldKey != newKey && !string.IsNullOrWhiteSpace(newKey) && !ActionInput.Parameters.ContainsKey(newKey))
         {
-            var value = ActionInput.Body[oldKey];
-            ActionInput.Body.Remove(oldKey);
-            ActionInput.Body[newKey] = value;
+            var value = ActionInput.Parameters[oldKey];
+            ActionInput.Parameters.Remove(oldKey);
+            ActionInput.Parameters[newKey] = value;
             await OnChange.InvokeAsync();
         }
     }
 
-    private async Task RemoveBodyField(string key)
+    private async Task RemoveParameter(string key)
     {
-        ActionInput.Body.Remove(key);
+        ActionInput.Parameters.Remove(key);
         await OnChange.InvokeAsync();
     }
 }
