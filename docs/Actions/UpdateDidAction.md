@@ -1,3 +1,10 @@
+---
+title: Update DID Action
+layout: default
+parent: Actions
+nav_order: 9
+---
+
 # UpdateDID Action Documentation
 
 The UpdateDID action enables workflows to modify existing decentralized identifiers (DIDs) on the PRISM blockchain. This action allows for adding, removing, or replacing verification methods and service endpoints of a DID that was previously created.
@@ -15,12 +22,12 @@ Updating a DID is an important operation for maintaining decentralized identitie
 
 ### DID Registrar Settings
 
-Like the [CreateDID action](CreateDidAction.md), the UpdateDID action can use DID registrar settings from one of two sources:
+Like the [CreateDID action](CreateDidAction), the UpdateDID action can use DID registrar settings from one of two sources:
 
 1. **Tenant Settings** (Recommended)
    - Use the centrally configured DID registrar settings from your tenant
    - Simplifies management and ensures consistency across workflows
-   - Requires proper [DID Registrar Settings](DidRegistrarSettings.md) configuration
+   - Requires proper [DID Registrar Settings](../Settings/DidRegistrarSettings) configuration
 
 2. **Custom Settings**
    - Configure registrar settings specific to this workflow action
@@ -120,11 +127,11 @@ When executed, the UpdateDID action:
 
 ## Differences from CreateDID
 
-While the [CreateDID action](CreateDidAction.md) initializes a new DID document, the UpdateDID action modifies an existing DID document by:
+While the [CreateDID action](CreateDidAction) initializes a new DID document, the UpdateDID action modifies an existing DID document by:
 
 1. Requiring a reference to an existing DID
 2. Requiring the master key secret for authentication
 3. Supporting targeted operations (add, remove, set) rather than complete document definition
 4. Allowing incremental changes to the DID document
 
-For information on creating new DIDs, see the [CreateDID action documentation](CreateDidAction.md).
+For information on creating new DIDs, see the [CreateDID action documentation](CreateDidAction).

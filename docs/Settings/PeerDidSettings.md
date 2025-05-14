@@ -70,7 +70,7 @@ PeerDIDs created in this interface can be used in the WalletInteractionTrigger c
 
 This establishes the DIDComm identity that the workflow will use when communicating with external wallets.
 
-Refer to the [WalletInteractionTrigger documentation](WalletInteractionTrigger.md) for more detailed information on configuring wallet interaction workflows.
+Refer to the [WalletInteractionTrigger documentation](../Triggers/WalletInteractionTrigger) for more detailed information on configuring wallet interaction workflows.
 
 ## Technical Details
 

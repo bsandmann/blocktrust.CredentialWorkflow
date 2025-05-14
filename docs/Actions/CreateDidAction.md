@@ -27,7 +27,7 @@ The CreateDID action can use DID registrar settings from one of two sources:
 1. **Tenant Settings** (Recommended)
    - Use the centrally configured DID registrar settings from your tenant
    - Simplifies management and ensures consistency across workflows
-   - Requires proper [DID Registrar Settings](DidRegistrarSettings.md) configuration
+   - Requires proper [DID Registrar Settings](../Settings/DidRegistrarSettings) configuration
 
 2. **Custom Settings**
    - Configure registrar settings specific to this workflow action
@@ -36,7 +36,7 @@ The CreateDID action can use DID registrar settings from one of two sources:
      - **OPN Registrar URL**: The URL of the OpenPrismNode registrar
      - **Wallet ID**: The wallet identifier within the OPN
 
-For information on setting up tenant-wide DID registrar settings, see the [DID Registrar Settings](DidRegistrarSettings.md) documentation.
+For information on setting up tenant-wide DID registrar settings, see the [DID Registrar Settings](../Settings/DidRegistrarSettings) documentation.
 
 ### Verification Methods
 

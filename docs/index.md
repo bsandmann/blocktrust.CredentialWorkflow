@@ -42,25 +42,19 @@ Built on modern .NET technology, this platform provides a flexible, rule-based a
 
 This documentation is organized into the following sections:
 
-- [Getting Started](getting-started.md): Installation, setup, and basic configuration
-- [Core Concepts](concepts/index.md): Fundamental architecture and design
-- [Workflow Triggers](triggers/index.md): Different ways to initiate workflows
-- [Actions](actions/index.md): Available actions and their configuration
-- [Web Interface](web/index.md): Using the web-based workflow designer
-- [API Reference](api/index.md): Programmatic interfaces
-- [Development Guide](development/index.md): Extending the platform
-- [Tutorials](tutorials/index.md): Guided examples for common use cases
+- [Getting Started](Guide): Installation, setup, and basic configuration
+- [Workflow Overview](WorkflowOverview): Platform concepts and architecture
+- [Workflow Triggers](Triggers/): Different ways to initiate workflows
+- [Actions](Actions/): Available actions and their configuration
+- [Platform Settings](Settings/): Configuration options for the platform
 
 ## Quick Links
 
-- [Platform Architecture](concepts/architecture.md)
-- [HTTP Action Guide](actions/http.md)
-- [Email Action Guide](actions/email.md)
-- [W3C Credential Operations](actions/credentials.md)
-- [DID Management](actions/did.md)
-- [Parameter Substitution](concepts/parameters.md)
-- [Workflow Context](concepts/context.md)
-- [Custom Validation](actions/custom-validation.md)
+- [HTTP Action Guide](Actions/HttpAction)
+- [Email Action Guide](Actions/EmailAction)
+- [W3C Credential Operations](Actions/IssueW3CCredentialAction)
+- [DID Management](Actions/CreateDidAction)
+- [Custom Validation](Actions/CustomValidationAction)
 
 ## Supported Standards
 

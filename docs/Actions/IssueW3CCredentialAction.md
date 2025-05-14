@@ -90,7 +90,7 @@ The IssueW3CCredential action:
 
 The action integrates with:
 
-- **Issuing Keys System**: Uses tenant-managed keys from the [Issuing Keys Settings](IssuingKeysSettings.md)
+- **Issuing Keys System**: Uses tenant-managed keys from the [Issuing Keys Settings](../Settings/IssuingKeysSettings)
 - **Workflow Context**: Reads input parameters and stores the resulting credential
 - **Parameter Resolution**: Supports dynamic values from trigger inputs and previous actions
 

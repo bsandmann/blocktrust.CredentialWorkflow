@@ -1,3 +1,10 @@
+---
+title: Validate W3C Credential Action
+layout: default
+parent: Actions
+nav_order: 7
+---
+
 # ValidateW3CCredential Action Documentation
 
 The `ValidateW3CCredential` action enables workflows to perform detailed validation of W3C Verifiable Credentials against custom validation rules. This component goes beyond the basic verification checks (signature, expiry, revocation) to allow for credential content validation, ensuring that credentials contain the expected data in the correct format.

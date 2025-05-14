@@ -1,3 +1,10 @@
+---
+title: JWT Token Generation Action
+layout: default
+parent: Actions
+nav_order: 5
+---
+
 # JWT Token Generation Action Documentation
 
 The `JWT Token Generation` action enables workflows to create JSON Web Tokens (JWTs) using the RSA keys associated with your tenant. This action allows for configuring standard JWT fields and custom claims, supporting both static values and dynamic data from workflow triggers and previous actions.

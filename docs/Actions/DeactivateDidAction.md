@@ -1,3 +1,10 @@
+---
+title: Deactivate DID Action
+layout: default
+parent: Actions
+nav_order: 10
+---
+
 # DeactivateDID Action Documentation
 
 The DeactivateDID action enables workflows to deactivate (permanently disable) decentralized identifiers (DIDs) on the PRISM blockchain. This is the final stage in a DID's lifecycle, indicating that the identifier should no longer be considered valid for any operations.
@@ -22,7 +29,7 @@ Like other DID actions, the DeactivateDID action can use DID registrar settings 
 1. **Tenant Settings** (Recommended)
    - Use the centrally configured DID registrar settings from your tenant
    - Simplifies management and ensures consistency across workflows
-   - Requires proper [DID Registrar Settings](DidRegistrarSettings.md) configuration
+   - Requires proper [DID Registrar Settings](../Settings/DidRegistrarSettings) configuration
 
 2. **Custom Settings**
    - Configure registrar settings specific to this workflow action
@@ -70,7 +77,7 @@ When executed, the DeactivateDID action:
 ## Integration with DID Lifecycle
 
 The DeactivateDID action represents the final stage in the DID lifecycle management, complementing:
-- [CreateDID action](CreateDidAction.md) - for creating new DIDs
-- [UpdateDID action](UpdateDidAction.md) - for modifying existing DIDs
+- [CreateDID action](CreateDidAction) - for creating new DIDs
+- [UpdateDID action](UpdateDidAction) - for modifying existing DIDs
 
 Together, these actions provide a complete set of tools for managing DIDs throughout their entire lifecycle.

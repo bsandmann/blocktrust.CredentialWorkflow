@@ -70,7 +70,7 @@ Each WalletInteractionTrigger requires a Peer DID for secure communication:
 2. **Manual Generation**: Users can generate a new Peer DID at any time using the "Generate New PeerDID" button
 3. **Persistent Storage**: The generated Peer DID is stored with the workflow configuration
 
-For more detailed information on creating and managing PeerDIDs that can be used with wallet interaction triggers, please refer to the [PeerDID Management documentation](PeerDidSettings.md).
+For more detailed information on creating and managing PeerDIDs that can be used with wallet interaction triggers, please refer to the [PeerDID Management documentation](../Settings/PeerDidSettings).
 
 ## Out-of-Band Invitation
 

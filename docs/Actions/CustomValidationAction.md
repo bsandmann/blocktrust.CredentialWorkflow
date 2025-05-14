@@ -1,3 +1,10 @@
+---
+title: Custom Validation Action
+layout: default
+parent: Actions
+nav_order: 6
+---
+
 # CustomValidation Action Documentation
 
 The `CustomValidation` action enables workflows to perform flexible, JavaScript-based validation on any JSON data. Unlike the more structured W3C credential validation, this component allows for complex validation logic with custom expressions, making it suitable for validating various data formats and implementing business-specific validation requirements.

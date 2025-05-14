@@ -1,3 +1,10 @@
+---
+title: DIDComm Action
+layout: default
+parent: Actions
+nav_order: 3
+---
+
 # DIDComm Action Documentation
 
 The `DIDComm Action` component enables workflows to communicate with external wallets and applications using the DIDComm v2 protocol. This action allows for sending trust pings, messages, and verifiable credentials to recipients through secure, encrypted DIDComm channels.
@@ -23,7 +30,7 @@ The DID that will be used as the sender identity for the DIDComm message:
 - Displays the name and a truncated version of the DID for easy identification
 - The private keys associated with this DID will be used to sign and encrypt the message
 
-This identity represents your tenant in the communication. For information on managing PeerDIDs, see the [PeerDID Settings documentation](PeerDidSettings.md).
+This identity represents your tenant in the communication. For information on managing PeerDIDs, see the [PeerDID Settings documentation](../Settings/PeerDidSettings).
 
 ### Recipient Peer DID
 
@@ -116,7 +123,7 @@ The DIDComm action:
 
 This action integrates with:
 
-- **PeerDID Management**: Uses tenant-managed Peer DIDs from the [PeerDID Settings](PeerDidSettings.md)
+- **PeerDID Management**: Uses tenant-managed Peer DIDs from the [PeerDID Settings](../Settings/PeerDidSettings)
 - **Issue W3C Credential Action**: Can use credentials created by this action for issuance
 - **Workflow Context**: Reads input parameters and stores operation results
 - **Parameter Resolution**: Supports dynamic values from trigger inputs and previous actions
@@ -163,7 +170,7 @@ Send a structured message:
 
 For the DIDComm action to work properly:
 
-1. You must have at least one Peer DID created in your tenant settings (see [PeerDID Settings](PeerDidSettings.md))
+1. You must have at least one Peer DID created in your tenant settings (see [PeerDID Settings](../Settings/PeerDidSettings))
 2. For credential issuance, you need a valid credential from a previous action
 3. The recipient DID must be resolvable and have valid service endpoints
 4. Your workflow platform must have outbound network access to reach the recipient's service endpoints
