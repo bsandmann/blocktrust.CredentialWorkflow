@@ -13,12 +13,14 @@
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowById
 @using JsonException = System.Text.Json.JsonException
 @using Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowSummaries
+@using Blocktrust.CredentialWorkflow.Core.Commands.WorkflowOutcome.CreateWorkflowOutcome
 @using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow.Triggers
 @using Blocktrust.CredentialWorkflow.Core.Domain.Template
 @using Blocktrust.CredentialWorkflow.Core.Services
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Http
 @using Blocktrust.CredentialWorkflow.Web.Components.Features
+@using Microsoft.Extensions.DependencyInjection
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
@@ -29,6 +31,7 @@
 @inject ILogger<Workflow> Logger
 @inject TemplateService TemplateService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IWorkflowQueue WorkflowQueue
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize()]
@@ -37,6 +40,13 @@
 <PageTitle>Blocktrust Credential Workflow Platform - Workflows</PageTitle>
 
 <div class="container mx-auto p-6">
+    @if (showToast)
+    {
+        <div class="fixed top-4 inset-x-0 mx-auto max-w-md bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500 z-50">
+            @toastMessage
+        </div>
+    }
+    
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Workflows</h1>
         <div class="flex space-x-4">
@@ -132,7 +142,8 @@
                                     {
                                         @if (workflow.WorkflowState == EWorkflowState.ActiveWithManualTrigger)
                                         {
-                                            <button @onclick:stopPropagation="true"
+                                            <button @onclick="() => ExecuteManualWorkflow(workflow.WorkflowId)" 
+                                                    @onclick:stopPropagation="true"
                                                     class="inline-flex items-center justify-center px-3 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors">
                                                 <span class="material-symbols-outlined mr-1">smart_button</span>
                                                 <span>Execute</span>
@@ -312,6 +323,8 @@
     private bool isJsonImportModalOpen;
     private string jsonInput = "";
     private string errorMessage = "";
+    private string? toastMessage;
+    private bool showToast;
     
     // Delete confirmation dialog
     private bool showDeleteConfirmation;
@@ -689,5 +702,48 @@
             return false;
             
         return workflow.ProcessFlow.Triggers.Values.Any(trigger => trigger.Type == ETriggerType.ManualTrigger);
+    }
+    
+    private async Task ExecuteManualWorkflow(Guid workflowId)
+    {
+        try
+        {
+            // Create a workflow outcome
+            var outcomeResult = await Mediator.Send(new CreateWorkflowOutcomeRequest(workflowId, null));
+            if (outcomeResult.IsFailed)
+            {
+                errorMessage = "Failed to create workflow outcome.";
+                StateHasChanged();
+                return;
+            }
+            
+            // Enqueue the outcome for processing using the injected workflow queue
+            await WorkflowQueue.EnqueueAsync(outcomeResult.Value);
+            
+            // Show success message
+            errorMessage = string.Empty;
+            await ShowToast("Workflow execution triggered successfully.");
+            
+            // Refresh the workflow list to show updated status
+            await Task.Delay(1000); // Give time for the workflow to start processing
+            await LoadWorkflowSummaries();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error executing workflow: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+    
+    private async Task ShowToast(string message)
+    {
+        toastMessage = message;
+        showToast = true;
+        StateHasChanged();
+        
+        await Task.Delay(3000); // Show toast for 3 seconds
+        
+        showToast = false;
+        StateHasChanged();
     }
 }
