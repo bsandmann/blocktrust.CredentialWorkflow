@@ -1,3 +1,10 @@
+---
+title: Email Action
+layout: default
+parent: Actions
+nav_order: 1
+---
+
 # Email Action Documentation
 
 The `Email Action` component enables workflows to send email notifications with customizable content and dynamic parameters. This action allows for creating personalized email communications to recipients based on workflow data and trigger inputs.

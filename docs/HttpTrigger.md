@@ -1,3 +1,10 @@
+---
+title: HTTP Trigger
+layout: default
+parent: Triggers
+nav_order: 1
+---
+
 # HttpRequestTrigger Component Documentation
 
 The `HttpRequestTrigger` component enables workflows to be triggered via HTTP endpoints. It provides a user interface for configuring HTTP-based triggers with customizable parameters.

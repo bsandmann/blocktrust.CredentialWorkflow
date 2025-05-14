@@ -1,3 +1,10 @@
+---
+title: Issue W3C Credential
+layout: default
+parent: Actions
+nav_order: 3
+---
+
 # IssueW3CCredential Action Documentation
 
 The `IssueW3CCredential` action enables workflows to create and sign W3C Verifiable Credentials using cryptographic keys associated with the tenant's DIDs. This action allows for configuring the credential subject, claims, issuer, and expiration date.

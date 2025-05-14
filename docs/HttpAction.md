@@ -1,3 +1,10 @@
+---
+title: HTTP Action
+layout: default
+parent: Actions
+nav_order: 2
+---
+
 # HTTP Action Documentation
 
 The `HTTP Action` component enables workflows to make HTTP requests to external services, APIs, and endpoints. This action allows for creating outbound HTTP connections with configurable methods, headers, and body parameters, enabling integration with third-party systems.

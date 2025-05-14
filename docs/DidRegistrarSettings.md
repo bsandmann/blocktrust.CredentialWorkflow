@@ -1,3 +1,10 @@
+---
+title: DID Registrar Settings
+layout: default
+parent: Settings
+nav_order: 1
+---
+
 # DID Registrar Settings Documentation
 
 The DID Registrar settings allow you to configure how your tenant interacts with a Prism DID registrar node when creating, updating, or deleting decentralized identifiers (DIDs). These settings are essential for any workflows that involve DID operations.

@@ -1,3 +1,10 @@
+---
+title: Recurring Trigger
+layout: default
+parent: Triggers
+nav_order: 2
+---
+
 # RecurringTimerTrigger Component Documentation
 
 The `RecurringTimerTrigger` component enables workflows to be executed automatically on a schedule defined by a CRON expression. This allows for periodic, time-based workflow execution without manual intervention.

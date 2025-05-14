@@ -1,3 +1,10 @@
+---
+title: JWT Keys Settings
+layout: default
+parent: Settings
+nav_order: 4
+---
+
 # JWT Keys Management Documentation
 
 The JWT Keys management page displays the RSA key pair used by your tenant for signing and verifying JSON Web Tokens (JWTs). Unlike other settings, these keys are automatically generated during tenant creation and cannot be changed.

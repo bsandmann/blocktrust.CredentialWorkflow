@@ -1,3 +1,10 @@
+---
+title: Issuing Keys Settings
+layout: default
+parent: Settings
+nav_order: 2
+---
+
 # Issuing Keys Management Documentation
 
 Issuing keys are cryptographic key pairs associated with Decentralized Identifiers (DIDs) that allow your tenant to issue verifiable credentials. The Issuing Keys management interface allows you to create, view, and delete issuing keys for your tenant.

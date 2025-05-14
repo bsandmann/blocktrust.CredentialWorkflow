@@ -1,3 +1,10 @@
+---
+title: Home
+layout: default
+nav_order: 1
+permalink: /
+---
+
 # Credential Workflow Platform
 
 Welcome to the **Blocktrust Credential Workflow Platform** documentation - your comprehensive guide to building, managing, and automating verifiable credential workflows.
@@ -69,4 +76,4 @@ For additional help or feature requests, please contact the Blocktrust team or o
 
 ---
 
-Copyright © Blocktrust. All rights reserved.
+Copyright ï¿½ Blocktrust. All rights reserved.

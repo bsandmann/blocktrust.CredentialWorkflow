@@ -1,3 +1,10 @@
+---
+title: PeerDID Settings
+layout: default
+parent: Settings
+nav_order: 3
+---
+
 # PeerDID Management Documentation
 
 PeerDIDs are decentralized identifiers used for secure DIDComm messaging between the Blocktrust Credential Workflow platform and external wallet applications. The PeerDID management interface allows you to create, view, and delete PeerDIDs for your tenant.

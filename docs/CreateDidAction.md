@@ -1,3 +1,10 @@
+---
+title: Create DID Action
+layout: default
+parent: Actions
+nav_order: 4
+---
+
 # CreateDID Action Documentation
 
 The CreateDID action enables workflows to create new decentralized identifiers (DIDs) on the PRISM blockchain. This action allows for configuring the DID's verification methods and service endpoints, with options to use either tenant-wide or custom DID registrar settings.

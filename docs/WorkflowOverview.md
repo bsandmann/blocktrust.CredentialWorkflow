@@ -1,3 +1,9 @@
+---
+title: Workflow Overview
+layout: default
+nav_order: 2
+---
+
 # Workflow Overview Page Documentation
 
 The Workflow Overview page is the central hub for managing all your credential workflows in the Blocktrust Credential Workflow platform. This page provides a comprehensive view of your workflows, their current states, and recent execution outcomes, while also offering tools for workflow management, creation, and execution.
