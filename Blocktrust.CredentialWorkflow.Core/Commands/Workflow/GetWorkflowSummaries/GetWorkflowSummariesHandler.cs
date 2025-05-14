@@ -1,5 +1,6 @@
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.GetWorkflowSummaries;
 
+using Blocktrust.CredentialWorkflow.Core.Domain.ProcessFlow;
 using Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 using FluentResults;
 using MediatR;
@@ -24,7 +25,8 @@ public class GetWorkflowSummariesHandler : IRequestHandler<GetWorkflowSummariesR
                 p.UpdatedUtc,
                 p.WorkflowState,
                 LastOutcome = p.WorkflowOutcomeEntities.OrderByDescending(q => q.EndedUtc).FirstOrDefault(),
-                IsRunable = p.IsRunable
+                IsRunable = p.IsRunable,
+                p.ProcessFlowJson
             }).ToListAsync(cancellationToken: cancellationToken);
 
         var result = workflow.Select(p => new WorkflowSummary()
@@ -34,8 +36,18 @@ public class GetWorkflowSummariesHandler : IRequestHandler<GetWorkflowSummariesR
             UpdatedUtc = p.UpdatedUtc,
             WorkflowState = p.WorkflowState,
             LastWorkflowOutcome = p.LastOutcome?.Map(),
-            IsRunable = p.IsRunable
+            IsRunable = p.IsRunable,
+            ProcessFlowJson = p.ProcessFlowJson
         }).ToList();
+        
+        // Add ProcessFlow by deserializing ProcessFlowJson
+        foreach (var summary in result)
+        {
+            if (!string.IsNullOrEmpty(summary.ProcessFlowJson))
+            {
+                summary.ProcessFlow = ProcessFlow.DeserializeFromJson(summary.ProcessFlowJson);
+            }
+        }
         
         return Result.Ok(result);
     }

@@ -298,6 +298,7 @@ else
                         ETriggerType.RecurringTimer => EWorkflowState.ActiveWithRecurrentTrigger,
                         ETriggerType.WalletInteraction => EWorkflowState.ActiveWithWalletInteractionTrigger,
                         ETriggerType.Form => EWorkflowState.ActiveWithFormTrigger,
+                        ETriggerType.ManualTrigger => EWorkflowState.ActiveWithManualTrigger,
                         _ => throw new InvalidOperationException($"Unsupported trigger type: {triggerType}")
                     };
 

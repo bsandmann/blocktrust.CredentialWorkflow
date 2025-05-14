@@ -6,6 +6,6 @@ public enum EWorkflowState
     ActiveWithExternalTrigger,
     ActiveWithRecurrentTrigger,
     ActiveWithFormTrigger,
-    ActiveWithWalletInteractionTrigger
-
+    ActiveWithWalletInteractionTrigger,
+    ActiveWithManualTrigger
 }

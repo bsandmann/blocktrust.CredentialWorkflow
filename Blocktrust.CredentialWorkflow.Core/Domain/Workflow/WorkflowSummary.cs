@@ -1,6 +1,7 @@
 namespace Blocktrust.CredentialWorkflow.Core.Domain.Workflow;
 
 using Enums;
+using ProcessFlow;
 
 public class WorkflowSummary
 {
@@ -15,4 +16,8 @@ public class WorkflowSummary
     public WorkflowOutcome? LastWorkflowOutcome { get;set; }
 
     public bool IsRunable { get; set; }
+    
+    public string? ProcessFlowJson { get; set; }
+    
+    public ProcessFlow? ProcessFlow { get; set; }
 }
