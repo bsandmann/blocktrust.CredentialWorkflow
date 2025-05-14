@@ -108,6 +108,7 @@ public class ExecuteWorkflowHandler : IRequestHandler<ExecuteWorkflowRequest, Re
             EActionType.IssueW3CCredential => _serviceProvider.GetService<IssueW3CCredentialProcessor>(),
             EActionType.VerifyW3CCredential => _serviceProvider.GetService<VerifyW3CCredentialProcessor>(),
             EActionType.Email => _serviceProvider.GetService<EmailActionProcessor>(),
+            EActionType.Http => _serviceProvider.GetService<HttpActionProcessor>(),
             EActionType.DIDComm => _serviceProvider.GetService<DIDCommActionProcessor>(),
             EActionType.W3cValidation => _serviceProvider.GetService<W3cValidationProcessor>(),
             EActionType.CustomValidation => _serviceProvider.GetService<CustomValidationProcessor>(),

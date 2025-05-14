@@ -91,10 +91,15 @@ builder.Services.AddTransient<UpdateDIDActionProcessor>();
 builder.Services.AddTransient<DeactivateDIDActionProcessor>();
 builder.Services.AddTransient<DIDCommActionProcessor>();
 builder.Services.AddTransient<EmailActionProcessor>();
+builder.Services.AddTransient<HttpActionProcessor>();
 builder.Services.AddTransient<IssueW3CCredentialProcessor>();
 builder.Services.AddTransient<VerifyW3CCredentialProcessor>();
 builder.Services.AddTransient<W3cValidationProcessor>();
 builder.Services.AddTransient<JwtTokenGeneratorActionProcessor>();
+
+// Add HTTP client for HTTP Action processor
+builder.Services.AddHttpClient("HttpActionProcessor");
+
 
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(
