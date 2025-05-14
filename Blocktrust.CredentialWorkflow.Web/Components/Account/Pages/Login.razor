@@ -112,7 +112,7 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            await InvokeAsync(() => NavigationManager.NavigateTo("/", forceLoad: true));
+            await InvokeAsync(() => NavigationManager.NavigateTo("/workflows", forceLoad: true));
         }
         else if (result.RequiresTwoFactor)
         {

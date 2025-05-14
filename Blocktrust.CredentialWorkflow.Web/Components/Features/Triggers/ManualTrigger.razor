@@ -4,94 +4,9 @@
 
 <div class="p-4 text-sm max-w-2xl">
     <div class="space-y-4">
-        <!-- Description Field -->
-        <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-                class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
-                rows="3"
-                placeholder="Enter a description for this manual trigger..."
-                @bind="TriggerInput.Description"
-                @bind:after="OnValueChanged">
-            </textarea>
-        </div>
-
-        <!-- Required Parameters Section -->
-        <div class="pt-3 border-t">
-            <div class="flex justify-between items-center mb-3">
-                <h4 class="text-sm font-medium">Required Parameters</h4>
-                <button class="w-auto bg-slate-700 hover:bg-slate-600 text-white text-xs py-1 px-2 rounded-md transition-colors duration-200 flex items-center justify-center"
-                        @onclick="AddParameter">
-                    <span class="material-symbols-outlined text-sm mr-1">add</span>
-                    Add Parameter
-                </button>
-            </div>
-
-            <!-- Parameters List -->
-            <div class="space-y-3">
-                @foreach (var param in parameters)
-                {
-                    <div class="bg-white border rounded-lg p-3">
-                        <div class="flex items-center gap-2 mb-2">
-                            @if (param.IsEditing)
-                            {
-                                <input type="text"
-                                       class="flex-1 rounded border-gray-300 px-2 py-1 text-sm"
-                                       placeholder="Parameter name"
-                                       @bind="param.Name"
-                                       @bind:event="oninput"
-                                       @onchange="async () => await HandleParameterChange(param)" />
-                                <select class="rounded border-gray-300 px-2 py-1 text-sm w-28"
-                                        @bind="param.Type"
-                                        @bind:event="oninput"
-                                        @onchange="async () => await HandleParameterChange(param)">
-                                    <option value="string">string</option>
-                                    <option value="number">number</option>
-                                    <option value="boolean">boolean</option>
-                                </select>
-                                <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
-                                        @onclick="() => CancelEdit(param)">
-                                    <span class="material-symbols-outlined text-sm">close</span>
-                                </button>
-                            }
-                            else
-                            {
-                                <div class="flex-1 py-1 px-2 text-sm">@param.Name</div>
-                                <div class="w-28 py-1 px-2 text-sm text-gray-600">@param.Type</div>
-                                <div class="flex gap-1">
-                                    <button class="p-1 text-gray-500 hover:text-gray-700 rounded"
-                                            @onclick="() => StartEdit(param)">
-                                        <span class="material-symbols-outlined text-sm">edit</span>
-                                    </button>
-                                    <button class="p-1 text-red-500 hover:text-red-700 rounded"
-                                            @onclick="async () => await RemoveParameter(param)">
-                                        <span class="material-symbols-outlined text-sm">delete</span>
-                                    </button>
-                                </div>
-                            }
-                        </div>
-
-                        @if (param.IsEditing)
-                        {
-                            <input type="text"
-                                   class="w-full rounded border-gray-300 px-2 py-1 text-sm mt-2"
-                                   placeholder="Parameter description (optional)"
-                                   @bind="param.Description"
-                                   @bind:event="oninput"
-                                   @onchange="async () => await HandleParameterChange(param)" />
-                        }
-                        else if (!string.IsNullOrEmpty(param.Description))
-                        {
-                            <div class="text-xs text-gray-500 mt-1">@param.Description</div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(param.ValidationMessage))
-                        {
-                            <div class="text-xs text-red-500 mt-1">@param.ValidationMessage</div>
-                        }
-                    </div>
-                }
-            </div>
+        <!-- Simple explanation text instead of input fields -->
+        <div class="text-xs font-medium text-gray-700">
+            The manual trigger does not contain settings and can be executed manually from the Workflow overview page.
         </div>
     </div>
 </div>
