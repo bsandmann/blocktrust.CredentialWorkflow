@@ -9,6 +9,8 @@ using MediatR;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.Workflow.ExecuteWorkflow.ActionProcessors;
 
+using Domain.Common;
+
 public class HttpActionProcessor : IActionProcessor
 {
     private readonly IMediator _mediator;
@@ -111,7 +113,17 @@ public class HttpActionProcessor : IActionProcessor
                 string bodyContent = string.Empty;
                 if (input.Body.TryGetValue("__body", out var bodyRef))
                 {
-                    bodyContent = bodyRef.Path;
+                    // If body reference is from an action outcome, resolve it properly
+                    if (bodyRef.Source == ParameterSource.ActionOutcome)
+                    {
+                        var bodyValue = await ParameterResolver.GetParameterFromExecutionContext(
+                            bodyRef, context.ExecutionContext, context.Workflow, context.ActionOutcomes, ActionType, _mediator);
+                        bodyContent = bodyValue ?? string.Empty;
+                    }
+                    else
+                    {
+                        bodyContent = bodyRef.Path;
+                    }
                 }
 
                 // Process template with parameters
@@ -191,7 +203,47 @@ public class HttpActionProcessor : IActionProcessor
                 // Check if the parameter value is JSON and format it consistently
                 if (IsJson(paramValue))
                 {
-                    paramValue = FormatJson(paramValue);
+                    // First try to deserialize to JsonElement to get a proper JSON structure
+                    try
+                    {
+                        var jsonElement = JsonSerializer.Deserialize<JsonElement>(paramValue);
+                        
+                        // If this is an action outcome JSON, it might have specific properties we want to extract
+                        // For example, we might want to get the actual content from a result property
+                        if (jsonElement.ValueKind == JsonValueKind.Object)
+                        {
+                            // If there's a Content property that's a string, use that (for HTTP action outcomes)
+                            if (jsonElement.TryGetProperty("Content", out var contentElement) && 
+                                contentElement.ValueKind == JsonValueKind.String)
+                            {
+                                var contentValue = contentElement.GetString();
+                                if (!string.IsNullOrEmpty(contentValue) && IsJson(contentValue))
+                                {
+                                    // If the content is also JSON, parse and use that
+                                    paramValue = FormatJson(contentValue);
+                                }
+                                else
+                                {
+                                    paramValue = contentValue ?? string.Empty;
+                                }
+                            }
+                            else
+                            {
+                                // Fall back to the entire JSON object
+                                paramValue = FormatJson(paramValue);
+                            }
+                        }
+                        else
+                        {
+                            // For arrays or other values, just format
+                            paramValue = FormatJson(paramValue);
+                        }
+                    }
+                    catch
+                    {
+                        // If any error occurs in the special handling, fall back to simple formatting
+                        paramValue = FormatJson(paramValue);
+                    }
                 }
                 
                 var key = param.Key.Trim();

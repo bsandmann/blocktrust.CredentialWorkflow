@@ -68,4 +68,28 @@ Lets first revist a sample credential (like the one we created earlier):
 **Note**: The default setup tries to resolve the DID only against the Cardano mainnet ledger. In our case the issuing DID was written to preprod. To also allow the resolution of that DID, you need to add a OPN node in the fallback configuration. For more information see also the [Fallback configuration](../Settings/Configuration.md) documentation.
 
 ## Send the Result
-After the validation we want to send the result of the validation back to the service which initially requested the validation. To do this we now use the Http-Request Action
+After the validation we want to send the result of the validation back to the service which initially requested the validation. To do this we now use the Http-Request Action. For more details see also the [Http Action Documentation](../Actions/HttpAction.md).
+1. Select the **Http Action** from the list of available actions (under the **Communications** tab).
+2. Select **POST** as the HTTP Method
+3. As the endpoint you can use a static value. In a real use case that would be your own service. For demonstration purposes we can use a service like [Webhook.site](https://webhook.site) to receive the data. You you go there to get a custom URL you can post to. For example `https://webhook.site/#!/view/00ea8eb4-0d22-4b35-a275-1343fab94cd8/e0b66344-78e5-49c9-b5b4-2ab5a754d804/1`
+4. For the Request Body we can setup a custom data structure:
+    ```json
+    {
+      "verificationResult": "{{verificationResult}}",
+      "validationResult": "{{validationResult}}"
+    }
+    ```
+5. For the **Parameters** we need to add a few parameters:
+    - For the **verificationResult** we select **Action Outcome** and the **Verify W3C Credential Action**. 
+    - For the **validationResult** we select **Action Outcome** and the **W3C Validation Action**. 
+6. Save the workflow.
+7. Click on the **Run** button to enable the workflow.
+8. Lastly we need to trigger the workflow for example by running a curl command:
+```bash
+curl -X POST https://localhost:7209/api/workflow/MYWORKFLOWID \
+  -H "Content-Type: application/json" \
+  -d '{"credential": "MYCREDENTAIL"}'
+```
+Replace the `MYWORKFLOWID` with the ID you can see in the Http-Request Trigger and the `MYCREDENTAIL` with the credential you want to verify (the starting starting with `ey...`).
+
+To see the results have a look at the looks or the Webhook.site page. You should see the verification result and the validation result. The verification result should be `true` and the validation result should be `true` as well.

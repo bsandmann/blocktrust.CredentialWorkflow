@@ -99,6 +99,7 @@
                             @bind:after="OnValueChanged">
                         <option value="@ParameterSource.Static">Static</option>
                         <option value="@ParameterSource.TriggerInput">Trigger Input</option>
+                        <option value="@ParameterSource.ActionOutcome">Action Outcome</option>
                     </select>
 
                     @if (header.Value.Source == ParameterSource.Static)
@@ -118,6 +119,22 @@
                                 @foreach (var param in TriggerParameters ?? Array.Empty<string>())
                                 {
                                     <option value="@param">@param</option>
+                                }
+                            }
+                            else if (header.Value.Source == ParameterSource.ActionOutcome)
+                            {
+                                <option value="">Select previous action</option>
+                                @if (FlowItems != null)
+                                {
+                                    @foreach (var item in FlowItems.Where(i => i is WorkflowAction && ((WorkflowAction)i).Input.Id != ActionInput.Id))
+                                    {
+                                        if (item is WorkflowAction actionItem)
+                                        {
+                                            <option value="@actionItem.Input.Id">
+                                                @actionItem.Type.ToString() (@actionItem.Input.Id)
+                                            </option>
+                                        }
+                                    }
                                 }
                             }
                             else
