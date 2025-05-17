@@ -24,4 +24,14 @@ public class AppSettings
     /// Default ledger for Prism DID resolver
     /// </summary>
     public string? PrismDefaultLedger { get; set; }
+    
+    /// <summary>
+    /// Fallback base URL for Prism DID resolver
+    /// </summary>
+    public string? PrismBaseUrlFallback { get; set; }
+    
+    /// <summary>
+    /// Fallback default ledger for Prism DID resolver
+    /// </summary>
+    public string? PrismDefaultLedgerFallback { get; set; }
 }
