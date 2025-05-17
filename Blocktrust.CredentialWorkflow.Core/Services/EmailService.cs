@@ -39,7 +39,7 @@ public class EmailService : IEmailService
             From = new EmailAddress(_emailSettings.SendGridFromEmail, _emailSettings.DefaultFromName),
             Subject = subject,
             PlainTextContent = message,
-            HtmlContent = message
+            HtmlContent = message.Replace(Environment.NewLine, "<br>").Replace("\n", "<br>")
         };
 
         msg.AddTo(new EmailAddress(toEmail));

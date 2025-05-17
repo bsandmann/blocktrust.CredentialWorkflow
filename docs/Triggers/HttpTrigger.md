@@ -5,9 +5,9 @@ parent: Triggers
 nav_order: 1
 ---
 
-# HttpRequestTrigger Component Documentation
+# Http-Request Trigger Documentation
 
-The `HttpRequestTrigger` component enables workflows to be triggered via HTTP endpoints. It provides a user interface for configuring HTTP-based triggers with customizable parameters.
+The **Http-Request Trigger** enables workflows to be triggered via HTTP endpoints. It provides a user interface for configuring HTTP-based triggers with customizable parameters.
 
 ## Trigger Types
 
@@ -28,7 +28,6 @@ A specialized template of the Custom HTTP Request preconfigured with parameters 
 - **HTTP Endpoint Generation**: Automatically creates a unique URL endpoint for each workflow
 - **HTTP Method Selection**: Supports GET, POST, PUT, and DELETE methods
 - **Parameter Management**: Define, edit, and validate custom parameters
-- **Schema Generation**: Automatically generates JSON schema for API documentation
 - **cURL Example**: Provides ready-to-use cURL commands for testing
 
 ## Usage Instructions
@@ -72,15 +71,6 @@ The component generates a JSON schema documenting the required parameters. This 
 A ready-to-use cURL command is automatically generated based on the current configuration:
 - For GET requests: Parameters are formatted as query parameters
 - For POST/PUT/DELETE: Parameters are formatted as a JSON body
-
-## Technical Implementation
-
-The component:
-1. Manages parameter state in a local collection
-2. Validates parameter names and uniqueness
-3. Updates the parent `TriggerInputHttpRequest` model when changes occur
-4. Provides helper functions for clipboard operations
-5. Handles parameter editing, deletion, and validation
 
 ## Integration with Workflow Execution
 

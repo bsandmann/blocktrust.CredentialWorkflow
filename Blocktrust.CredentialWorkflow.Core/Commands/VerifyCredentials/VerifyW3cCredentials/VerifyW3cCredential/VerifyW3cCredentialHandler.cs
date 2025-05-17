@@ -40,7 +40,7 @@ public class VerifyW3CCredentialHandler : IRequestHandler<VerifyW3CCredentialReq
                 var signatureResult = await _mediator.Send(new CheckSignatureRequest(credential), cancellationToken);
                 if (signatureResult.IsFailed)
                 {
-                    return Result.Fail<CredentialVerificationResult>("Failed to verify signature");
+                    return Result.Fail<CredentialVerificationResult>($"Failed to verify signature: {signatureResult.Errors.FirstOrDefault()?.Message}");
                 }
 
                 verificationResult.SignatureValid = signatureResult.Value;

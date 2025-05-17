@@ -7,7 +7,8 @@ nav_order: 4
 
 # CreateDID Action Documentation
 
-The CreateDID action enables workflows to create new decentralized identifiers (DIDs) on the PRISM blockchain. This action allows for configuring the DID's verification methods and service endpoints, with options to use either tenant-wide or custom DID registrar settings.
+The CreateDID action enables workflows to create new decentralized identifiers (DIDs) on the PRISM blockchain by leveraging the OpenPrismNode (OPN) registrar with a simplied UI for configuration. 
+For a details walkthrough of the process, see the [Create and Update DID Userguide](../UserGuides/CreatingAndUpdatingDids.md).
 
 ## Overview
 
@@ -15,8 +16,7 @@ Creating a DID is an important operation for establishing a decentralized identi
 
 - Issuing verifiable credentials
 - Establishing secure communication channels
-- Proving identity in decentralized systems
-- Managing cryptographic keys in a standards-compliant way
+- Sharing URLs for services associated with the DID
 
 ## Configuration Options
 
@@ -36,7 +36,7 @@ The CreateDID action can use DID registrar settings from one of two sources:
      - **OPN Registrar URL**: The URL of the OpenPrismNode registrar
      - **Wallet ID**: The wallet identifier within the OPN
 
-For information on setting up tenant-wide DID registrar settings, see the [DID Registrar Settings](../Settings/DidRegistrarSettings) documentation.
+For information on setting up tenant-wide DID registrar settings, see the [DID Registrar Settings](../Settings/DidRegistrarSettings.md) documentation.
 
 ### Verification Methods
 
@@ -52,8 +52,8 @@ For each verification method, configure:
    - **Authentication**: For authenticating as the DID subject
    - **KeyAgreement**: For establishing encrypted communication
    - **AssertionMethod**: For issuing verifiable credentials
-   - **CapabilityInvocation**: For authorization capabilities
-   - **CapabilityDelegation**: For delegating capabilities
+   - **CapabilityInvocation** (limited support) 
+   - **CapabilityDelegation** (limited support) 
 
 3. **Curve**: The cryptographic curve to use
    - **secp256k1**: Standard Bitcoin curve (default for most purposes)
@@ -81,30 +81,6 @@ Services are optional endpoints associated with a DID that define how to interac
 
 3. **Endpoint**: The URL where the service is located
    - Must be a valid URL or URI
-
-## Dynamic Parameters
-
-Each field in the CreateDID action can be configured to use dynamic values from:
-
-- **Static values**: Directly entered values
-- **Trigger parameters**: Values passed from the workflow trigger
-- **Workflow context**: Values from previous actions in the workflow
-
-This enables creating DIDs with properties determined at runtime.
-
-## Action Outcome
-
-When executed, the CreateDID action:
-
-1. Connects to the specified DID registrar
-2. Creates a new DID with the configured verification methods and services
-3. Submits the DID creation transaction to the blockchain
-4. Returns the newly created DID for use in subsequent workflow actions
-
-The created DID is stored in the workflow context and can be used by other actions, such as:
-- Storing the DID in the tenant's issuing keys
-- Creating a verifiable credential with the new DID as the issuer
-- Establishing DIDComm connections
 
 ## Technical Notes
 

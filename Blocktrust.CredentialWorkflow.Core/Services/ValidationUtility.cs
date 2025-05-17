@@ -110,14 +110,15 @@ public static class ValidationUtility
     
     public static (bool IsValid, string? ErrorMessage) ValidateFormat(JsonDocument credential, ValidationRule rule)
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Split only on the first colon
+        var firstColonIndex = rule.Configuration.IndexOf(':');
+        if (firstColonIndex < 0)
         {
             return (false, "Invalid format rule configuration");
         }
         
-        var path = config[0];
-        var format = config[1];
+        var path = rule.Configuration.Substring(0, firstColonIndex);
+        var format = rule.Configuration.Substring(firstColonIndex + 1);
         var pathParts = path.Split('.');
         
         if (!TryGetElementByPath(credential.RootElement, pathParts, out var element))
@@ -168,16 +169,17 @@ public static class ValidationUtility
     
     public static (bool IsValid, string? ErrorMessage) ValidateRange(JsonDocument credential, ValidationRule rule)
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Split only on the first colon
+        var firstColonIndex = rule.Configuration.IndexOf(':');
+        if (firstColonIndex < 0)
         {
             return (false, "Invalid range rule configuration");
         }
         
-        var path = config[0];
+        var path = rule.Configuration.Substring(0, firstColonIndex);
         
         // Handle range with negative numbers more carefully
-        string rangeStr = config[1];
+        string rangeStr = rule.Configuration.Substring(firstColonIndex + 1);
         double min, max;
         
         // Find the last hyphen which separates the min and max values
@@ -239,14 +241,15 @@ public static class ValidationUtility
     
     public static (bool IsValid, string? ErrorMessage) ValidateValue(JsonDocument credential, ValidationRule rule)
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Split only on the first colon to allow expected values to contain colons
+        var firstColonIndex = rule.Configuration.IndexOf(':');
+        if (firstColonIndex < 0)
         {
             return (false, "Invalid value rule configuration. Expected format: 'path:expectedValue'");
         }
         
-        var path = config[0];
-        var expectedValue = config[1];
+        var path = rule.Configuration.Substring(0, firstColonIndex);
+        var expectedValue = rule.Configuration.Substring(firstColonIndex + 1);
         var pathParts = path.Split('.');
         
         if (!TryGetElementByPath(credential.RootElement, pathParts, out var element))
@@ -293,14 +296,15 @@ public static class ValidationUtility
     
     public static (bool IsValid, string? ErrorMessage) ValidateValueArray(JsonDocument credential, ValidationRule rule)
     {
-        var config = rule.Configuration.Split(':');
-        if (config.Length != 2)
+        // Split only on the first colon
+        var firstColonIndex = rule.Configuration.IndexOf(':');
+        if (firstColonIndex < 0)
         {
             return (false, "Invalid value array rule configuration. Expected format: 'path:value1,value2,value3'");
         }
         
-        var path = config[0];
-        var allowedValuesString = config[1];
+        var path = rule.Configuration.Substring(0, firstColonIndex);
+        var allowedValuesString = rule.Configuration.Substring(firstColonIndex + 1);
         var allowedValues = allowedValuesString.Split(',').Select(v => v.Trim()).ToArray();
         
         if (allowedValues.Length == 0)

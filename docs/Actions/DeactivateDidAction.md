@@ -8,6 +8,7 @@ nav_order: 10
 # DeactivateDID Action Documentation
 
 The DeactivateDID action enables workflows to deactivate (permanently disable) decentralized identifiers (DIDs) on the PRISM blockchain. This is the final stage in a DID's lifecycle, indicating that the identifier should no longer be considered valid for any operations.
+For a details walkthrough of the process, see the [Create and Update DID Userguide](../UserGuides/CreatingAndUpdatingDids.md).
 
 ## Overview
 
@@ -16,7 +17,6 @@ Deactivating a DID is a critical security operation that might be necessary when
 - A DID's private key has been compromised
 - The DID is no longer needed and should be retired
 - The owner wants to publicly signal that the DID should no longer be trusted
-- Compliance with "right to be forgotten" requirements
 
 Once deactivated, a DID cannot be reactivated and any credentials issued by it should be considered invalid.
 
@@ -61,9 +61,8 @@ Both these values can be configured to use:
 When executed, the DeactivateDID action:
 
 1. Connects to the specified DID registrar
-2. Authenticates using the master key secret (if provided)
-3. Creates and submits a deactivation transaction to the blockchain
-4. Returns the status of the deactivation operation
+2. Creates and submits a deactivation transaction to the blockchain
+3. Returns the status of the deactivation operation
 
 ## Technical Notes
 
@@ -73,11 +72,3 @@ When executed, the DeactivateDID action:
 - The DID document will still be resolvable, but will be marked as deactivated
 - Deactivation does not delete the DID from the blockchain, but signals it should not be used
 - Verifiers should check for deactivation status when validating credentials issued by a DID
-
-## Integration with DID Lifecycle
-
-The DeactivateDID action represents the final stage in the DID lifecycle management, complementing:
-- [CreateDID action](CreateDidAction) - for creating new DIDs
-- [UpdateDID action](UpdateDidAction) - for modifying existing DIDs
-
-Together, these actions provide a complete set of tools for managing DIDs throughout their entire lifecycle.

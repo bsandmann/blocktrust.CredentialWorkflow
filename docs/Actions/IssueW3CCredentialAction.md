@@ -76,33 +76,6 @@ When a workflow with an IssueW3CCredential action is executed:
 5. The signed credential is stored in the workflow outcome
 6. The credential can be accessed by subsequent actions in the workflow
 
-## Technical Details
-
-The IssueW3CCredential action:
-
-1. Uses the `CreateW3cCredential` command to build an unsigned credential
-2. Uses the `SignW3cCredential` command to sign the credential
-3. Stores both the unsigned and signed versions in the workflow context
-4. Automatically adds credential metadata like issuance date and type
-5. Validates all parameters before creating the credential
-
-## Integration with Other Components
-
-The action integrates with:
-
-- **Issuing Keys System**: Uses tenant-managed keys from the [Issuing Keys Settings](../Settings/IssuingKeysSettings)
-- **Workflow Context**: Reads input parameters and stores the resulting credential
-- **Parameter Resolution**: Supports dynamic values from trigger inputs and previous actions
-
-## Use Cases
-
-The IssueW3CCredential action is ideal for:
-
-1. **Identity Credentials**: Create ID credentials, membership cards, or access passes
-2. **Qualification Credentials**: Issue certificates of achievement or qualification
-3. **Authorization Credentials**: Generate permission or authorization proofs
-4. **Attestation Credentials**: Create verified statements about attributes or properties
-
 ## Example Configuration
 
 A typical configuration might include:
@@ -114,4 +87,3 @@ A typical configuration might include:
    - `name`: Static value or from trigger
    - `email`: From trigger parameter
    - `membershipLevel`: Static value
-   - `issuanceDate`: Current date (automatically added)

@@ -1,23 +1,23 @@
 ---
 title: Home
 layout: default
-nav_order: 1
+nav_order: 2
 permalink: /
 ---
 
 # Credential Workflow Platform
 
-Welcome to the **Blocktrust Credential Workflow Platform** documentation - your comprehensive guide to building, managing, and automating verifiable credential workflows.
+Welcome to the **Blocktrust Credential Workflow Platform** documentation - your guide to building, managing, and automating SSI worksflows around Hyperledger Identus workflows.
 
 ## Overview
 
 The Credential Workflow Platform is a powerful, extensible system that enables organizations to:
 
-- Create and manage verifiable credentials using W3C standards
 - Design custom workflows with triggers and sequential actions
 - Automate credential issuance, verification, and management
+- Implement decentralized identity (DID) management, by creating, updating, and deactivating DIDs
 - Integrate with external systems through HTTP and DIDComm
-- Implement decentralized identity (DID) management
+- Fully Open Source based on the Apache 2.0 license
 
 Built on modern .NET technology, this platform provides a flexible, rule-based approach to credential orchestration while maintaining high security and compliance standards.
 
@@ -32,7 +32,7 @@ Built on modern .NET technology, this platform provides a flexible, rule-based a
   - Send emails with customizable templates
   - Create and manage DIDs
   - Communicate using DIDComm messaging
-  - Generate JWT tokens
+  - Generate JWT tokens for authentication
   - Custom validation with business rules
 - **Multi-Tenant Architecture**: Securely manage multiple organizational contexts
 - **Parameter Substitution**: Dynamic content in templates and HTTP requests
@@ -48,14 +48,6 @@ This documentation is organized into the following sections:
 - [Actions](Actions/): Available actions and their configuration
 - [Platform Settings](Settings/): Configuration options for the platform
 
-## Quick Links
-
-- [HTTP Action Guide](Actions/HttpAction)
-- [Email Action Guide](Actions/EmailAction)
-- [W3C Credential Operations](Actions/IssueW3CCredentialAction)
-- [DID Management](Actions/CreateDidAction)
-- [Custom Validation](Actions/CustomValidationAction)
-
 ## Supported Standards
 
 - W3C Verifiable Credentials
@@ -67,7 +59,3 @@ This documentation is organized into the following sections:
 ## Contact & Support
 
 For additional help or feature requests, please contact the Blocktrust team or open an issue in our GitHub repository.
-
----
-
-Copyright � Blocktrust. All rights reserved.

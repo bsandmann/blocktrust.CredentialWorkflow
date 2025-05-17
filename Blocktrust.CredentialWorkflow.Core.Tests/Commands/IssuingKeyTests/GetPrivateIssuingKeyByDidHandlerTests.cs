@@ -67,7 +67,7 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
     {
         // Arrange
         var tenantResult = await _createTenantHandler.Handle(
-            new CreateTenantRequest("TestTenant"), 
+            new CreateTenantRequest("TestTenant"),
             CancellationToken.None);
         tenantResult.IsSuccess.Should().BeTrue();
 
@@ -87,8 +87,9 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
                     name,
                     did,
                     "secp256k1",
+                    privateKey,
                     "publicKey",
-                    privateKey),
+                    null),
                 CancellationToken.None);
             createResult.IsSuccess.Should().BeTrue();
         }
@@ -98,7 +99,7 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
         {
             // Act
             var result = await _handler.Handle(
-                new GetPrivateIssuingKeyByDidRequest(did), 
+                new GetPrivateIssuingKeyByDidRequest(did),
                 CancellationToken.None);
 
             // Assert
@@ -118,7 +119,7 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
     {
         // Arrange
         var tenantResult = await _createTenantHandler.Handle(
-            new CreateTenantRequest("TestTenant"), 
+            new CreateTenantRequest("TestTenant"),
             CancellationToken.None);
         tenantResult.IsSuccess.Should().BeTrue();
 
@@ -138,15 +139,16 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
                     name,
                     sameDid,
                     "secp256k1",
+                    privateKey,
                     "publicKey",
-                    privateKey),
+                    null),
                 CancellationToken.None);
             createResult.IsSuccess.Should().BeTrue();
         }
 
         // Act
         var result = await _handler.Handle(
-            new GetPrivateIssuingKeyByDidRequest(sameDid), 
+            new GetPrivateIssuingKeyByDidRequest(sameDid),
             CancellationToken.None);
 
         // Assert
@@ -165,7 +167,7 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
     {
         // Arrange
         var tenantResult = await _createTenantHandler.Handle(
-            new CreateTenantRequest("TestTenant"), 
+            new CreateTenantRequest("TestTenant"),
             CancellationToken.None);
         tenantResult.IsSuccess.Should().BeTrue();
 
@@ -176,14 +178,15 @@ public class GetPrivateIssuingKeyByDidHandlerTests : TestSetup
                 "TestKey",
                 did,
                 "secp256k1",
+                "privateKey",
                 "publicKey",
-                "privateKey"),
+                null),
             CancellationToken.None);
         createResult.IsSuccess.Should().BeTrue();
 
         // Act
         var result = await _handler.Handle(
-            new GetPrivateIssuingKeyByDidRequest(did.ToLower()), 
+            new GetPrivateIssuingKeyByDidRequest(did.ToLower()),
             CancellationToken.None);
 
         // Assert

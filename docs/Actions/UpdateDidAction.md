@@ -8,6 +8,9 @@ nav_order: 9
 # UpdateDID Action Documentation
 
 The UpdateDID action enables workflows to modify existing decentralized identifiers (DIDs) on the PRISM blockchain. This action allows for adding, removing, or replacing verification methods and service endpoints of a DID that was previously created.
+For a details walkthrough of the process, see the [Create and Update DID Userguide](../UserGuides/CreatingAndUpdatingDids.md).
+
+See also the [CreateDID action documentation](CreateDidAction) for information on creating new DIDs.
 
 ## Overview
 
@@ -46,7 +49,7 @@ To update a DID, you must provide:
 
 2. **Master Key Secret**: The base64-encoded private key associated with the DID's master key
    - Required for authentication to prove ownership of the DID
-   - Can be obtained from the CreateDID action output or from an external source
+   - Can be obtained from the CreateDID action output ("d" of the MasterKey) or from an external source
    - Must be valid base64-encoded data
 
 Both these values can be configured to use:
@@ -70,8 +73,8 @@ Adds a new verification method (key) to the DID document, configurable with:
   - **authentication**: For authenticating as the DID subject
   - **keyAgreement**: For establishing encrypted communication
   - **assertionMethod**: For issuing verifiable credentials
-  - **capabilityInvocation**: For authorization capabilities
-  - **capabilityDelegation**: For delegating capabilities
+  - **capabilityInvocation**: (limited support)
+  - **capabilityDelegation**: (limited support)
 
 - **Curve**: The cryptographic curve to use
   - **secp256k1**: Standard Bitcoin curve (default for most purposes)
@@ -106,16 +109,6 @@ Replaces all service endpoints in the DID document with a new set. For each serv
 - **Endpoint**: The URL where the service is located
   - Must be a valid URL or URI
 
-## Action Outcome
-
-When executed, the UpdateDID action:
-
-1. Connects to the specified DID registrar
-2. Authenticates using the master key secret
-3. Performs all update operations in sequence
-4. Submits the DID update transaction to the blockchain
-5. Returns the updated DID document for use in subsequent workflow actions
-
 ## Technical Notes
 
 - DID updates are on-chain transactions that require a funded wallet in the OpenPrismNode
@@ -124,14 +117,3 @@ When executed, the UpdateDID action:
 - Multiple operations can be included in a single update transaction
 - Update operations are applied in the order they are defined
 - Failed operations will cause the entire update to fail
-
-## Differences from CreateDID
-
-While the [CreateDID action](CreateDidAction) initializes a new DID document, the UpdateDID action modifies an existing DID document by:
-
-1. Requiring a reference to an existing DID
-2. Requiring the master key secret for authentication
-3. Supporting targeted operations (add, remove, set) rather than complete document definition
-4. Allowing incremental changes to the DID document
-
-For information on creating new DIDs, see the [CreateDID action documentation](CreateDidAction).

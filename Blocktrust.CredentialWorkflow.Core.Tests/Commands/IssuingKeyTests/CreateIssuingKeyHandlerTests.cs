@@ -2,6 +2,7 @@
 using Blocktrust.CredentialWorkflow.Core.Commands.Tenant.CreateTenant;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+
 // using Blocktrust.CredentialWorkflow.Core.Commands.IssuingKey;
 // using Blocktrust.CredentialWorkflow.Core.Commands.Tenant;
 
@@ -33,8 +34,10 @@ public class CreateIssuingKeyHandlerTests : TestSetup
             "TestKey",
             "did:prism:test123",
             "secp256k1",
+            "privateKeyTest",
             "publicKeyTest",
-            "privateKeyTest");
+            null
+        );
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -68,8 +71,9 @@ public class CreateIssuingKeyHandlerTests : TestSetup
             "TestKey",
             "did:prism:test123",
             "secp256k1",
+            "privateKeyTest",
             "publicKeyTest",
-            "privateKeyTest");
+            "publicKeyPart2Test");
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -99,8 +103,9 @@ public class CreateIssuingKeyHandlerTests : TestSetup
             name,
             did,
             keyType,
+            privateKey,
             publicKey,
-            privateKey);
+            null);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -128,16 +133,18 @@ public class CreateIssuingKeyHandlerTests : TestSetup
             "TestKey1",
             "did:prism:test1",
             "secp256k1",
+            "privateKey1",
             "publicKey1",
-            "privateKey1");
+            null);
 
         var request2 = new CreateIssuingKeyRequest(
             tenantId,
             "TestKey2",
             "did:prism:test2",
             "secp256k1",
+            "privateKey2",
             "publicKey2",
-            "privateKey2");
+            null);
 
         // Act
         var result1 = await _handler.Handle(request1, CancellationToken.None);

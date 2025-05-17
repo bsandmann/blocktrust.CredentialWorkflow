@@ -62,46 +62,59 @@
                             <div>
                                 <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Key Name</label>
                                 <InputText id="name"
-                                          @bind-Value="NewKey.Name"
-                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
-                                          placeholder="Enter a descriptive name"/>
+                                           @bind-Value="NewKey.Name"
+                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                           placeholder="Enter a descriptive name"/>
                                 <ValidationMessage For="() => NewKey.Name" class="mt-1 text-sm text-red-500"/>
                             </div>
 
                             <div>
                                 <label for="did" class="block text-sm font-medium text-slate-700 mb-1">DID</label>
                                 <InputText id="did"
-                                          @bind-Value="NewKey.Did"
-                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
-                                          placeholder="did:prism:..."/>
+                                           @bind-Value="NewKey.Did"
+                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                           placeholder="did:prism:..."/>
                                 <ValidationMessage For="() => NewKey.Did" class="mt-1 text-sm text-red-500"/>
                             </div>
 
                             <div>
-                                <label for="keyType" class="block text-sm font-medium text-slate-700 mb-1">Key Type</label>
+                                <label for="keyType" class="block text-sm font-medium text-slate-700 mb-1">Key
+                                    Type</label>
                                 <InputSelect id="keyType"
-                                            @bind-Value="NewKey.KeyType"
-                                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                                             @bind-Value="NewKey.KeyType"
+                                             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
                                     <option value="secp256k1">secp256k1</option>
                                 </InputSelect>
                                 <ValidationMessage For="() => NewKey.KeyType" class="mt-1 text-sm text-red-500"/>
                             </div>
 
                             <div>
-                                <label for="publicKey" class="block text-sm font-medium text-slate-700 mb-1">Public Key</label>
+                                <label for="publicKey" class="block text-sm font-medium text-slate-700 mb-1">Public
+                                    Key</label>
                                 <InputText id="publicKey"
-                                          @bind-Value="NewKey.PublicKey"
-                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
-                                          placeholder="Enter base64url encoded public key"/>
+                                           @bind-Value="NewKey.PublicKey"
+                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                           placeholder="Enter base64url encoded public key"/>
                                 <ValidationMessage For="() => NewKey.PublicKey" class="mt-1 text-sm text-red-500"/>
                             </div>
 
                             <div>
-                                <label for="privateKey" class="block text-sm font-medium text-slate-700 mb-1">Private Key</label>
+                                <label for="publicKey2" class="block text-sm font-medium text-slate-700 mb-1">Public Key
+                                    (in case of two part variant)</label>
+                                <InputText id="publicKey2"
+                                           @bind-Value="NewKey.PublicKey2"
+                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                           placeholder="Enter base64url encoded public key"/>
+                                <ValidationMessage For="() => NewKey.PublicKey2" class="mt-1 text-sm text-red-500"/>
+                            </div>
+
+                            <div>
+                                <label for="privateKey" class="block text-sm font-medium text-slate-700 mb-1">Private
+                                    Key</label>
                                 <InputText id="privateKey"
-                                          @bind-Value="NewKey.PrivateKey"
-                                          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
-                                          placeholder="Enter base64url encoded private key"/>
+                                           @bind-Value="NewKey.PrivateKey"
+                                           class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                                           placeholder="Enter base64url encoded private key"/>
                                 <ValidationMessage For="() => NewKey.PrivateKey" class="mt-1 text-sm text-red-500"/>
                             </div>
 
@@ -123,7 +136,8 @@
 
                     @if (!IssuingKeysList.Any())
                     {
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center text-slate-600">
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center text-slate-600">
                             <p>No issuing keys added yet.</p>
                         </div>
                     }
@@ -147,11 +161,13 @@
                                                 </p>
                                                 <p class="text-sm text-slate-600">
                                                     <span class="font-medium">Public Key:</span>
-                                                    <span class="font-mono text-xs ml-1">@TruncateKey(key.PublicKey)</span>
+                                                    <span
+                                                        class="font-mono text-xs ml-1">@TruncateKey(key.PublicKey)</span>
                                                 </p>
                                                 <p class="text-sm text-slate-600">
                                                     <span class="font-medium">Private Key:</span>
-                                                    <span class="font-mono text-xs ml-1">@TruncateKey(key.PrivateKey)</span>
+                                                    <span
+                                                        class="font-mono text-xs ml-1">@TruncateKey(key.PrivateKey)</span>
                                                 </p>
                                                 <p class="text-xs text-slate-500 mt-2">
                                                     Created @key.CreatedUtc.ToLocalTime().ToString("g")
@@ -204,7 +220,7 @@
 
     private async Task OnAddKeySubmitAsync()
     {
-        var request = new CreateIssuingKeyRequest(TenantId, NewKey.Name, NewKey.Did, NewKey.KeyType, NewKey.PublicKey, NewKey.PrivateKey);
+        var request = new CreateIssuingKeyRequest(TenantId, NewKey.Name, NewKey.Did, NewKey.KeyType, NewKey.PrivateKey, NewKey.PublicKey, NewKey.PublicKey2);
         var result = await Mediator.Send(request);
 
         if (result.IsSuccess)
@@ -257,6 +273,9 @@
         [Display(Name = "Public Key")]
         public string PublicKey { get; set; } = "";
 
+        [Display(Name = "Public Key (in case of two part variant)")]
+        public string PublicKey2 { get; set; } = "";
+
         [Required(ErrorMessage = "Private Key is required")]
         [Display(Name = "Private Key")]
         public string PrivateKey { get; set; } = "";
@@ -275,10 +294,21 @@
             // Validate Public Key
             if (!string.IsNullOrWhiteSpace(PublicKey))
             {
-                var publicKeyValidation = ValidateBase64UrlKey(PublicKey, 33, "Public Key");
-                if (publicKeyValidation != null)
+                if(string.IsNullOrWhiteSpace(PublicKey2))
                 {
-                    yield return publicKeyValidation;
+                    var publicKeyValidation = ValidateBase64UrlKey(PublicKey, 33, "Public Key");
+                    if (publicKeyValidation != null)
+                    {
+                        yield return publicKeyValidation;
+                    }
+                }
+                else
+                {
+                    var publicKeyValidation = ValidateBase64UrlKey(PublicKey2, 32, "Public Key 2");
+                    if (publicKeyValidation != null)
+                    {
+                        yield return publicKeyValidation;
+                    }
                 }
             }
 
@@ -332,4 +362,5 @@
             return null;
         }
     }
+
 }

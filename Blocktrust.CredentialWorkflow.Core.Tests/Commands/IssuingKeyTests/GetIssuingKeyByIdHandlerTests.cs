@@ -58,8 +58,8 @@ public class GetIssuingKeyByIdHandlerTests : TestSetup
                 "TestKey1",
                 "did:prism:test1",
                 "secp256k1",
-                "publicKey1",
-                "privateKey1"),
+                "privateKey1",
+                "publicKey1", null),
             CancellationToken.None);
 
         var key2Result = await _createIssuingKeyHandler.Handle(
@@ -68,8 +68,8 @@ public class GetIssuingKeyByIdHandlerTests : TestSetup
                 "TestKey2",
                 "did:prism:test2",
                 "secp256k1",
-                "publicKey2",
-                "privateKey2"),
+                "privateKey2",
+                "publicKey2", null),
             CancellationToken.None);
 
         var key3Result = await _createIssuingKeyHandler.Handle(
@@ -78,8 +78,8 @@ public class GetIssuingKeyByIdHandlerTests : TestSetup
                 "TestKey3",
                 "did:prism:test3",
                 "secp256k1",
-                "publicKey3",
-                "privateKey3"),
+                "privateKey3",
+                "publicKey3", null),
             CancellationToken.None);
 
         // Verify all keys were created successfully
@@ -131,8 +131,9 @@ public class GetIssuingKeyByIdHandlerTests : TestSetup
                 complexData.Name,
                 complexData.Did,
                 complexData.KeyType,
+                complexData.PrivateKey,
                 complexData.PublicKey,
-                complexData.PrivateKey),
+                null),
             CancellationToken.None);
         createKeyResult.IsSuccess.Should().BeTrue();
 
