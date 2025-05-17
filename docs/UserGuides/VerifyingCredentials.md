@@ -65,8 +65,7 @@ Lets first revist a sample credential (like the one we created earlier):
 5. Add another Validation Rule with the following values:
     - **Required Field**: `credentialSubject.name:`. Stating that the name field must be present in the credential, independent of the value.
 
-**Note**: The default setup tries to resolve the DID only against the Cardano mainnet ledger. In our case the issuing DID was written to preprod. To also allow tnd he resolution of that DID, you need to add a OPN node the the fallback configuration. For more information see also the [Fallback configuration](../Configuration/FallbackConfiguration.md) documentation.
+**Note**: The default setup tries to resolve the DID only against the Cardano mainnet ledger. In our case the issuing DID was written to preprod. To also allow the resolution of that DID, you need to add a OPN node in the fallback configuration. For more information see also the [Fallback configuration](../Settings/Configuration.md) documentation.
 
-
-
-weiter mit raussenden des resultats per http post
+## Send the Result
+After the validation we want to send the result of the validation back to the service which initially requested the validation. To do this we now use the Http-Request Action

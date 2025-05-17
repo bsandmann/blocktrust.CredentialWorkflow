@@ -110,7 +110,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3
                             return Result.Fail("DID is deactivated (per resolution API).");
                         }
 
-                        return Result.Fail($"Failed to resolve short-form DID: {resolutionResult.ErrorMessage}");
+                        return Result.Fail($"Failed to resolve short-form DID.");
                     }
 
                     publicKey = resolutionResult.PublicKey;
@@ -150,7 +150,7 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3
             var result = await TryResolveWithClientAsync(_prismDidClient, did, cancellationToken);
             
             // If primary client failed and we have a fallback client, try with the fallback
-            if (!result.IsSuccess && _hasFallbackClient && !result.IsDeactivated)
+            if (!result.IsSuccess && _hasFallbackClient && !result.IsDeactivated )
             {
                 return await TryResolveWithFallbackAsync(did, cancellationToken);
             }
@@ -167,6 +167,10 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3
             {
                 // Use the fallback client to resolve the DID
                 var didDocument = await _fallbackPrismDidClient.ResolveDidDocumentAsync(did, cancellationToken);
+                if (didDocument == null)
+                {
+                    return DidResolutionKeyResult.Failure($"Fallback resolution failed. Not configured.");
+                }
                 return ExtractPublicKeyFromDocument(didDocument);
             }
             catch (PrismDidResolutionException ex)

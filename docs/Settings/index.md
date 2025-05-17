@@ -24,6 +24,7 @@ The platform includes the following settings categories:
 3. **Integration Settings**
    - Email Configuration
    - External Service Connections
+   - [Application Configuration](Configuration.md)
 
 ## Configuration Persistence
 
