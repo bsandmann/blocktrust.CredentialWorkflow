@@ -1,3 +1,10 @@
+---
+title: DID Registrar Settings
+layout: default
+parent: Settings
+nav_order: 1
+---
+
 # DID Registrar Settings Documentation
 
 The DID Registrar settings allow you to configure how your tenant interacts with an instance of a DID Registrar, in our case the OPN (OpenPrismNode).

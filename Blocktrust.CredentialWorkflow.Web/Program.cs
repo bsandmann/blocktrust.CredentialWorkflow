@@ -148,7 +148,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddHttpClient<PrismDidClient>()
+// Configure primary PrismDidClient
+builder.Services.AddHttpClient<PrismDidClient>("PrimaryPrismClient")
     .ConfigurePrimaryHttpMessageHandler(() =>
     {
         return new HttpClientHandler
@@ -159,14 +160,61 @@ builder.Services.AddHttpClient<PrismDidClient>()
         };
     });
 
-builder.Services.AddSingleton(sp => 
+// Configure fallback PrismDidClient
+builder.Services.AddHttpClient<PrismDidClient>("FallbackPrismClient")
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        return new HttpClientHandler
+        {
+            // Insecure: bypass SSL errors
+            ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+    });
+
+
+// Register the primary client options with a name for better identification
+builder.Services.AddSingleton<PrimaryPrismDidClientOptions>(sp => 
 {
     var appSettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AppSettings>>().Value;
-    return new PrismDidClientOptions
+    return new PrimaryPrismDidClientOptions
     {
         BaseUrl = appSettings.PrismBaseUrl,
         DefaultLedger = appSettings.PrismDefaultLedger
     };
+});
+
+// Register primary options as PrismDidClientOptions for backward compatibility
+builder.Services.AddSingleton<PrismDidClientOptions>(sp => 
+    sp.GetRequiredService<PrimaryPrismDidClientOptions>());
+
+// Register the fallback client options with a name for better identification
+builder.Services.AddSingleton<FallbackPrismDidClientOptions>(sp => 
+{
+    var appSettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AppSettings>>().Value;
+    return new FallbackPrismDidClientOptions
+    {
+        BaseUrl = appSettings.PrismBaseUrlFallback,
+        DefaultLedger = appSettings.PrismDefaultLedgerFallback
+    };
+});
+
+// Register the primary client as the default implementation
+builder.Services.AddScoped(sp => 
+{
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    var options = sp.GetRequiredService<PrimaryPrismDidClientOptions>();
+    var httpClient = factory.CreateClient("PrimaryPrismClient");
+    return new PrismDidClient(httpClient, options);
+});
+
+// Register the fallback client as a named service
+builder.Services.AddScoped<FallbackPrismDidClient>(sp => 
+{
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    var options = sp.GetRequiredService<FallbackPrismDidClientOptions>();
+    var httpClient = factory.CreateClient("FallbackPrismClient");
+    return new FallbackPrismDidClient(new PrismDidClient(httpClient, options));
 });
 
 builder.Services.AddTransient<IEmailSender, SendGridEmailSender>();

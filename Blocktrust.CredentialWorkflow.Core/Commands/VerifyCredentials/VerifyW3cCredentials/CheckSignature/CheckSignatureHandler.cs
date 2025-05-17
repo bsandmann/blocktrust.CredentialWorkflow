@@ -3,24 +3,31 @@ using Blocktrust.CredentialWorkflow.Core.Prism;
 using Blocktrust.CredentialWorkflow.Core.Services.DIDPrism;
 using FluentResults;
 using MediatR;
-using DidPrismResolverClient; // Or whichever namespace your PrismDidClient is in.
+using DidPrismResolverClient;
 
 namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3cCredentials.CheckSignature
 {
+    using DidPrismResolverClient.Models;
+
     public class CheckSignatureHandler : IRequestHandler<CheckSignatureRequest, Result<bool>>
     {
         private readonly ExtractPrismPubKeyFromLongFormDid _extractPrismPubKey;
         private readonly IEcService _ecService;
         private readonly PrismDidClient _prismDidClient;
+        private readonly FallbackPrismDidClient _fallbackPrismDidClient;
+        private readonly bool _hasFallbackClient;
 
         public CheckSignatureHandler(
             ExtractPrismPubKeyFromLongFormDid extractPrismPubKey,
             IEcService ecService,
-            PrismDidClient prismDidClient)
+            PrismDidClient prismDidClient,
+            FallbackPrismDidClient fallbackPrismDidClient = null)
         {
             _extractPrismPubKey = extractPrismPubKey;
             _ecService = ecService;
             _prismDidClient = prismDidClient;
+            _fallbackPrismDidClient = fallbackPrismDidClient;
+            _hasFallbackClient = fallbackPrismDidClient != null;
         }
 
         public async Task<Result<bool>> Handle(CheckSignatureRequest request, CancellationToken cancellationToken)
@@ -135,82 +142,69 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3
         /// <summary>
         /// Calls the Prism DID resolution API to retrieve the DID Document and extracts the public key.
         /// Returns a small record capturing success/failure, a deactivation flag, and the extracted key.
+        /// Will attempt to use the fallback client if the primary client fails and a fallback is available.
         /// </summary>
         private async Task<DidResolutionKeyResult> TryResolvePublicKeyAsync(string did, CancellationToken cancellationToken)
         {
+            // Try with the primary client first
+            var result = await TryResolveWithClientAsync(_prismDidClient, did, cancellationToken);
+            
+            // If primary client failed and we have a fallback client, try with the fallback
+            if (!result.IsSuccess && _hasFallbackClient && !result.IsDeactivated)
+            {
+                return await TryResolveWithFallbackAsync(did, cancellationToken);
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// Attempts to resolve using the fallback client
+        /// </summary>
+        private async Task<DidResolutionKeyResult> TryResolveWithFallbackAsync(string did, CancellationToken cancellationToken)
+        {
             try
             {
-                // Attempt to resolve
-                var didDocument = await _prismDidClient.ResolveDidDocumentAsync(did, cancellationToken: cancellationToken);
-
-                if (didDocument == null)
-                {
-                    return DidResolutionKeyResult.Failure("Empty DID document returned from server.");
-                }
-
-                // Check for an assertionMethod
-                if (didDocument.AssertionMethod == null || didDocument.AssertionMethod.Count == 0)
-                {
-                    return DidResolutionKeyResult.Failure("No issuer key found in DID document.");
-                }
-                if (didDocument.AssertionMethod.Count > 1)
-                {
-                    return DidResolutionKeyResult.Failure("Multiple issuer keys found in DID document.");
-                }
-
-                var assertionMethod = didDocument.AssertionMethod[0].Split('#');
-                if (assertionMethod.Length != 2)
-                {
-                    return DidResolutionKeyResult.Failure("Invalid AssertionMethod key syntax.");
-                }
-
-                var keyPart = assertionMethod[1];
-                var issuingKey = didDocument.VerificationMethod.FirstOrDefault(
-                    p => p.Id == didDocument.AssertionMethod[0]
-                         || p.Id == keyPart
-                         || p.Id == "#" + keyPart);
-
-                if (issuingKey?.PublicKeyJwk == null)
-                {
-                    return DidResolutionKeyResult.Failure("Issuer key not found in DID document.");
-                }
-
-                if (!issuingKey.PublicKeyJwk.KeyType.Equals("EC", StringComparison.OrdinalIgnoreCase))
-                {
-                    return DidResolutionKeyResult.Failure("Unable to extract public key (non-EC key) from DID document.");
-                }
-
-                // Parse out x & y
-                var xKey = issuingKey.PublicKeyJwk.X;
-                var yKey = issuingKey.PublicKeyJwk.Y;
-
-                if (string.IsNullOrEmpty(xKey))
-                {
-                    return DidResolutionKeyResult.Failure("Missing 'x' coordinate in public key JWK.");
-                }
-
-                byte[] finalKey;
-                if (string.IsNullOrEmpty(yKey))
-                {
-                    // If 'y' is not provided (maybe compressed key)
-                    finalKey = PrismEncoding.HexToByteArray(xKey);
-                }
-                else
-                {
-                    var xBytes = PrismEncoding.Base64ToByteArray(xKey);
-                    var yBytes = PrismEncoding.Base64ToByteArray(yKey);
-
-                    finalKey = PrismEncoding.HexToByteArray(
-                        PrismEncoding.PublicKeyPairByteArraysToHex(xBytes, yBytes)
-                    );
-                }
-
-                return DidResolutionKeyResult.Success(finalKey);
+                // Use the fallback client to resolve the DID
+                var didDocument = await _fallbackPrismDidClient.ResolveDidDocumentAsync(did, cancellationToken);
+                return ExtractPublicKeyFromDocument(didDocument);
             }
             catch (PrismDidResolutionException ex)
             {
                 // Inspect ex.Message for specific status codes, e.g. 410 Gone => deactivated
-                if (ex.Message.Contains("410")) // or parse for the exact status code if you prefer
+                if (ex.Message.Contains("410"))
+                {
+                    return DidResolutionKeyResult.Deactivated("DID is deactivated (HTTP 410).");
+                }
+
+                // Otherwise, treat as a generic unreachable/failure
+                return DidResolutionKeyResult.Failure($"Fallback resolution failed: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Some other network or JSON parsing error
+                return DidResolutionKeyResult.Failure($"Fallback resolution unexpected error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Attempts to resolve a DID using the specified PrismDidClient
+        /// </summary>
+        private async Task<DidResolutionKeyResult> TryResolveWithClientAsync(PrismDidClient client, string did, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Log which client is being used (useful for debugging)
+                string clientName = client.GetOptions().GetType().Name;
+                
+                // Attempt to resolve
+                var didDocument = await client.ResolveDidDocumentAsync(did, cancellationToken: cancellationToken);
+                return ExtractPublicKeyFromDocument(didDocument);
+            }
+            catch (PrismDidResolutionException ex)
+            {
+                // Inspect ex.Message for specific status codes, e.g. 410 Gone => deactivated
+                if (ex.Message.Contains("410"))
                 {
                     return DidResolutionKeyResult.Deactivated("DID is deactivated (HTTP 410).");
                 }
@@ -223,6 +217,76 @@ namespace Blocktrust.CredentialWorkflow.Core.Commands.VerifyCredentials.VerifyW3
                 // Some other network or JSON parsing error
                 return DidResolutionKeyResult.Failure($"Unexpected error: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// Extracts the public key from a DID document
+        /// </summary>
+        private DidResolutionKeyResult ExtractPublicKeyFromDocument(DidDocument didDocument)
+        {
+            if (didDocument == null)
+            {
+                return DidResolutionKeyResult.Failure("Empty DID document returned from server.");
+            }
+
+            // Check for an assertionMethod
+            if (didDocument.AssertionMethod == null || didDocument.AssertionMethod.Count == 0)
+            {
+                return DidResolutionKeyResult.Failure("No issuer key found in DID document.");
+            }
+            if (didDocument.AssertionMethod.Count > 1)
+            {
+                return DidResolutionKeyResult.Failure("Multiple issuer keys found in DID document.");
+            }
+
+            var assertionMethod = didDocument.AssertionMethod[0].Split('#');
+            if (assertionMethod.Length != 2)
+            {
+                return DidResolutionKeyResult.Failure("Invalid AssertionMethod key syntax.");
+            }
+
+            var keyPart = assertionMethod[1];
+            var issuingKey = didDocument.VerificationMethod.FirstOrDefault(
+                p => p.Id == didDocument.AssertionMethod[0]
+                     || p.Id == keyPart
+                     || p.Id == "#" + keyPart);
+
+            if (issuingKey?.PublicKeyJwk == null)
+            {
+                return DidResolutionKeyResult.Failure("Issuer key not found in DID document.");
+            }
+
+            if (!issuingKey.PublicKeyJwk.KeyType.Equals("EC", StringComparison.OrdinalIgnoreCase))
+            {
+                return DidResolutionKeyResult.Failure("Unable to extract public key (non-EC key) from DID document.");
+            }
+
+            // Parse out x & y
+            var xKey = issuingKey.PublicKeyJwk.X;
+            var yKey = issuingKey.PublicKeyJwk.Y;
+
+            if (string.IsNullOrEmpty(xKey))
+            {
+                return DidResolutionKeyResult.Failure("Missing 'x' coordinate in public key JWK.");
+            }
+
+            byte[] finalKey;
+            if (string.IsNullOrEmpty(yKey))
+            {
+                // If 'y' is not provided (maybe compressed key)
+                finalKey = PrismEncoding.HexToByteArray(xKey);
+            }
+            else
+            {
+                var xBytes = PrismEncoding.Base64ToByteArray(xKey);
+                var yBytes = PrismEncoding.Base64ToByteArray(yKey);
+
+                finalKey = PrismEncoding.HexToByteArray(
+                    PrismEncoding.PublicKeyPairByteArraysToHex(xBytes, yBytes)
+                );
+            }
+
+            return DidResolutionKeyResult.Success(finalKey);
         }
     }
 
