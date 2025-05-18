@@ -103,7 +103,7 @@ For the Email action to work properly:
 2. Sender email address and name must be configured in the platform settings
 3. The platform must have outbound network access to reach the SendGrid API
 4. Recipients must have valid email addresses
-. 
+
 Overwrite the settings in the appSettings.json:
 `EmailSettings__SendGridKey`
 `EmailSettings__SendGridFromEmail`
