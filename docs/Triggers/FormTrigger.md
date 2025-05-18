@@ -17,6 +17,10 @@ The `FormTrigger` component enables the creation of custom web forms that can tr
 - **Field Validation**: Enforces required fields and proper validation
 - **Multiple Field Types**: Supports text, number, date, and boolean field types
 
+*Example of a form page:*
+![issuing1.png](issuing1.png)
+
+
 ## Form Configuration
 
 ### Form Settings

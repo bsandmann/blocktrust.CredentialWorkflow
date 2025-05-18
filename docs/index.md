@@ -42,7 +42,7 @@ Built on modern .NET technology, this platform provides a flexible, rule-based a
 
 This documentation is organized into the following sections:
 
-- [Getting Started](Guide): Installation, setup, and basic configuration
+- [Getting Started](UserGuides/index.md): Installation, setup, and basic configuration
 - [Workflow Overview](WorkflowOverview): Platform concepts and architecture
 - [Workflow Triggers](Triggers/): Different ways to initiate workflows
 - [Actions](Actions/): Available actions and their configuration

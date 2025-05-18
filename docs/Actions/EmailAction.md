@@ -43,10 +43,10 @@ The email address must be valid and properly formatted.
 The email subject line:
 
 - Enter the subject text directly in the input field
-- Can include template parameters in the format `{{parameterName}}`
+- Can include template parameters in the format {% raw %}`{{parameterName}}`{% endraw %}
 - Supports both static text and dynamic content
 
-Example: `Your credential from {{issuerName}} is ready`
+Example: {% raw %}`Your credential from {{issuerName}} is ready`{% endraw %}
 
 ### Email Body
 
@@ -54,10 +54,11 @@ The main content of the email:
 
 - Enter the body text in the textarea
 - Supports HTML formatting for rich content
-- Can include template parameters in the format `{{parameterName}}`
+- Can include template parameters in the format {% raw %}`{{parameterName}}`{% endraw %}
 - JSON parameters are automatically formatted with proper indentation when displayed in the email
 
 Example:
+{% raw %}
 ```
 Dear {{recipientName}},
 
@@ -69,12 +70,13 @@ Credential details:
 Best regards,
 The {{issuerName}} Team
 ```
+{% endraw %}
 
 ### Parameters
 
 Define the dynamic values that will be substituted in the subject and body:
 
-1. **Parameter Name**: The name of the parameter used in the template (without curly braces)
+1. **Parameter Name**: The name of the parameter used in the template (without the {% raw %}{{ }}{% endraw %} curly braces)
 2. **Value Source**:
    - **Static**: A fixed value entered directly
    - **Trigger Input**: Value from a trigger parameter
@@ -88,7 +90,7 @@ Parameters allow for highly customized emails with content specific to each work
 When a workflow with an Email action is executed:
 
 1. The platform resolves the recipient email address and all parameters
-2. It processes the subject and body templates, replacing all `{{parameterName}}` occurrences with actual values
+2. It processes the subject and body templates, replacing all {% raw %}`{{parameterName}}`{% endraw %} occurrences with actual values
 3. If any parameter value contains JSON, it is automatically formatted for better readability
 4. The email is sent via SendGrid to the specified recipient
 5. The result of the operation is stored in the workflow outcome

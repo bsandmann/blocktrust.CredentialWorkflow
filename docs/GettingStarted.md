@@ -76,9 +76,9 @@ When you want to build the application locally, you can also do so:
    - Activate it from the Workflow Overview page
    - Test with sample data
 
-For a more indepth explanation see the [User Guides](/docs/UserGuides/index.md):
-- [Creating and Updating DIDs](/docs/UserGuides/CreatingAndUpdatingDids.md)
-- [Issuing Credentials](/docs/UserGuides/IssuingCredentials.md)
-- [Verifying Credentials](/docs/UserGuides/VerifyingCredentials.md)
+For a more indepth explanation see the [User Guides](UserGuides/index.md) section.:
+- [Creating and Updating DIDs](UserGuides/CreatingAndUpdatingDids.md)
+- [Issuing Credentials](UserGuides/IssuingCredentials.md)
+- [Verifying Credentials](UserGuides/VerifyingCredentials.md)
 
 For additional support, contact the Blocktrust team or consult the GitHub repository for known issues and solutions.

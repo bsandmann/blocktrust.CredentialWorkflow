@@ -5,9 +5,9 @@ parent: Triggers
 nav_order: 5
 ---
 
-# WalletInteractionTrigger Component Documentation
+# WalletInteractionTrigger Documentation
 
-The `WalletInteractionTrigger` component enables workflows to be triggered by DIDComm v2 messages from digital wallets or other DIDComm-capable applications. This component allows for secure, decentralized communication between the workflow platform and external systems using the DIDComm protocol.
+The `WalletInteractionTrigger` enables workflows to be triggered by DIDComm v2 messages from digital wallets or other DIDComm-capable applications. This component allows for secure, decentralized communication between the workflow platform and external systems using the DIDComm protocol.
 
 ## Features
 
@@ -96,22 +96,3 @@ The controller supports various DIDComm protocol features:
 - Forward messaging to mediators
 - Processing of encrypted messages
 - Generation of presentation requests
-
-## Integration with Wallet Applications
-
-External wallet applications can interact with the trigger in several ways:
-
-1. **Direct Connection**: Scan the out-of-band invitation QR code to establish a connection
-2. **Basic Message Exchange**: Send structured messages according to the defined parameters
-3. **Credential Presentation**: Respond to presentation requests with verifiable credentials
-4. **Programmatic Integration**: Use the cURL examples to integrate with the platform programmatically
-
-## Use Cases
-
-The WalletInteractionTrigger is ideal for:
-
-1. **Credential Verification**: Verify presented credentials against predefined criteria
-2. **Secure Data Exchange**: Exchange sensitive information through encrypted DIDComm channels
-3. **Cross-System Workflows**: Trigger workflows from external wallet applications
-4. **Self-Sovereign Identity Integration**: Connect workflows to SSI ecosystems
-5. **Decentralized Notifications**: Send notifications to users through their wallets

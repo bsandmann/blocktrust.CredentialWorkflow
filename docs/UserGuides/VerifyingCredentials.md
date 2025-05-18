@@ -30,7 +30,8 @@ Verification is usally only the first step in a validation process, it proves th
 Lets first revist a sample credential (like the one we created earlier):
     - It started like this `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJka...` meaning that it is a JWT.
     - The decoded payload looks like this:
-     ```json
+
+```json
     {
       "iss": "did:prism:6b7c5e9dd3c0d5bae65d21ea26fe452cf05e36f1b7454aeb2b8e1ecd0c764eca",
       "sub": "did:prism:327ec8ec5a36aed239acb28d27e996311b7049bd92f2f36d63b70326b04745b5",
@@ -53,7 +54,7 @@ Lets first revist a sample credential (like the one we created earlier):
       "nbf": 1747407962,
       "exp": 1778968799
     }
-     ```
+```
 
 
 1. Select the **W3C Validation Action** from the list of available actions (under the **Validation Actions** tab).
