@@ -49,5 +49,3 @@ Documentation Page: [https://docs.workflow.blocktrust.dev/](https://docs.workflo
 Video with a feature overview: [https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)
 
 Hosted Instance [https://workflow.blocktrust.dev](https://workflow.blocktrust.dev)
-
-Docker image [ghcr.io/bsandmann/workflowplatform:latest](ghcr.io/bsandmann/workflowplatform:latest)
