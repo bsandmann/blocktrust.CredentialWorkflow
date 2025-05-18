@@ -104,6 +104,6 @@ public class WorkflowController : ControllerBase
 
         await _workflowQueue.EnqueueAsync(outcomeResult.Value);
 
-        return Ok("Workflow retrieved successfully");
+        return Ok("Workflow started successfully");
     }
 }
