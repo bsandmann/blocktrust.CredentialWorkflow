@@ -22,8 +22,7 @@ Closeout-video: xxxxxxx
 
 ## Project KPIs
 - Successfully completed all defined project requirements and open-sourced under Apache 2.0
-- Provided comprehensive documentation and a step-by-step guide for users 
-- Secure tenant isolation
+- Provided comprehensive documentation and a step-by-step guide for users (including a guided video)
 
 ## Key Achievements (particularly around collaboration and engagement)
 - The software is used internally for a other blocktrust project
