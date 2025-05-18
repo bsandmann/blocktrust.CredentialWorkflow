@@ -6,16 +6,6 @@
 public class AppSettings
 {
     /// <summary>
-    /// API key for SendGrid
-    /// </summary>
-    public string? SendGridKey { get; set; }
-
-    /// <summary>
-    /// Configured Email for SendGrid
-    /// </summary>
-    public string? SendGridFromEmail { get; set; }
-    
-    /// <summary>
     /// Base URL for Prism DID resolver
     /// </summary>
     public string? PrismBaseUrl { get; set; }

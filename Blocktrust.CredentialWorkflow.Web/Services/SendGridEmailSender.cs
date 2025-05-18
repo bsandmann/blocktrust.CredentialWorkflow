@@ -1,6 +1,6 @@
 ﻿namespace Blocktrust.CredentialWorkflow.Web.Services;
 
-using Common;
+using Core.Settings;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Options;
 using SendGrid;
@@ -9,23 +9,23 @@ using SendGrid.Helpers.Mail;
 public class SendGridEmailSender : IEmailSender
 {
     private readonly ILogger _logger;
-    private readonly AppSettings _appSettings;
+    private readonly EmailSettings _emailSettings;
 
-    public SendGridEmailSender(IOptions<AppSettings> appSettingOptions, ILogger<SendGridEmailSender> logger)
+    public SendGridEmailSender(IOptions<EmailSettings> emailSettingsOptions, ILogger<SendGridEmailSender> logger)
     {
-        _appSettings = appSettingOptions.Value;
+        _emailSettings = emailSettingsOptions.Value;
         _logger = logger;
     }
 
 
     public async Task SendEmailAsync(string toEmail, string subject, string message)
     {
-        if (string.IsNullOrEmpty(_appSettings.SendGridKey))
+        if (string.IsNullOrEmpty(_emailSettings.SendGridKey))
         {
             throw new Exception("Null SendGridKey");
         }
 
-        await Execute(_appSettings.SendGridKey, subject, message, toEmail);
+        await Execute(_emailSettings.SendGridKey, subject, message, toEmail);
     }
 
     public async Task Execute(string apiKey, string subject, string message, string toEmail)
@@ -33,7 +33,7 @@ public class SendGridEmailSender : IEmailSender
         var client = new SendGridClient(apiKey);
         var msg = new SendGridMessage()
         {
-            From = new EmailAddress(_appSettings.SendGridFromEmail, "Blocktrust Credential Workflow Platform"),
+            From = new EmailAddress(_emailSettings.SendGridFromEmail, _emailSettings.DefaultFromName),
             Subject = subject,
             PlainTextContent = message,
             HtmlContent = message

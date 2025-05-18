@@ -127,7 +127,7 @@ Content-Type: application/json
 
 
 ### POST request to WorkflowController with Template 1 (Create DID and send by email)
-POST https://localhost:7209/api/workflow/a183337f-563c-4db3-8e88-08dd85b4a4cc
+POST https://workflow.blocktrust.dev/api/workflow/a592ae02-cd32-4d80-2400-08dd964dac4a
 Content-Type: application/json
 
 {
