@@ -29,7 +29,7 @@ Closeout-video: xxxxxxx
 - Discussed with several people enganged in the Cardano ecosystem
 
 ## Key Learnings
-- Open standards proved essential. Rather than developing proprietary solutions, we integrated open standards like the DID Resolution spec, DID Registrar Spec for the public APIs for the project
+- Open standards proved essential. Rather than developing proprietary solutions, we integrated open standards like the DID Resolution spec, DID Registrar Spec, DID-Prism spec, W3C Verifiable Credntials, DIDComm v2, etc.
 - While the project is complete and achieved it stated technical goals, we are currently sceptical regarding the interessted of the community. Mainly because the SSI ecosystem around Prism/Identus hasn't grown as much as s we hoped for. This project in particular relies on specific use cases people have. If these use cases are not known (or not actually existant in a small speciliazed community) the project development cannot be focused, it is potentiall prone to several issues.
 
 ## Next Steps
