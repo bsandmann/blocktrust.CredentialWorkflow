@@ -9,6 +9,10 @@ permalink: /
 
 Welcome to the **Blocktrust Credential Workflow Platform** documentation - your guide to building, managing, and automating SSI worksflows around Hyperledger Identus workflows.
 
+Github project: [https://github.com/bsandmann/blocktrust.CredentialWorkflow](https://github.com/bsandmann/blocktrust.CredentialWorkflow)
+
+{% include youtube.html id="9XJUgtR4sR0" %}
+
 ## Overview
 
 The Credential Workflow Platform is a powerful, extensible system that enables organizations to:
@@ -55,6 +59,7 @@ This documentation is organized into the following sections:
 - JWT (JSON Web Tokens)
 - DIDComm Messaging
 - OAuth 2.0 / OpenID Connect
+
 
 ## Contact & Support
 
