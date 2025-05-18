@@ -30,7 +30,7 @@ Closeout-video: xxxxxxx
 
 ## Key Learnings
 - Open standards proved essential. Rather than developing proprietary solutions, we integrated open standards like the DID Resolution spec, DID Registrar Spec, DID-Prism spec, W3C Verifiable Credntials, DIDComm v2, etc.
-- While the project is complete and achieved it stated technical goals, we are currently sceptical regarding the interessted of the community. Mainly because the SSI ecosystem around Prism/Identus hasn't grown as much as s we hoped for. This project in particular relies on specific use cases people have. If these use cases are not known (or not actually existant in a small speciliazed community) the project development cannot be focused, it is potentiall prone to several issues.
+- While the project is complete and achieved it stated technical goals, we are currently sceptical regarding the interessted of the community. Mainly because the SSI ecosystem around Prism/Identus hasn't grown as much as we hoped for. This project in particular relies on specific use cases people have. If these use cases are not known (or not actually existant in a small specialized community) the project development cannot be focused and can't address those needs. Trying to do everything cannot work.
 
 ## Next Steps
 
