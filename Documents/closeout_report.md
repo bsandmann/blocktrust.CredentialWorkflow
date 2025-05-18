@@ -25,7 +25,7 @@ Closeout-video: xxxxxxx
 - Provided comprehensive documentation and a step-by-step guide for users (including a guided video)
 
 ## Key Achievements (particularly around collaboration and engagement)
-- The software is used internally for a other blocktrust project
+- The software is used internally for another blocktrust project
 - Discussed with several people enganged in the Cardano ecosystem
 
 ## Key Learnings
