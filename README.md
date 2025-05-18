@@ -6,6 +6,13 @@ An open‑source platform for designing, automating, and managing self‑soverei
 
 ---
 
+## 📚 Documentation
+Extensive documentation is available to help you get started can be found here: **[https://docs.workflow.blocktrust.dev](https://docs.workflow.blocktrust.dev)**.
+
+A guided video is available here: **[https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)**.
+
+---
+
 ## ✨ Key Features
 
 * **IFTTT‑style workflow engine** – build event‑driven processes with rich conditional logic
@@ -24,11 +31,10 @@ An open‑source platform for designing, automating, and managing self‑soverei
 
 ## 🚀 Quick Start
 
-### 1. Try the Hosted Sandbox
+### 1. Try the hosted instance
 
-```text
-https://workflow.blocktrust.dev
-```
+[https://workflow.blocktrust.dev](https://workflow.blocktrust.dev)
+
 
 Create an account and start building.
 *Best for development on the **preprod** network.*
@@ -103,12 +109,6 @@ dotnet build
 
 4. Configure `appsettings.json`, run EF migrations, and start the app.
 
----
-
-## 📚 Documentation
-Extensive documentation is available to help you get started can be found here: **[https://docs.workflow.blocktrust.dev](https://docs.workflow.blocktrust.dev)**.
-
-A guided video is available here: **[https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)**.
 
 ---
 
