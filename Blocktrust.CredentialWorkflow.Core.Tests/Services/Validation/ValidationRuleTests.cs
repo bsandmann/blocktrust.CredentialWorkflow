@@ -895,7 +895,7 @@ public class ValidationRuleTests
         
         // Assert
         result.IsValid.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Error evaluating rule");
+        result.ErrorMessage.Should().Contain("Expression evaluation failed");
     }
     
     [Fact]
@@ -984,6 +984,149 @@ public class ValidationRuleTests
     }
     
     #endregion
+
+    #region JavaScript Security Tests
     
-   
+    [Fact]
+    public void JavaScriptRule_DangerousEvalPattern_ShouldBeBlocked()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "EvalAttempt",
+            Expression = "eval('2+2') === 4",
+            ErrorMessage = "Eval should be blocked"
+        };
+        
+        var json = @"{""data"": 123}";
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("potentially unsafe operations");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_NetworkAccessPattern_ShouldBeBlocked()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "NetworkAttempt",
+            Expression = "fetch('https://example.com')",
+            ErrorMessage = "Fetch should be blocked"
+        };
+        
+        var json = @"{""data"": 123}";
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("potentially unsafe operations");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_InfiniteLoopAttempt_ShouldBeBlocked()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "LoopAttempt",
+            Expression = "while(true) { }; return true;",
+            ErrorMessage = "Infinite loop should be blocked"
+        };
+        
+        var json = @"{""data"": 123}";
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("potentially unsafe operations");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ExceedsMaxLength_ShouldBeBlocked()
+    {
+        // Arrange
+        var longExpression = string.Join(" && ", Enumerable.Range(0, 100).Select(i => $"data.value !== {i}"));
+        var rule = new CustomValidationRule
+        {
+            Name = "LongExpression",
+            Expression = longExpression,
+            ErrorMessage = "Expression too long"
+        };
+        
+        var json = @"{""value"": 100}";
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("exceeds maximum allowed length");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_MultiLineExpression_ShouldBeBlocked()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "MultiLineExpression",
+            Expression = "const x = 10;\nconst y = 20;\nreturn x + y === 30;",
+            ErrorMessage = "Multi-line expression should be blocked"
+        };
+        
+        var json = @"{""data"": 123}";
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("Multi-line expressions are not allowed");
+    }
+    
+    [Fact]
+    public void JavaScriptRule_ComplexButSafeExpression_ShouldPass()
+    {
+        // Arrange
+        var rule = new CustomValidationRule
+        {
+            Name = "SafeComplexExpression",
+            Expression = "data.items && data.items.filter(i => i.price > 10).length === data.items.length / 2",
+            ErrorMessage = "Complex expression failed"
+        };
+        
+        var json = @"{
+            ""items"": [
+                { ""id"": 1, ""price"": 15 },
+                { ""id"": 2, ""price"": 5 },
+                { ""id"": 3, ""price"": 20 },
+                { ""id"": 4, ""price"": 8 }
+            ]
+        }";
+        
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+        
+        // Act
+        var result = ValidationUtility.ValidateJavaScriptExpression(data, rule);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+        result.ErrorMessage.Should().BeNull();
+    }
+    
+    #endregion
 }

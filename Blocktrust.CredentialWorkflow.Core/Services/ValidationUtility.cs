@@ -370,34 +370,81 @@ public static class ValidationUtility
     {
         try
         {
-            var engine = new Engine();
-        
-            // Convert JsonElement to a proper JS object if needed
+            // Validate expression length and format
+            string expression = rule.Expression?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(expression))
+                return (false, "Expression cannot be empty");
+                
+            if (expression.Length > 300)
+                return (false, "Expression exceeds maximum allowed length (300 characters)");
+                
+            if (expression.Contains('\n') || expression.Contains('\r'))
+                return (false, "Multi-line expressions are not allowed");
+            
+            // Block dangerous patterns - comprehensive blocklist approach
+            string[] dangerousPatterns = new[] {
+                // Code execution
+                @"\beval\s*\(", @"new\s+Function", @"\bsetTimeout\s*\(", @"\bsetInterval\s*\(", 
+                
+                // Network access
+                @"\bfetch\s*\(", @"\bxhr\b", @"\bXMLHttpRequest\b", @"\bWebSocket\b", 
+                @"https?://", @"ftp://", @"ws[s]?://", @"\bURL\b", @"\bURLSearchParams\b",
+                
+                // Module loading
+                @"\brequire\s*\(", @"\bimport\s*\(", @"\bimport\s+", @"from\s+['\""]",
+                
+                // DOM access (shouldn't exist in Jint, but being thorough)
+                @"\bdocument\b", @"\bwindow\b", @"\blocation\b", @"\bnavigator\b",
+                
+                // Object prototype tampering
+                @"\b__proto__\b", @"\bObject\.prototype\b", @"\bObject\.defineProperty\b",
+                
+                // System/environment access
+                @"\bprocess\b", @"\bglobal\b", @"\bconsole\b",
+                
+                // Potential infinite loops
+                @"while\s*\([^)]*true", @"for\s*\([^;]*;\s*;", @"do\s*{.*}\s*while\s*\(\s*true\s*\)"
+            };
+            
+            foreach (var pattern in dangerousPatterns)
+            {
+                if (Regex.IsMatch(expression, pattern, RegexOptions.IgnoreCase))
+                    return (false, "Expression contains potentially unsafe operations");
+            }
+            
+            // Create engine with strict execution limits
+            var engine = new Engine(options => {
+                options.LimitRecursion(3)                     // Extremely low recursion limit
+                      .MaxStatements(20)                      // Restrict to few statements
+                      .TimeoutInterval(TimeSpan.FromMilliseconds(50)) // Very short timeout
+                      .DebugMode(false)                       // No debugging
+                      .Strict(true);                          // Enforce strict mode
+            });
+            
+            // Serialize the data if necessary
             if (data is JsonElement jsonElement)
             {
-                // Serialize the JsonElement to a JSON string and then parse it in JavaScript
                 string jsonString = JsonSerializer.Serialize(jsonElement);
-                engine.Execute($"var data = JSON.parse('{jsonString.Replace("'", "\\'")}');");
+                // Use safer approach without string interpolation that could be exploited
+                engine.Execute("var data = " + JsonSerializer.Serialize(jsonString) + ";");
+                engine.Execute("data = JSON.parse(data);");
             }
             else
             {
-                // Set up the JavaScript environment for non-JsonElement data
+                // Set up the JS environment for non-JsonElement data
                 engine.SetValue("data", data);
             }
-        
-            // Execute validation rule
-            var isValid = engine.Evaluate(rule.Expression).AsBoolean();
-        
-            if (!isValid)
-            {
-                return (false, rule.ErrorMessage);
-            }
-        
-            return (true, null);
+            
+            // Force expression to return boolean
+            string safeExpression = $"!!({expression})";
+            var isValid = engine.Evaluate(safeExpression).AsBoolean();
+            
+            return isValid ? (true, null) : (false, rule.ErrorMessage);
         }
         catch (Exception ex)
         {
-            return (false, $"Error evaluating rule: {ex.Message}");
+            // Sanitize error message to avoid leaking implementation details
+            return (false, "Expression evaluation failed: Invalid expression");
         }
     }
     

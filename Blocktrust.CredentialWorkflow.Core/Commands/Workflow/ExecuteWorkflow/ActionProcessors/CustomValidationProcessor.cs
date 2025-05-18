@@ -71,6 +71,14 @@ public class CustomValidationProcessor : IActionProcessor
             }
         }
 
+        // Ensure data is not null before creating a validation request
+        if (data == null)
+        {
+            var errorMessage = "No data found in the execution context to validate";
+            actionOutcome.FinishOutcomeWithFailure(errorMessage);
+            return Result.Fail(errorMessage);
+        }
+        
         var validationRequest = new CustomValidationRequest(data, input.ValidationRules);
         var validationResult = await _mediator.Send(validationRequest, context.CancellationToken);
         if (validationResult.IsFailed)

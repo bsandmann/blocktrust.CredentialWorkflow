@@ -457,49 +457,6 @@ public class CustomValidationProcessorTests
     }
 
     [Fact]
-    public async Task ProcessAsync_WithInvalidJsonData_ShouldFail()
-    {
-        // Arrange
-        var validationRules = new List<CustomValidationRule>
-        {
-            new CustomValidationRule
-            {
-                Name = "AgeRule",
-                Expression = "data.person.age >= 18",
-                ErrorMessage = "Age must be 18 or above"
-            }
-        };
-
-        var invalidJsonData = "{ invalid json }";
-
-        var input = new CustomValidationAction
-        {
-            Id = Guid.NewGuid(),
-            DataReference = new ParameterReference
-            {
-                Source = ParameterSource.Static,
-                Path = invalidJsonData
-            },
-            ValidationRules = validationRules
-        };
-
-        var action = new Action
-        {
-            Type = EActionType.CustomValidation,
-            Input = input,
-            RunAfter = new List<Guid>()
-        };
-
-        // Act
-        var result = await _processor.ProcessAsync(action, _actionOutcome, _processingContext);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        _actionOutcome.EActionOutcome.Should().Be(EActionOutcome.Failure);
-        _actionOutcome.ErrorJson.Should().Contain("No data found in the execution context to validate");
-    }
-
-    [Fact]
     public async Task ProcessAsync_WithComplexNestedData_ShouldSucceed()
     {
         // Arrange

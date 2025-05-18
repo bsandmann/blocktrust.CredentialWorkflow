@@ -312,7 +312,7 @@ public class CustomValidationHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.IsValid.Should().BeFalse();
         result.Value.Errors.Should().ContainSingle();
-        result.Value.Errors.First().Message.Should().Contain("Error evaluating rule");
+        result.Value.Errors.First().Message.Should().Contain("Expression evaluation failed");
     }
     
     [Fact]
