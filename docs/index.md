@@ -11,7 +11,8 @@ Welcome to the **Blocktrust Credential Workflow Platform** documentation - your 
 
 Github project: [https://github.com/bsandmann/blocktrust.CredentialWorkflow](https://github.com/bsandmann/blocktrust.CredentialWorkflow)
 
-{% include youtube.html id="9XJUgtR4sR0" %}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9XJUgtR4sR0" title="Blocktrust Credential Workflow Platform" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 
 ## Overview
 
