@@ -1,7 +1,7 @@
 ---
 title: Workflow Overview
 layout: default
-nav_order: 2
+nav_order: 3
 ---
 
 # Workflow Overview Page Documentation
@@ -96,18 +96,6 @@ To create a workflow from a template:
 
 Templates provide starting points for common credential workflows, saving time and ensuring best practices are followed.
 
-## Workflow States
-
-Workflows can exist in various states, indicated by color-coded badges:
-
-1. **Inactive** (Gray): The workflow is not running and will not respond to triggers
-2. **Active States** (Green): The workflow is running and will respond to triggers:
-   - **ActiveWithExternalTrigger**: Listening for HTTP requests
-   - **ActiveWithRecurrentTrigger**: Running on a schedule
-   - **ActiveWithFormTrigger**: Accepting form submissions
-   - **ActiveWithWalletInteractionTrigger**: Listening for wallet communications
-   - **ActiveWithManualTrigger**: Ready for manual execution
-
 ## Workflow Outcome States
 
 Workflow execution outcomes are indicated by color-coded badges:
@@ -188,29 +176,3 @@ To import a workflow from JSON:
 3. Click "Import" to validate and create the workflow
 4. The system will validate the JSON against the workflow schema
 5. If valid, a new workflow is created and added to your workflow list
-
-## Technical Details
-
-The Workflow Overview page:
-
-1. Automatically loads all workflows associated with your tenant
-2. Displays real-time workflow states and outcomes
-3. Uses color-coded indicators for quick status assessment
-4. Validates imported workflows against a JSON schema
-5. Implements confirmation dialogues for destructive actions
-6. Provides toast notifications for action confirmations
-7. Supports workflow execution directly from the overview
-
-## Best Practices
-
-For effective workflow management:
-
-1. **Naming**: Use descriptive names for your workflows that reflect their purpose
-2. **Templates**: Leverage templates for common scenarios to ensure consistency
-3. **Testing**: Use manual execution for testing before activating scheduled workflows
-4. **Organization**: Deactivate workflows that aren't currently needed to maintain clarity
-5. **Backup**: Regularly export important workflows for backup purposes
-6. **Monitoring**: Regularly check the logs page to ensure workflows are executing correctly
-7. **Debugging**: When issues occur, use the detailed information in the logs page to identify and fix problems
-
-The Workflow Overview page provides a complete management interface for your credential workflows, from creation and configuration to execution and monitoring.

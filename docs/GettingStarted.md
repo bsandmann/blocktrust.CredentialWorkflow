@@ -31,14 +31,14 @@ You can find the docker compose file in the root directory of the repository.
 When you want to build the application locally, you can also do so:
 
    - Install the .net 9 SDK
-   - Clone the repository from https://github.com/bsandmann/blocktrust.CredentialWorkflow which is the main repo of the platform. 
+   - Clone the repository from [https://github.com/bsandmann/blocktrust.CredentialWorkflow](https://github.com/bsandmann/blocktrust.CredentialWorkflow) which is the main repo of the platform. 
    - Additionally you need to clone the following repositories:
-        - The Blocktrust Mediator project: https://github.com/bsandmann/blocktrust.Mediator
-        - The Blocktrust DIDComm project: https://github.com/bsandmann/blocktrust.DIDComm
-        - The Blocktrust Core project: https://github.com/bsandmann/blocktrust.Core
-        - The Blocktrust PeerDID project: https://github.com/bsandmann/blocktrust.PeerDID
-        - The Blocktrust Credentials project: https://github.com/bsandmann/blocktrust.VerifiableCredential
-        - The DidPrismResolverClient: https://github.com/bsandmann/DidPrismResolverClient
+        - The Blocktrust Mediator project: [https://github.com/bsandmann/blocktrust.Mediator](https://github.com/bsandmann/blocktrust.Mediator)
+        - The Blocktrust DIDComm project: [https://github.com/bsandmann/blocktrust.DIDComm](https://github.com/bsandmann/blocktrust.DIDComm)
+        - The Blocktrust Core project: [https://github.com/bsandmann/blocktrust.Core](https://github.com/bsandmann/blocktrust.Core)
+        - The Blocktrust PeerDID project: [https://github.com/bsandmann/blocktrust.PeerDID](https://github.com/bsandmann/blocktrust.PeerDID)
+        - The Blocktrust Credentials project: [https://github.com/bsandmann/blocktrust.VerifiableCredential](https://github.com/bsandmann/blocktrust.VerifiableCredential)
+        - The DidPrismResolverClient: [https://github.com/bsandmann/DidPrismResolverClient](https://github.com/bsandmann/DidPrismResolverClient)
    - You should for one now be able to build you own version of the platform. Either by:
         - Building the image by running the Dockerfile (found inside the the root directory of the CredentialWorkflow.Web project) at the root of the all the cloned projects, or
         - by running`dotnet build` in the root directory of the project of the CredentialWorkflow.Web project.
@@ -76,9 +76,9 @@ When you want to build the application locally, you can also do so:
    - Activate it from the Workflow Overview page
    - Test with sample data
 
-For a more indepth explanation see the scenario User Guides:
-
-
-
+For a more indepth explanation see the [User Guides](/docs/UserGuides/index.md):
+- [Creating and Updating DIDs](/docs/UserGuides/CreatingAndUpdatingDids.md)
+- [Issuing Credentials](/docs/UserGuides/IssuingCredentials.md)
+- [Verifying Credentials](/docs/UserGuides/VerifyingCredentials.md)
 
 For additional support, contact the Blocktrust team or consult the GitHub repository for known issues and solutions.

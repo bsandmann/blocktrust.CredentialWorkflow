@@ -1,7 +1,7 @@
 ---
 title: Creating and Updating DIDs
 layout: default
-parent: UserGuides
+parent: User Guides
 nav_order: 1
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Verifying Credentials
 layout: default
-parent: UserGuides
+parent: User Guides
 nav_order: 3
 ---
 

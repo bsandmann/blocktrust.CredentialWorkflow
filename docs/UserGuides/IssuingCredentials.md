@@ -1,7 +1,7 @@
 ---
 title: Issuing Credentials
 layout: default
-parent: UserGuides
+parent: User Guides
 nav_order: 2
 ---
 
