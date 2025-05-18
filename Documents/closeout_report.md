@@ -12,7 +12,7 @@ Date Project Started: March 11, 2024
 
 Date Project Completed: May 18, 2025
 
-Closeout-video: xxxxxxx
+Closeout-video: [https://youtu.be/KPOugkS0fw4](https://youtu.be/KPOugkS0fw4)
 
 ## Challenge KPIs
 - Deliver a no-code, open-source solution that simplifies SSI adoption
