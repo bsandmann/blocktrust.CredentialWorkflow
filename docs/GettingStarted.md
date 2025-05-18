@@ -24,7 +24,50 @@ For a more production ready solution we would recommend to run the platform on y
 
 The platform can be run as a docker compose file, which includes a postgres database and the platform itself.
 You can find the docker compose file in the root directory of the repository. 
+The image can be found here [https://github.com/users/bsandmann/packages/container/package/workflowplatform](https://github.com/users/bsandmann/packages/container/package/workflowplatform)
 
+```yaml
+version: '3.9'
+
+services:
+  credential-workflow-web:
+    image: ghcr.io/bsandmann/workflowplatform:latest
+    container_name: credential-workflow-web
+    ports:
+      - "80:80"
+
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+
+      - AppSettings__PrismBaseUrl=https://opn.mainnet.blocktrust.dev
+      - AppSettings__PrismDefaultLedger=mainnet
+      - AppSettings__PrismBaseUrlFallback=https://opn.preprod.blocktrust.dev
+      - AppSettings__PrismDefaultLedgerFallback=preprod
+
+      - ConnectionStrings__DefaultConnection=Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
+
+      - EmailSettings__SendGridKey=<YOUR SENDGRID KEY>
+      - EmailSettings__SendGridFromEmail=<YOUR EMAIL DEFINED IN SENDGRID>
+      - EmailSettings__DefaultFromName=Credential Workflow Platform
+
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    container_name: credential-workflow-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workflowdatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+```
 
 ## Building the application
 

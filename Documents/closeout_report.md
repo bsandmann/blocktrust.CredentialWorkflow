@@ -26,7 +26,7 @@ Closeout-video: [https://youtu.be/KPOugkS0fw4](https://youtu.be/KPOugkS0fw4)
 
 ## Key Achievements (particularly around collaboration and engagement)
 - The software is used internally for another blocktrust project
-- Discussed with several people enganged in the Cardano ecosystem
+- Discussed with several people in the Cardano ecosystem
 
 ## Key Learnings
 - Open standards proved essential. Rather than developing proprietary solutions, we integrated open standards like the DID Resolution spec, DID Registrar Spec, DID-Prism spec, W3C Verifiable Credntials, DIDComm v2, etc.
@@ -49,3 +49,5 @@ Documentation Page: [https://docs.workflow.blocktrust.dev/](https://docs.workflo
 Video with a feature overview: [https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)
 
 Hosted Instance [https://workflow.blocktrust.dev](https://workflow.blocktrust.dev)
+
+Docker image [ghcr.io/bsandmann/workflowplatform:latest](ghcr.io/bsandmann/workflowplatform:latest)
