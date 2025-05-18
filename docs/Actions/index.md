@@ -64,8 +64,8 @@ Actions produce structured output that:
 
 Actions support dynamic parameter values through substitution syntax:
 
-- Use `{{paramName}}` to reference trigger inputs
-- Use `{{actionId.outputField}}` to reference outputs from previous actions
+- Use `{% raw %}{{paramName}}{% endraw %}` to reference trigger inputs
+- Use `{% raw %}{{actionId.outputField}}{% endraw %}` to reference outputs from previous actions
 - Complex nested values can be accessed using dot notation
 
 For detailed information about each action type, refer to the specific documentation pages listed below.

@@ -76,8 +76,10 @@ After the validation we want to send the result of the validation back to the se
 4. For the Request Body we can setup a custom data structure:
     ```json
     {
+    {% raw %}
       "verificationResult": "{{verificationResult}}",
       "validationResult": "{{validationResult}}"
+    {% endraw %}
     }
     ```
 5. For the **Parameters** we need to add a few parameters:

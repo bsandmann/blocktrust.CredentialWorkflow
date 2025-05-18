@@ -109,7 +109,7 @@ The action provides several options for handling validation failures:
 
 3. **Error Message Template**:
    - Customizable error message template for validation failures
-   - Can include `{{field}}` placeholders that will be replaced with actual field names
+   - Can include `{% raw %}{{field}}{% endraw %}` placeholders that will be replaced with actual field names
 
 ## How It Works
 

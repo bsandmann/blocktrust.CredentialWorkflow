@@ -69,7 +69,7 @@ When you want to build the application locally, you can also do so:
 
 4. **Configure Parameters**
    - Set up data flow between trigger inputs and action parameters
-   - Use parameter substitution with `{{paramName}}` syntax
+   - Use parameter substitution with {% raw %}`{{paramName}}`{% endraw %} syntax
 
 5. **Activate and Test**
    - Save the workflow

@@ -57,7 +57,7 @@ Before creating and sending out the credential we want to validate the secret-ke
 
 ### Create the Credential
 Next we to create the credential. For this we will us the [Issue W3C Credential Action](../Actions/IssueW3CCredentialAction.md). The Issue W3C Credential Action allows you to create a W3C Verifiable Credential, and sign it with the Issuing key.
-1. Select the **W3C VC Action** from the list of availab~~~~le actions (under the **Issue credentials** tab).
+1. Select the **W3C VC Action** from the list of available actions (under the **Issue credentials** tab).
 2. For the **Subject DID** field, select **From Trigger** and the **DID** field. This means that the credential will be issued to the DID entered in the form. You could have added an additional validation step to check if the DID is a valid format e.g. using regex in the prior step, but in case for the subject a Prism DID is not needed, it could even be some kind of other identifier (from a pure technical perspective).
 3. For the **Isserier DID** select the Issue which we setup earlier in the Prerequisites section. 
 4. For **Valid until** select the date when the credential should expire. For example 1 year from now.
@@ -70,7 +70,7 @@ Lastly we want to send the Credential to the email provided by the user. For thi
 1. Select the **Email Action** from the list of available actions (under the **Communications** tab).
 2. For the **To** field, select **From Trigger** and the **Email** field. This means that the email will be sent to the email entered in the form.
 3. For the Subject field, enter a subject for the email. For example `Your Blocktrust University Credential`.
-4. For the Body field, enter a message for the email. For example `Congratulations {{name}}! You have completed the Blocktrust course. Please find your credential here: {{credential}}`.
+4. For the Body field, enter a message for the email. For example {% raw %}`Congratulations {{name}}! You have completed the Blocktrust course. Please find your credential here: {{credential}}`{% endraw %}.
 5. Since we used parameters in the body we need to sepcify the source of the parameters:
     - Add a new Parameter. The name is `name` and the source is **From Trigger** and the **Name** field.
     - Add a new Parameter. The name is `credential` and the source is **Action Outcome** and the **Issue W3C Credential**. This means that the credential will be attached to the email.
