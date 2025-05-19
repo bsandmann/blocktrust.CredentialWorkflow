@@ -61,7 +61,6 @@ services:
 
       ConnectionStrings__DefaultConnection: Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
 
-      # Optional – email notifications
       EmailSettings__SendGridKey: <YOUR_SENDGRID_KEY>
       EmailSettings__SendGridFromEmail: <YOUR_FROM_EMAIL>
       EmailSettings__DefaultFromName: Credential Workflow Platform
