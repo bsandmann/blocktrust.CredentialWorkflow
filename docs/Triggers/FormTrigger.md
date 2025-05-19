@@ -5,7 +5,7 @@ parent: Triggers
 nav_order: 4
 ---
 
-# FormTrigger Component Documentation
+# FormTrigger Documentation
 
 The `FormTrigger` component enables the creation of custom web forms that can trigger workflows when submitted. This allows for user-friendly data collection through a dedicated form page that's automatically generated based on your configuration.
 

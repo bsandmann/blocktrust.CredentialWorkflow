@@ -5,7 +5,7 @@ parent: Triggers
 nav_order: 3
 ---
 
-# Manual-Trigger Component Documentation
+# Manual-Trigger Documentation
 
 The `ManualTrigger` component provides a simple way to create workflows that can be triggered manually by users from the Workflow overview page. Unlike other trigger types that respond to external events or time-based schedules, manual triggers are explicitly executed by a user when needed.
 

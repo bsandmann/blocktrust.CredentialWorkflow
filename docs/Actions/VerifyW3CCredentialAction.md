@@ -5,7 +5,7 @@ parent: Actions
 nav_order: 8
 ---
 
-# VerifyW3CCredential Action Documentation
+# Verify W3C Credential Action Documentation
 
 The `VerifyW3CCredential` action enables workflows to verify W3C Verifiable Credentials by checking their cryptographic signatures, expiration dates, and revocation status. This action performs comprehensive validation to ensure credentials are authentic, current, and valid.
 

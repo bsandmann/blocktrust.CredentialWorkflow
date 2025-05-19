@@ -27,45 +27,59 @@ You can find the docker compose file in the root directory of the repository.
 The image can be found here [https://github.com/users/bsandmann/packages/container/package/workflowplatform](https://github.com/users/bsandmann/packages/container/package/workflowplatform)
 
 ```yaml
-version: '3.9'
-
 services:
   credential-workflow-web:
     image: ghcr.io/bsandmann/workflowplatform:latest
     container_name: credential-workflow-web
     ports:
-      - "80:80"
-
+      - "8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://0.0.0.0:80
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:8080
 
-      - AppSettings__PrismBaseUrl=https://opn.mainnet.blocktrust.dev
-      - AppSettings__PrismDefaultLedger=mainnet
-      - AppSettings__PrismBaseUrlFallback=https://opn.preprod.blocktrust.dev
-      - AppSettings__PrismDefaultLedgerFallback=preprod
+      AppSettings__PrismBaseUrl: https://opn.mainnet.blocktrust.dev
+      AppSettings__PrismDefaultLedger: mainnet
+      AppSettings__PrismBaseUrlFallback: https://opn.preprod.blocktrust.dev
+      AppSettings__PrismDefaultLedgerFallback: preprod
 
-      - ConnectionStrings__DefaultConnection=Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
+      ConnectionStrings__DefaultConnection: Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
 
-      - EmailSettings__SendGridKey=<YOUR SENDGRID KEY>
-      - EmailSettings__SendGridFromEmail=<YOUR EMAIL DEFINED IN SENDGRID>
-      - EmailSettings__DefaultFromName=Credential Workflow Platform
-
+      EmailSettings__SendGridKey: <YOUR_SENDGRID_KEY>
+      EmailSettings__SendGridFromEmail: <YOUR_FROM_EMAIL>
+      EmailSettings__DefaultFromName: Credential Workflow Platform
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - wp
 
   postgres:
     image: postgres:15
     container_name: credential-workflow-postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: workflowdatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - wp
+    healthcheck:
+      # Simpler pg_isready, assumes it's run against the local server
+      test: ["CMD-SHELL", "pg_isready -U postgres -d workflowdatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
+
+networks:
+  wp:
+    driver: bridge
 
 ```
 

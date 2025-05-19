@@ -5,7 +5,7 @@ parent: Triggers
 nav_order: 5
 ---
 
-# WalletInteractionTrigger Documentation
+# Wallet-Interaction Trigger Documentation
 
 The `WalletInteractionTrigger` enables workflows to be triggered by DIDComm v2 messages from digital wallets or other DIDComm-capable applications. This component allows for secure, decentralized communication between the workflow platform and external systems using the DIDComm protocol.
 

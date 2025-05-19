@@ -1,49 +1,127 @@
-# Blocktrust Workflow Platform
+# Blocktrust Credential Workflow Platform
 
-## TL;DR
-Blocktrust Workflow Platform is an open-source, no-code solution for creating and managing Self-Sovereign Identity (SSI) workflows. The project heavily relies on [Hyperledger Identus](https://github.com/hyperledger/identus) (formaly Atala PRISM) and in particular its Cloud Agents. It simplifies the process of issuing and validating credentials, making SSI integration accessible to developers, businesses, and innovators without requiring deep SSI expertise.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-## Project Overview
+An open‑source platform for designing, automating, and managing self‑sovereign identity (SSI) workflows using DID Prism.
 
-### Goals
-The primary goal of the Blocktrust Workflow Platform is to accelerate the adoption of Self-Sovereign Identity (SSI) by providing an intuitive, flexible, and powerful toolset for creating SSI workflows based on [Hyperledger Identus](https://github.com/hyperledger/identus) (formaly Atala PRISM) . By eliminating the complexity typically associated with SSI integration, we aim to make digital identity solutions more accessible and implementable across various projects and use cases.
+---
 
-### Expected Results
-Upon completion, the Blocktrust Workflow Platform will offer:
+## 📚 Documentation
+Extensive documentation is available to help you get started can be found here: **[https://docs.workflow.blocktrust.dev](https://docs.workflow.blocktrust.dev)**.
 
-1. A user-friendly interface for creating, configuring, and managing SSI workflows
-2. A set of triggers and actions for building versatile SSI processes
-3. Templates for common SSI workflows to jumpstart integration
-4. Open-source codebase allowing for community contributions and customizations
-5. Compatibility with multiple operating systems and cloud environments
+A guided video is available here: **[https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)**.
 
-### Technical Details
-- **Framework**: Built on .NET using C#
-- **Database**: PostgreSQL
-- **Deployment**: Docker image for easy setup and portability
+---
 
-### Key Features
-1. **Triggers**: Listen for specific events or inputs, such as:
-    - POST/GET requests to predefined endpoints
-    - Form submissions
-    - DIDComm messages (e.g., Basic messages, PRISM connect protocol requests)
+## ✨ Key Features
 
-2. **Actions**: Process and validate inputs, including:
-    - DID resolution
-    - Credential verification
-    - Input value checks
-    - Calling predefined endpoints
-    - Issuing or revoking credentials
-    - Sending DIDComm messages
-    - Managing DIDs (create, update, deactivate, publish)
-    - Generating QR codes for Out-of-Band connections
+* **IFTTT‑style workflow engine** – build event‑driven processes with rich conditional logic
+* **Multiple triggers** – HTTP, timers, manual actions, forms, wallet interactions
+* **Extensive action library**
 
-### Example Use Cases
-1. **Automated Credential Issuance**: When a user completes a course, automatically issue a credential to their provided wallet address.
-2. **Streamlined User Registration**: Upon QR code scan, register the user and redirect them to a specified page.
-3. **KYC Verification**: Automatically verify a user's KYC credential and grant access to protected resources.
-4. **SSI-based Sign-In**: Generate a JSON Web Token for users signing in with their SSI credentials.
+   * Issue, verify, and revoke **W3C Verifiable Credentials**
+   * Create, update, and deactivate **Decentralized Identifiers (DIDs)**
+   * Send HTTP requests, emails (SendGrid), DIDComm messages, and JWTs
+   * Custom validation using business rules
+* **Multi‑tenant** by design – clean separation of organizational data
+* **Visual designer** – drag‑and‑drop UI for building workflows
+* **Extensible & secure** – written in modern .NET with a plug‑in architecture
+
+---
+
+## 🚀 Quick Start
+
+### 1. Try the hosted instance
+
+[https://workflow.blocktrust.dev](https://workflow.blocktrust.dev)
 
 
-### Contact
-For questions, feedback, or collaboration opportunities, please reach out to the Blocktrust team at [blocktrust.dev](https://blocktrust.dev) or on our [Discord channel](https://discord.gg/6BghFzxnmt).
+Create an account and start building.
+*Best for development on the **preprod** network.*
+
+### 2. Self‑Host with Docker Compose
+
+```yaml
+services:
+   credential-workflow-web:
+      image: ghcr.io/bsandmann/workflowplatform:latest
+      container_name: credential-workflow-web
+      ports:
+         - "8080:8080"
+      environment:
+         ASPNETCORE_ENVIRONMENT: Production
+         ASPNETCORE_URLS: http://0.0.0.0:8080
+
+         AppSettings__PrismBaseUrl: https://opn.mainnet.blocktrust.dev
+         AppSettings__PrismDefaultLedger: mainnet
+         AppSettings__PrismBaseUrlFallback: https://opn.preprod.blocktrust.dev
+         AppSettings__PrismDefaultLedgerFallback: preprod
+
+         ConnectionStrings__DefaultConnection: Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
+
+         EmailSettings__SendGridKey: <YOUR_SENDGRID_KEY>
+         EmailSettings__SendGridFromEmail: <YOUR_FROM_EMAIL>
+         EmailSettings__DefaultFromName: Credential Workflow Platform
+      depends_on:
+         postgres:
+            condition: service_healthy
+      networks:
+         - wp
+
+   postgres:
+      image: postgres:15
+      container_name: credential-workflow-postgres
+      restart: always
+      environment:
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: postgres
+         POSTGRES_DB: workflowdatabase
+      volumes:
+         - postgres_data:/var/lib/postgresql/data
+      expose:
+         - "5432"
+      networks:
+         - wp
+      healthcheck:
+         # Simpler pg_isready, assumes it's run against the local server
+         test: ["CMD-SHELL", "pg_isready -U postgres -d workflowdatabase"]
+         interval: 10s
+         timeout: 5s
+         retries: 5
+
+volumes:
+   postgres_data:
+
+networks:
+   wp:
+      driver: bridge
+
+```
+
+> **Tip:** prefer running in a secure environment for production workloads.
+
+### 3. Build from Source
+
+See the documentation for more [information](https://docs.workflow.blocktrust.dev/GettingStarted.html)
+
+---
+
+## 🛠 Supported Standards
+
+* W3C Verifiable Credentials
+* Decentralized Identifiers (DIDs)
+* DIDComm Messaging
+* JWT (JSON Web Tokens)
+* OAuth 2.0 / OpenID Connect
+
+---
+
+## 📄 License
+
+This project is licensed under the **Apache License 2.0** – see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📬 Contact
+
+For questions, feedback, or collaboration opportunities, please reach out to the Blocktrust team at **blocktrust.dev** or join our **Discord** community.
