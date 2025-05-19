@@ -360,7 +360,325 @@ namespace Blocktrust.CredentialWorkflow.Core.Services
                       }
                     }
                     """
-                )
+                ),
+                new Template(
+                    Guid.NewGuid(),
+                    "User Guide Part 1",
+                    "Create a DID using a manual Trigger",
+                    """
+                    {
+                      "triggers": {
+                        "<GUID_1>": {
+                          "type": "ManualTrigger",
+                          "input": {
+                            "$type": "manualTrigger",
+                            "description": "Manual trigger point",
+                            "requiredParameters": {},
+                            "id": "<GUID_1>"
+                          }
+                        }
+                      },
+                      "actions": {
+                        "<GUID_2>": {
+                          "type": "CreateDID",
+                          "input": {
+                            "$type": "createDID",
+                            "useTenantRegistrar": true,
+                            "registrarUrl": {
+                              "source": "static",
+                              "path": ""
+                            },
+                            "walletId": {
+                              "source": "static",
+                              "path": ""
+                            },
+                            "verificationMethods": [
+                              {
+                                "keyId": {
+                                  "source": "static",
+                                  "path": "",
+                                  "defaultValue": "key-1"
+                                },
+                                "purpose": {
+                                  "source": "static",
+                                  "path": "assertionMethod",
+                                  "defaultValue": "assertionMethod"
+                                },
+                                "curve": {
+                                  "source": "static",
+                                  "path": "secp256k1",
+                                  "defaultValue": "secp256k1"
+                                }
+                              }
+                            ],
+                            "services": [
+                              {
+                                "serviceId": {
+                                  "source": "static",
+                                  "path": "",
+                                  "defaultValue": "service-1"
+                                },
+                                "type": {
+                                  "source": "static",
+                                  "path": "",
+                                  "defaultValue": "LinkedDomain"
+                                },
+                                "endpoint": {
+                                  "source": "static",
+                                  "path": "https://docs.workflow.blocktrust.dev",
+                                  "defaultValue": "https://docs.workflow.blocktrust.dev"
+                                }
+                              }
+                            ],
+                            "id": "<GUID_2>"
+                          },
+                          "runAfter": [
+                            "<GUID_1>"
+                          ]
+                        }
+                      }
+                    }
+                    """
+                ),
+                new Template(
+                    Guid.NewGuid(),
+                    "User Guide Part 2",
+                    "Issue a W3C Credential using the Form Trigger and send email",
+                    """
+                    {
+                      "triggers": {
+                        "<GUID_1>": {
+                          "type": "Form",
+                          "input": {
+                            "$type": "form",
+                            "title": "Blocktrust University Certification",
+                            "description": "Please fill out the form to receive your degree as a Verifiable Credential",
+                            "parameters": {
+                              "Name": {
+                                "type": "string",
+                                "required": true,
+                                "description": "Please enter your name"
+                              },
+                              "DID": {
+                                "type": "string",
+                                "required": true,
+                                "description": "Please enter your DID to ensure the credential is issued to you"
+                              },
+                              "Code": {
+                                "type": "string",
+                                "required": true,
+                                "description": "Please enter the code given to you after graduation"
+                              },
+                              "Email": {
+                                "type": "string",
+                                "required": true,
+                                "description": "Please enter you email to receive the credential"
+                              }
+                            },
+                            "id": "<GUID_1>"
+                          }
+                        }
+                      },
+                      "actions": {
+                        "<GUID_2>": {
+                          "type": "CustomValidation",
+                          "input": {
+                            "$type": "customValidation",
+                            "DataReference": {
+                              "source": "triggerInput",
+                              "path": "Code"
+                            },
+                            "ValidationRules": [
+                              {
+                                "Name": "Code must match",
+                                "Expression": "[\u0022ABC123\u0022, \u0022SuperSecret\u0022, \u0022DoNotShare\u0022].includes(data.value)",
+                                "ErrorMessage": ""
+                              }
+                            ],
+                            "FailureAction": "Stop",
+                            "id": "<GUID_2>"
+                          },
+                          "runAfter": [
+                            "<GUID_1>"
+                          ]
+                        },
+                        "<GUID_3>": {
+                          "type": "IssueW3CCredential",
+                          "input": {
+                            "$type": "issueW3cCredential",
+                            "subjectDid": {
+                              "source": "triggerInput",
+                              "path": "DID"
+                            },
+                            "issuerDid": {
+                              "source": "appSettings",
+                              "path": "DefaultIssuerDid"
+                            },
+                            "validUntil": "2026-05-18T00:00:00",
+                            "claims": {
+                              "name": {
+                                "type": "TriggerProperty",
+                                "value": "",
+                                "parameterReference": {
+                                  "source": "triggerInput",
+                                  "path": "Name"
+                                }
+                              },
+                              "degree": {
+                                "type": "Static",
+                                "value": "Completion of the Blocktrust course",
+                                "parameterReference": {
+                                  "source": "triggerInput",
+                                  "path": ""
+                                }
+                              }
+                            },
+                            "id": "<GUID_3>"
+                          },
+                          "runAfter": [
+                            "<GUID_2>"
+                          ]
+                        },
+                        "<GUID_4>": {
+                          "type": "Email",
+                          "input": {
+                            "$type": "email",
+                            "to": {
+                              "source": "triggerInput",
+                              "path": "Email"
+                            },
+                            "subject": "Your Blocktrust University credential",
+                            "body": "Congratulations {{name}}!\nYou have completed the Blocktrust course. Please find your credential here:\n\n{{credential}}\n\nAll the best",
+                            "parameters": {
+                              "name": {
+                                "source": "triggerInput",
+                                "path": "Name"
+                              },
+                              "credential": {
+                                "source": "actionOutcome",
+                                "path": "<GUID_3>"
+                              }
+                            },
+                            "attachments": [],
+                            "id": "<GUID_4>"
+                          },
+                          "runAfter": [
+                            "<GUID_3>"
+                          ]
+                        }
+                      }
+                    }
+                    """
+                ),
+                new Template(
+                    Guid.NewGuid(),
+                    "User Guide Part 3",
+                    "Verifiy and Validate W3C Verifiable Credential. Receive and Send via HTTP ",
+                    """
+                    {
+                      "triggers": {
+                        "<GUID_1>": {
+                          "type": "HttpRequest",
+                          "input": {
+                            "$type": "incomingRequest",
+                            "method": "POST",
+                            "parameters": {
+                              "credential": {
+                                "type": "string",
+                                "required": true,
+                                "description": ""
+                              }
+                            },
+                            "id": "<GUID_1>"
+                          }
+                        }
+                      },
+                      "actions": {
+                        "<GUID_2>": {
+                          "type": "VerifyW3CCredential",
+                          "input": {
+                            "$type": "verifyW3cCredential",
+                            "credentialReference": {
+                              "source": "triggerInput",
+                              "path": "credential"
+                            },
+                            "checkSignature": true,
+                            "checkStatus": false,
+                            "checkSchema": false,
+                            "checkTrustRegistry": false,
+                            "checkExpiry": true,
+                            "id": "<GUID_2>"
+                          },
+                          "runAfter": [
+                            "<GUID_1>"
+                          ]
+                        },
+                        "<GUID_3>": {
+                          "type": "W3cValidation",
+                          "input": {
+                            "$type": "w3cValidation",
+                            "CredentialReference": {
+                              "source": "triggerInput",
+                              "path": "credential"
+                            },
+                            "ValidationRules": [
+                              {
+                                "Type": "Value",
+                                "Configuration": "issuer:did:prism:ebc906c73d0f57109bd9a4886c413734a83b53a8b502465c42651b69c3eb993b"
+                              },
+                              {
+                                "Type": "Value",
+                                "Configuration": "credentialSubject.degree:Completion of the Blocktrust course"
+                              },
+                              {
+                                "Type": "Required",
+                                "Configuration": "credentialSubject.name"
+                              }
+                            ],
+                            "FailureAction": "Stop",
+                            "ErrorMessageTemplate": "",
+                            "id": "<GUID_3>"
+                          },
+                          "runAfter": [
+                            "<GUID_2>"
+                          ]
+                        },
+                        "<GUID_4>": {
+                          "type": "Http",
+                          "input": {
+                            "$type": "http",
+                            "method": "POST",
+                            "endpoint": {
+                              "source": "static",
+                              "path": "https://webhook.site/c053d14f-baff-416e-bcdd-0f6258d54730"
+                            },
+                            "headers": {},
+                            "body": {
+                              "__body": {
+                                "source": "static",
+                                "path": " {\n   \u0022verificationResult\u0022: \u0022{{verificationResult}}\u0022,\n   \u0022validationResult\u0022: \u0022{{validationResult}}\u0022\n }"
+                              }
+                            },
+                            "parameters": {
+                              "verificationResult": {
+                                "source": "actionOutcome",
+                                "path": "<GUID_2>"
+                              },
+                              "validationResult": {
+                                "source": "actionOutcome",
+                                "path": "<GUID_3>"
+                              }
+                            },
+                            "id": "<GUID_4>"
+                          },
+                          "runAfter": [
+                            "<GUID_3>"
+                          ]
+                        }
+                      }
+                    }
+                    """
+                ),
             };
         }
 
