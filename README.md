@@ -6,6 +6,13 @@ An open‑source platform for designing, automating, and managing self‑soverei
 
 ---
 
+## 📚 Documentation
+Extensive documentation is available to help you get started can be found here: **[https://docs.workflow.blocktrust.dev](https://docs.workflow.blocktrust.dev)**.
+
+A guided video is available here: **[https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)**.
+
+---
+
 ## ✨ Key Features
 
 * **IFTTT‑style workflow engine** – build event‑driven processes with rich conditional logic
@@ -24,11 +31,10 @@ An open‑source platform for designing, automating, and managing self‑soverei
 
 ## 🚀 Quick Start
 
-### 1. Try the Hosted Sandbox
+### 1. Try the hosted instance
 
-```text
-https://workflow.blocktrust.dev
-```
+[https://workflow.blocktrust.dev](https://workflow.blocktrust.dev)
+
 
 Create an account and start building.
 *Best for development on the **preprod** network.*
@@ -55,7 +61,6 @@ services:
 
       ConnectionStrings__DefaultConnection: Host=postgres;Username=postgres;Password=postgres;Database=workflowdatabase
 
-      # Optional – email notifications
       EmailSettings__SendGridKey: <YOUR_SENDGRID_KEY>
       EmailSettings__SendGridFromEmail: <YOUR_FROM_EMAIL>
       EmailSettings__DefaultFromName: Credential Workflow Platform
@@ -81,34 +86,7 @@ volumes:
 
 ### 3. Build from Source
 
-1. Install the **.NET 9 SDK**.
-2. Clone the main repo and required libraries:
-
-```bash
-git clone https://github.com/bsandmann/blocktrust.CredentialWorkflow.git
-cd blocktrust.CredentialWorkflow
-# clone dependencies (Mediator, DIDComm, Core, etc.)
-```
-
-3. Build:
-
-```bash
-# Docker
-docker build -t credential-workflow .
-
-# or native
-cd CredentialWorkflow.Web
-dotnet build
-```
-
-4. Configure `appsettings.json`, run EF migrations, and start the app.
-
----
-
-## 📚 Documentation
-Extensive documentation is available to help you get started can be found here: **[https://docs.workflow.blocktrust.dev](https://docs.workflow.blocktrust.dev)**.
-
-A guided video is available here: **[https://youtu.be/9XJUgtR4sR0](https://youtu.be/9XJUgtR4sR0)**.
+See the documentation for more [information](https://docs.workflow.blocktrust.dev/GettingStarted.html)
 
 ---
 
