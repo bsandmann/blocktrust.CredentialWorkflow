@@ -1,0 +1,34 @@
+﻿@using Blocktrust.CredentialWorkflow.Web.Services
+@inject AppStateService AppStateService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<button @onclick="ToggleMobileMenu" 
+        class="lg:hidden text-white hover:text-gray-300">
+    <span class="material-symbols-outlined">@(showMobileMenu ? "close" : "menu")</span>
+</button>
+
+@code {
+    private bool showMobileMenu;
+
+    [Parameter]
+    public EventCallback<bool> OnToggle { get; set; }
+
+    private async Task ToggleMobileMenu()
+    {
+        showMobileMenu = !showMobileMenu;
+        if (OnToggle.HasDelegate)
+        {
+            await OnToggle.InvokeAsync(showMobileMenu);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        AppStateService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppStateService.OnChange -= StateHasChanged;
+    }
+}

@@ -39,6 +39,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<WorkflowChangeTrackerService>();
 builder.Services.AddScoped<ISchemaValidationService, SchemaValidationService>();
+builder.Services.AddSingleton<VersionService>();
 
 
 var MyAllowSpecificOrigins = "MyCorsPolicy";
